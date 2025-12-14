@@ -31,3 +31,4 @@ echo ""
 echo "✅ Done! You can now run ./start-app.command or npm run dev"
 echo ""
 
+
