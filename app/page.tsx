@@ -19,6 +19,7 @@ interface CommuteResults {
 }
 
 const ADDRESS_HISTORY_KEY = 'real-estate-address-history'
+const DESTINATION_HISTORY_KEY = 'real-estate-destination-history'
 const MAX_HISTORY_ITEMS = 10
 
 export default function Home() {
@@ -30,6 +31,7 @@ export default function Home() {
   const [results, setResults] = useState<SearchResults | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [addressHistory, setAddressHistory] = useState<string[]>([])
+  const [destinationHistory, setDestinationHistory] = useState<string[]>([])
   const [commuteResults, setCommuteResults] = useState<{
     distance?: string
     duration?: string
@@ -47,6 +49,16 @@ export default function Home() {
           setAddressHistory(Array.isArray(parsed) ? parsed : [])
         } catch (error) {
           console.error('Error loading address history:', error)
+        }
+      }
+      
+      const destStored = localStorage.getItem(DESTINATION_HISTORY_KEY)
+      if (destStored) {
+        try {
+          const parsed = JSON.parse(destStored)
+          setDestinationHistory(Array.isArray(parsed) ? parsed : [])
+        } catch (error) {
+          console.error('Error loading destination history:', error)
         }
       }
     }
@@ -79,9 +91,41 @@ export default function Home() {
     }
   }
 
+  // Save destination address to history
+  const saveDestinationToHistory = (addr: string) => {
+    if (!addr || addr.trim() === '') return
+
+    setDestinationHistory((prev) => {
+      // Remove duplicate if exists
+      const filtered = prev.filter((a) => a.toLowerCase() !== addr.toLowerCase())
+      // Add to beginning and limit to MAX_HISTORY_ITEMS
+      const updated = [addr, ...filtered].slice(0, MAX_HISTORY_ITEMS)
+      
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(DESTINATION_HISTORY_KEY, JSON.stringify(updated))
+      }
+      
+      return updated
+    })
+  }
+
+  // Clear destination history
+  const clearDestinationHistory = () => {
+    setDestinationHistory([])
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(DESTINATION_HISTORY_KEY)
+    }
+  }
+
   // Select address from history
   const handleSelectFromHistory = (addr: string) => {
     setAddress(addr)
+  }
+
+  // Select destination from history
+  const handleSelectDestinationFromHistory = (addr: string) => {
+    setDestinationAddress(addr)
   }
 
   const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
@@ -135,6 +179,8 @@ export default function Home() {
           
           if (destGeocodeResponse.ok) {
             destinationAddressGeocoded = destGeocodeData.address
+            // Save successful destination address to history
+            saveDestinationToHistory(destGeocodeData.address)
           }
         } catch (error) {
           console.error('Destination geocoding error:', error)
@@ -270,6 +316,11 @@ export default function Home() {
               placeholder="Enter destination address..."
               value={destinationAddress}
               onChange={setDestinationAddress}
+            />
+            <AddressHistory
+              addresses={destinationHistory}
+              onSelectAddress={handleSelectDestinationFromHistory}
+              onClearHistory={clearDestinationHistory}
             />
           </div>
 
