@@ -32,6 +32,19 @@ export default function NeighborhoodFinder() {
   const [selectedCityId, setSelectedCityId] = useState<string | undefined>(undefined)
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'both'>('both')
 
+  // Inject spinner animation styles
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const styleId = 'spinner-animation-styles'
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style')
+        style.id = styleId
+        style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }'
+        document.head.appendChild(style)
+      }
+    }
+  }, [])
+
   // Load address history from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -115,7 +128,10 @@ export default function NeighborhoodFinder() {
     setError(null)
     setResults([])
 
-    if (!workLocation) {
+    // Determine the location to use - either from state or by geocoding
+    let locationToUse: { lat: number; lng: number } | null = workLocation
+
+    if (!locationToUse) {
       // Try to geocode the address first
       if (!workAddress) {
         setError('Please enter a work address')
@@ -130,9 +146,9 @@ export default function NeighborhoodFinder() {
         const geocodeData = await geocodeResponse.json()
         
         if (geocodeResponse.ok && geocodeData.location) {
+          locationToUse = geocodeData.location
           setWorkLocation(geocodeData.location)
           saveToHistory(geocodeData.address)
-          // Continue with search using the geocoded location
         } else {
           setError('Could not find location for work address')
           setIsLoading(false)
@@ -146,9 +162,16 @@ export default function NeighborhoodFinder() {
       }
     }
 
+    // Ensure we have a valid location before proceeding
+    if (!locationToUse || !locationToUse.lat || !locationToUse.lng) {
+      setError('Invalid location. Please enter a valid work address.')
+      setIsLoading(false)
+      return
+    }
+
     try {
       const response = await fetch(
-        `/api/neighborhood-finder?lat=${workLocation!.lat}&lng=${workLocation!.lng}&mode=${transportMode}&maxTime=${maxCommuteTime}`
+        `/api/neighborhood-finder?lat=${locationToUse.lat}&lng=${locationToUse.lng}&mode=${transportMode}&maxTime=${maxCommuteTime}`
       )
       const data = await response.json()
 
@@ -156,13 +179,16 @@ export default function NeighborhoodFinder() {
         setResults(data.cities || [])
         if (data.cities && data.cities.length === 0) {
           setError('No cities found within the specified commute time. Try increasing the maximum commute time.')
+        } else {
+          setError(null) // Clear any previous errors
         }
       } else {
         setError(data.error || 'Failed to find neighborhoods')
       }
     } catch (error) {
       console.error('Neighborhood finder error:', error)
-      setError('An error occurred while searching for neighborhoods')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      setError(`An error occurred while searching for neighborhoods: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
@@ -209,7 +235,13 @@ export default function NeighborhoodFinder() {
                 <AddressAutocomplete
                   placeholder="Enter your work address..."
                   value={workAddress}
-                  onChange={setWorkAddress}
+                  onChange={(value) => {
+                    setWorkAddress(value)
+                    // Clear error when user starts typing a new address
+                    if (error) {
+                      setError(null)
+                    }
+                  }}
                   onPlaceSelected={handlePlaceSelected}
                 />
               </div>
@@ -310,9 +342,47 @@ export default function NeighborhoodFinder() {
               borderRadius: '4px',
               cursor: (isLoading || !workAddress) ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s',
-              alignSelf: 'flex-start'
+              alignSelf: 'flex-start',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
           >
+            {isLoading && (
+              <svg
+                style={{
+                  animation: 'spin 1s linear infinite',
+                  width: '16px',
+                  height: '16px',
+                  flexShrink: 0
+                }}
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray="32"
+                  strokeDashoffset="32"
+                  opacity="0.3"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray="32"
+                  strokeDashoffset="24"
+                />
+              </svg>
+            )}
             {isLoading ? 'Searching...' : 'Find Neighborhoods'}
           </button>
         </form>

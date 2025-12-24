@@ -45,6 +45,7 @@ export default function AddressHistory({
           Recent Addresses
         </h3>
         <button
+          type="button"
           onClick={onClearHistory}
           style={{
             padding: '0.25rem 0.5rem',
@@ -67,6 +68,7 @@ export default function AddressHistory({
         {addresses.slice(0, 3).map((addr, index) => (
           <button
             key={index}
+            type="button"
             onClick={() => onSelectAddress(addr)}
             style={{
               padding: '0.5rem',

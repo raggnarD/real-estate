@@ -8,6 +8,7 @@ interface AddressAutocompleteProps {
   placeholder?: string
   value?: string
   onChange?: (value: string) => void
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
 }
 
 export default function AddressAutocomplete({
@@ -15,6 +16,7 @@ export default function AddressAutocomplete({
   placeholder = 'Enter address',
   value,
   onChange,
+  onKeyDown,
 }: AddressAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
@@ -75,6 +77,18 @@ export default function AddressAutocomplete({
         value={value}
         onChange={(e) => {
           if (onChange) onChange(e.target.value)
+        }}
+        onKeyDown={(e) => {
+          // Prevent form submission when Enter is pressed in the address field
+          // This allows users to type without accidentally submitting the form
+          if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault()
+            e.stopPropagation()
+          }
+          // Call custom onKeyDown handler if provided
+          if (onKeyDown) {
+            onKeyDown(e)
+          }
         }}
         style={{
           width: '100%',
