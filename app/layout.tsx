@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Navigation from '@/components/Navigation'
 
 export const metadata: Metadata = {
   title: 'Real Estate App',
@@ -19,6 +20,7 @@ export default function RootLayout({
         backgroundColor: '#fff',
         color: '#000'
       }}>
+        <Navigation />
         {children}
       </body>
     </html>

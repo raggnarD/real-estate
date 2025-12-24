@@ -574,19 +574,10 @@ export default function Home() {
       backgroundColor: '#fff',
       minHeight: '100vh'
     }}>
-      <h1 style={{ 
-        fontSize: '2.5rem', 
-        fontWeight: 'bold', 
-        marginBottom: '1rem',
-        color: '#000'
-      }}>
-        Real Estate App
+      <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem' }}>
+        True Commute Time
       </h1>
-      <p style={{ 
-        fontSize: '1.125rem', 
-        color: '#333',
-        marginBottom: '2rem'
-      }}>
+      <p style={{ color: '#666', marginBottom: '2rem' }}>
         Search for properties and calculate commute times.
       </p>
       
@@ -598,7 +589,7 @@ export default function Home() {
         marginBottom: '2rem'
       }}>
         <h2 style={{ marginTop: 0, color: '#000', marginBottom: '1.5rem' }}>
-          Property Search
+          True Commute Time
         </h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
