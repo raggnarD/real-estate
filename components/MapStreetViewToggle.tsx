@@ -14,7 +14,7 @@ function MapStreetViewToggle({
   width = 400,
   height = 300,
 }: MapStreetViewToggleProps) {
-  const [viewMode, setViewMode] = useState<'street' | 'map'>('street')
+  const [viewMode, setViewMode] = useState<'street' | 'map'>('map')
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const markerRef = useRef<google.maps.Marker | null>(null)

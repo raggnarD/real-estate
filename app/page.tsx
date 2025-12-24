@@ -253,6 +253,73 @@ export default function Home() {
     }
   }
 
+  // Get address from Zillow URL
+  const handleGetAddressFromZillow = async () => {
+    if (!zillowUrl || !zillowUrl.trim()) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Process Zillow URL
+      const zillowResponse = await fetch(
+        `/api/zillow?url=${encodeURIComponent(zillowUrl)}`
+      )
+      const zillowData = await zillowResponse.json()
+      
+      if (zillowResponse.ok && zillowData.address) {
+        // Set the extracted address
+        setAddress(zillowData.address)
+        
+        // Geocode the extracted address
+        const geocodeResponse = await fetch(
+          `/api/geocode?address=${encodeURIComponent(zillowData.address)}`
+        )
+        const geocodeData = await geocodeResponse.json()
+        
+        if (geocodeResponse.ok && geocodeData.location) {
+          // Update results with location for Street View
+          setResults(prev => {
+            // If location already exists and is the same, preserve the object reference
+            if (prev?.location && 
+                Math.abs(prev.location.lat - geocodeData.location.lat) < 0.0001 &&
+                Math.abs(prev.location.lng - geocodeData.location.lng) < 0.0001) {
+              return {
+                ...prev,
+                address: geocodeData.address,
+                location: prev.location, // Preserve object reference
+                zillowData: zillowData
+              }
+            }
+            // New location or no previous location
+            return {
+              ...prev,
+              address: geocodeData.address,
+              location: geocodeData.location,
+              zillowData: zillowData
+            }
+          })
+          
+          // Save to history
+          saveToHistory(geocodeData.address)
+          
+          // Fetch transit stops if bus/train is selected
+          if ((transportMode === 'bus' || transportMode === 'train') && geocodeData.location) {
+            fetchTransitStops(geocodeData.location.lat, geocodeData.location.lng, transportMode)
+          }
+        } else {
+          console.error('Failed to geocode Zillow address:', geocodeData.error)
+        }
+      } else {
+        console.error('Failed to extract address from Zillow URL:', zillowData.error)
+      }
+    } catch (error) {
+      console.error('Error getting address from Zillow URL:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -262,40 +329,86 @@ export default function Home() {
       const searchResults: SearchResults = {}
       let originAddress: string | null = null
       let destinationAddressGeocoded: string | null = null
+      let addressToUse = address // Start with manually entered address
 
-      // Preserve existing results if origin address hasn't changed
-      const originAddressChanged = address !== results?.address
-      
-      // Only clear results if origin address changed
-      if (originAddressChanged) {
-        setResults(null)
-      } else {
-        // Preserve existing location if address hasn't changed
-        if (results?.location) {
-          searchResults.location = results.location
-          searchResults.address = results.address
-          originAddress = results.address
+      // Process Zillow URL first if provided - this can populate the address
+      if (zillowUrl) {
+        try {
+          const zillowResponse = await fetch(
+            `/api/zillow?url=${encodeURIComponent(zillowUrl)}`
+          )
+          const zillowData = await zillowResponse.json()
+          
+          if (zillowResponse.ok) {
+            searchResults.zillowData = zillowData
+            
+            // If address was extracted from Zillow URL, use it (override manual entry if Zillow URL is provided)
+            if (zillowData.address) {
+              addressToUse = zillowData.address
+              setAddress(zillowData.address) // Update the input field
+            }
+          } else {
+            searchResults.error = searchResults.error 
+              ? `${searchResults.error}; ${zillowData.error}`
+              : zillowData.error || 'Failed to process Zillow URL'
+          }
+        } catch (error) {
+          console.error('Zillow processing error:', error)
+          searchResults.error = searchResults.error 
+            ? `${searchResults.error}; Failed to process Zillow URL`
+            : 'Failed to process Zillow URL'
         }
       }
 
+      // Check if origin address actually changed
+      // Compare address strings first (fast check)
+      let originAddressChanged = addressToUse !== results?.address
+      
+      // If address string is different but we have a location, we'll geocode and compare locations
+      // This handles cases where address format differs but location is the same
+      // Don't clear results yet - we'll check after geocoding if location is the same
+      
+      // Preserve existing location if address string matches (definitely hasn't changed)
+      if (!originAddressChanged && results?.location) {
+        searchResults.location = results.location
+        searchResults.address = results.address
+        originAddress = results.address
+      }
+
       // Geocode origin address if provided and it changed
-      if (address && originAddressChanged) {
+      if (addressToUse && originAddressChanged) {
         try {
           const geocodeResponse = await fetch(
-            `/api/geocode?address=${encodeURIComponent(address)}`
+            `/api/geocode?address=${encodeURIComponent(addressToUse)}`
           )
           const geocodeData = await geocodeResponse.json()
           
           if (geocodeResponse.ok) {
-            searchResults.address = geocodeData.address
-            searchResults.location = geocodeData.location
-            originAddress = geocodeData.address
-            // Save successful address to history
-            saveToHistory(geocodeData.address)
+            // Check if this geocodes to the same location as existing results
+            // If so, preserve the existing location object reference
+            if (results?.location &&
+                Math.abs(results.location.lat - geocodeData.location.lat) < 0.0001 &&
+                Math.abs(results.location.lng - geocodeData.location.lng) < 0.0001) {
+              // Same location, preserve object reference - address hasn't actually changed
+              searchResults.location = results.location
+              searchResults.address = results.address || geocodeData.address
+              originAddress = results.address || geocodeData.address
+              originAddressChanged = false // Mark as unchanged to preserve in setResults
+            } else {
+              // Different location or no previous location - address has changed
+              searchResults.address = geocodeData.address
+              searchResults.location = geocodeData.location
+              originAddress = geocodeData.address
+              originAddressChanged = true
+              // Update address field with geocoded address (might be more accurate)
+              setAddress(geocodeData.address)
+              // Save successful address to history
+              saveToHistory(geocodeData.address)
+            }
             
             // Fetch transit stops if bus/train is selected
-            if ((transportMode === 'bus' || transportMode === 'train') && geocodeData.location) {
-              fetchTransitStops(geocodeData.location.lat, geocodeData.location.lng, transportMode)
+            if ((transportMode === 'bus' || transportMode === 'train') && searchResults.location) {
+              fetchTransitStops(searchResults.location.lat, searchResults.location.lng, transportMode)
             }
           } else {
             // Clear location if geocoding fails
@@ -308,7 +421,7 @@ export default function Home() {
           console.error('Geocoding error:', error)
           searchResults.error = 'Failed to geocode address'
         }
-      } else if (address && !originAddressChanged && results?.location) {
+      } else if (addressToUse && !originAddressChanged && results?.location) {
         // Address hasn't changed, but we still need to fetch transit stops if mode changed
         if ((transportMode === 'bus' || transportMode === 'train') && results.location) {
           fetchTransitStops(results.location.lat, results.location.lng, transportMode)
@@ -339,49 +452,54 @@ export default function Home() {
         }
       }
 
-      // Process Zillow URL if provided
-      if (zillowUrl) {
-        try {
-          const zillowResponse = await fetch(
-            `/api/zillow?url=${encodeURIComponent(zillowUrl)}`
-          )
-          const zillowData = await zillowResponse.json()
-          
-          if (zillowResponse.ok) {
-            searchResults.zillowData = zillowData
-          } else {
-            searchResults.error = searchResults.error 
-              ? `${searchResults.error}; ${zillowData.error}`
-              : zillowData.error || 'Failed to process Zillow URL'
-          }
-        } catch (error) {
-          console.error('Zillow processing error:', error)
-          searchResults.error = searchResults.error 
-            ? `${searchResults.error}; Failed to process Zillow URL`
-            : 'Failed to process Zillow URL'
-        }
-      }
 
       // Update results, preserving origin location if it hasn't changed
       setResults(prev => {
         // If origin address didn't change, preserve existing location and address completely
         if (!originAddressChanged && prev?.location) {
-          // Only update if there are actual changes (like zillowData)
-          const hasChanges = Object.keys(searchResults).some(key => 
-            key !== 'location' && key !== 'address' && searchResults[key as keyof SearchResults] !== prev[key as keyof SearchResults]
-          )
+          // Check if there are actual changes to non-location/address fields
+          // Deep compare zillowData if it exists
+          let hasChanges = false
+          if (searchResults.zillowData && prev.zillowData) {
+            hasChanges = searchResults.zillowData.zpid !== prev.zillowData.zpid ||
+                        searchResults.zillowData.url !== prev.zillowData.url
+          } else if (searchResults.zillowData !== prev.zillowData) {
+            hasChanges = true
+          }
+          
+          if (searchResults.error !== prev.error) {
+            hasChanges = true
+          }
+          
           if (!hasChanges) {
-            // No changes, return previous to prevent re-render
+            // No changes to origin-related fields, return previous to prevent re-render
+            // This is critical when only destination address changes
             return prev
           }
+          
+          // There are changes (like zillowData or error), but preserve location and address object references
           return { 
             ...prev, 
             ...searchResults,
-            location: prev.location, // Keep same object reference
-            address: prev.address 
+            location: prev.location, // Keep same object reference - critical for preventing re-render
+            address: prev.address    // Keep same string reference
           }
         }
-        // Origin changed or no previous results - use new searchResults
+        
+        // Origin changed or no previous results
+        // If we have a location in searchResults, check if it matches previous location
+        if (searchResults.location && prev?.location &&
+            Math.abs(searchResults.location.lat - prev.location.lat) < 0.0001 &&
+            Math.abs(searchResults.location.lng - prev.location.lng) < 0.0001) {
+          // Same location, preserve object reference
+          return {
+            ...searchResults,
+            location: prev.location, // Preserve object reference
+            address: prev.address || searchResults.address
+          }
+        }
+        
+        // Use new searchResults
         return searchResults
       })
 
@@ -483,31 +601,64 @@ export default function Home() {
           Property Search
         </h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div>
-            <label style={{ 
-              display: 'block', 
-              marginBottom: '0.5rem', 
-              color: '#000', 
-              fontWeight: '500',
-              fontSize: '1rem'
-            }}>
-              Zillow URL:
-            </label>
-            <input 
-              type="url" 
-              placeholder="https://www.zillow.com/homedetails/..."
-              value={zillowUrl}
-              onChange={(e) => setZillowUrl(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                color: '#000',
-                backgroundColor: '#fff'
-              }}
-            />
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem', 
+                color: '#000', 
+                fontWeight: '500',
+                fontSize: '1rem'
+              }}>
+                Zillow URL:
+              </label>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                <input 
+                  type="url" 
+                  placeholder="https://www.zillow.com/homedetails/..."
+                  value={zillowUrl}
+                  onChange={(e) => setZillowUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && zillowUrl && zillowUrl.trim()) {
+                      e.preventDefault()
+                      handleGetAddressFromZillow()
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    fontSize: '1rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    color: '#000',
+                    backgroundColor: '#fff',
+                    boxSizing: 'border-box'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleGetAddressFromZillow}
+                  disabled={!zillowUrl || !zillowUrl.trim() || isLoading}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    backgroundColor: (!zillowUrl || !zillowUrl.trim() || isLoading) ? '#e0e0e0' : '#0070f3',
+                    color: (!zillowUrl || !zillowUrl.trim() || isLoading) ? '#999' : '#fff',
+                    cursor: (!zillowUrl || !zillowUrl.trim() || isLoading) ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Get Address
+                </button>
+              </div>
+            </div>
+            <div style={{ flexShrink: 0, width: '400px' }}>
+              {/* Spacer to match address field width */}
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
