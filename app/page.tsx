@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 import AddressHistory from '@/components/AddressHistory'
+import StreetView from '@/components/StreetView'
 
 interface SearchResults {
   address?: string
@@ -51,6 +52,7 @@ export default function Home() {
   const [addressHistory, setAddressHistory] = useState<string[]>([])
   const [destinationHistory, setDestinationHistory] = useState<string[]>([])
   const [commuteResults, setCommuteResults] = useState<CommuteResults | null>(null)
+  const [destinationLocation, setDestinationLocation] = useState<{ lat: number; lng: number } | null>(null)
 
   // Load address history from localStorage on mount
   useEffect(() => {
@@ -132,19 +134,68 @@ export default function Home() {
   }
 
   // Select address from history
-  const handleSelectFromHistory = (addr: string) => {
+  const handleSelectFromHistory = async (addr: string) => {
     setAddress(addr)
+    // Geocode immediately to show Street View
+    try {
+      const geocodeResponse = await fetch(
+        `/api/geocode?address=${encodeURIComponent(addr)}`
+      )
+      const geocodeData = await geocodeResponse.json()
+      
+      if (geocodeResponse.ok && geocodeData.location) {
+        setResults(prev => ({ 
+          ...prev, 
+          address: geocodeData.address,
+          location: geocodeData.location 
+        }))
+        // Fetch transit stops if bus/train is selected
+        if ((transportMode === 'bus' || transportMode === 'train') && geocodeData.location) {
+          fetchTransitStops(geocodeData.location.lat, geocodeData.location.lng, transportMode)
+        }
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error)
+    }
   }
 
   // Select destination from history
-  const handleSelectDestinationFromHistory = (addr: string) => {
+  const handleSelectDestinationFromHistory = async (addr: string) => {
     setDestinationAddress(addr)
+    // Geocode immediately to show Street View
+    try {
+      const geocodeResponse = await fetch(
+        `/api/geocode?address=${encodeURIComponent(addr)}`
+      )
+      const geocodeData = await geocodeResponse.json()
+      
+      if (geocodeResponse.ok && geocodeData.location) {
+        setDestinationLocation(geocodeData.location)
+      } else {
+        setDestinationLocation(null)
+      }
+    } catch (error) {
+      console.error('Destination geocoding error:', error)
+      setDestinationLocation(null)
+    }
   }
 
   const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
     setSelectedPlace(place)
     if (place.formatted_address) {
       setAddress(place.formatted_address)
+    }
+    // Set location immediately if available from place selection
+    if (place.geometry?.location) {
+      const location = {
+        lat: typeof place.geometry.location.lat === 'function' 
+          ? place.geometry.location.lat() 
+          : place.geometry.location.lat,
+        lng: typeof place.geometry.location.lng === 'function'
+          ? place.geometry.location.lng()
+          : place.geometry.location.lng
+      }
+      setResults(prev => ({ ...prev, location }))
     }
     // Reset transit-related state when address changes
     setTransitStops([])
@@ -212,6 +263,10 @@ export default function Home() {
               fetchTransitStops(geocodeData.location.lat, geocodeData.location.lng, transportMode)
             }
           } else {
+            // Clear location if geocoding fails
+            if (searchResults.location) {
+              searchResults.location = undefined
+            }
             searchResults.error = geocodeData.error || 'Failed to geocode address'
           }
         } catch (error) {
@@ -230,8 +285,14 @@ export default function Home() {
           
           if (destGeocodeResponse.ok) {
             destinationAddressGeocoded = destGeocodeData.address
+            // Store destination location for Street View
+            if (destGeocodeData.location) {
+              setDestinationLocation(destGeocodeData.location)
+            }
             // Save successful destination address to history
             saveDestinationToHistory(destGeocodeData.address)
+          } else {
+            setDestinationLocation(null)
           }
         } catch (error) {
           console.error('Destination geocoding error:', error)
@@ -388,49 +449,77 @@ export default function Home() {
             />
           </div>
 
-          <div>
-            <label style={{ 
-              display: 'block', 
-              marginBottom: '0.5rem', 
-              color: '#000', 
-              fontWeight: '500',
-              fontSize: '1rem'
-            }}>
-              Address (with autocomplete):
-            </label>
-            <AddressAutocomplete
-              placeholder="Start typing an address..."
-              value={address}
-              onChange={setAddress}
-              onPlaceSelected={handlePlaceSelected}
-            />
-            <AddressHistory
-              addresses={addressHistory}
-              onSelectAddress={handleSelectFromHistory}
-              onClearHistory={clearHistory}
-            />
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem', 
+                color: '#000', 
+                fontWeight: '500',
+                fontSize: '1rem'
+              }}>
+                Address (with autocomplete):
+              </label>
+              <AddressAutocomplete
+                placeholder="Start typing an address..."
+                value={address}
+                onChange={setAddress}
+                onPlaceSelected={handlePlaceSelected}
+              />
+              <AddressHistory
+                addresses={addressHistory}
+                onSelectAddress={handleSelectFromHistory}
+                onClearHistory={clearHistory}
+              />
+            </div>
+            <div style={{ flexShrink: 0 }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem', 
+                color: '#000', 
+                fontWeight: '500',
+                fontSize: '1rem'
+              }}>
+                Street View:
+              </label>
+              <StreetView location={results?.location || null} width={400} height={300} />
+            </div>
           </div>
 
-          <div>
-            <label style={{ 
-              display: 'block', 
-              marginBottom: '0.5rem', 
-              color: '#000', 
-              fontWeight: '500',
-              fontSize: '1rem'
-            }}>
-              Destination Address (for commute):
-            </label>
-            <AddressAutocomplete
-              placeholder="Enter destination address..."
-              value={destinationAddress}
-              onChange={setDestinationAddress}
-            />
-            <AddressHistory
-              addresses={destinationHistory}
-              onSelectAddress={handleSelectDestinationFromHistory}
-              onClearHistory={clearDestinationHistory}
-            />
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem', 
+                color: '#000', 
+                fontWeight: '500',
+                fontSize: '1rem'
+              }}>
+                Destination Address (for commute):
+              </label>
+              <AddressAutocomplete
+                placeholder="Enter destination address..."
+                value={destinationAddress}
+                onChange={setDestinationAddress}
+              />
+              <AddressHistory
+                addresses={destinationHistory}
+                onSelectAddress={handleSelectDestinationFromHistory}
+                onClearHistory={clearDestinationHistory}
+              />
+            </div>
+            <div style={{ flexShrink: 0 }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem', 
+                color: '#000', 
+                fontWeight: '500',
+                fontSize: '1rem'
+              }}>
+                Street View:
+              </label>
+              <StreetView location={destinationLocation} width={400} height={300} />
+            </div>
           </div>
 
           <div>
