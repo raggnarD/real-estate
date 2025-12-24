@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 import AddressHistory from '@/components/AddressHistory'
 import MapStreetViewToggle from '@/components/MapStreetViewToggle'
+import CommuteMap from '@/components/CommuteMap'
 
 interface SearchResults {
   address?: string
@@ -634,68 +635,8 @@ export default function Home() {
           {/* Transit Stop Selection - shown when bus/train is selected */}
           {(transportMode === 'bus' || transportMode === 'train') && results?.location && (
             <>
-              <div>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '0.5rem', 
-                  color: '#000', 
-                  fontWeight: '500',
-                  fontSize: '1rem'
-                }}>
-                  Nearest {transportMode === 'bus' ? 'Bus' : 'Train'} Stops:
-                </label>
-                {isLoadingStops ? (
-                  <div style={{ padding: '1rem', color: '#666' }}>Loading stops...</div>
-                ) : transitStops.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {transitStops.map((stop, index) => (
-                      <label
-                        key={stop.placeId}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          padding: '0.75rem',
-                          border: selectedStop?.placeId === stop.placeId ? '2px solid #0070f3' : '1px solid #ccc',
-                          borderRadius: '4px',
-                          backgroundColor: selectedStop?.placeId === stop.placeId ? '#e6f2ff' : '#fff',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <input
-                          type="radio"
-                          name="transitStop"
-                          value={stop.placeId}
-                          checked={selectedStop?.placeId === stop.placeId}
-                          onChange={() => {
-                            setSelectedStop(stop)
-                            setLeg1Mode('driving') // Default to driving when stop is selected
-                          }}
-                          style={{ marginRight: '0.75rem' }}
-                        />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>
-                            {stop.name}
-                          </div>
-                          <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
-                            {stop.address}
-                          </div>
-                          <div style={{ fontSize: '0.875rem', color: '#0070f3' }}>
-                            {stop.distance} away
-                          </div>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ padding: '1rem', color: '#666', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                    No {transportMode === 'bus' ? 'bus' : 'train'} stops found nearby. Try a different address.
-                  </div>
-                )}
-              </div>
-
-              {/* Leg 1 Mode Selector - shown when a stop is selected */}
-              {selectedStop && (
-                <div>
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
                   <label style={{ 
                     display: 'block', 
                     marginBottom: '0.5rem', 
@@ -703,24 +644,102 @@ export default function Home() {
                     fontWeight: '500',
                     fontSize: '1rem'
                   }}>
-                    How to get to stop?
+                    Nearest {transportMode === 'bus' ? 'Bus' : 'Train'} Stops:
                   </label>
-                  <select
-                    value={leg1Mode || 'driving'}
-                    onChange={(e) => setLeg1Mode(e.target.value as 'walking' | 'driving')}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      fontSize: '1rem',
-                      border: '1px solid #ccc',
-                      borderRadius: '4px',
-                      color: '#000',
-                      backgroundColor: '#fff'
-                    }}
-                  >
-                    <option value="walking">🚶 Walk</option>
-                    <option value="driving">🚗 Drive</option>
-                  </select>
+                  {isLoadingStops ? (
+                    <div style={{ padding: '1rem', color: '#666' }}>Loading stops...</div>
+                  ) : transitStops.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {transitStops.map((stop, index) => (
+                        <label
+                          key={stop.placeId}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '0.75rem',
+                            border: selectedStop?.placeId === stop.placeId ? '2px solid #0070f3' : '1px solid #ccc',
+                            borderRadius: '4px',
+                            backgroundColor: selectedStop?.placeId === stop.placeId ? '#e6f2ff' : '#fff',
+                            cursor: 'pointer',
+                            width: '100%',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name="transitStop"
+                            value={stop.placeId}
+                            checked={selectedStop?.placeId === stop.placeId}
+                            onChange={() => {
+                              setSelectedStop(stop)
+                              setLeg1Mode('driving') // Default to driving when stop is selected
+                            }}
+                            style={{ marginRight: '0.75rem' }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>
+                              {stop.name}
+                            </div>
+                            <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
+                              {stop.address}
+                            </div>
+                            <div style={{ fontSize: '0.875rem', color: '#0070f3' }}>
+                              {stop.distance} away
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ padding: '1rem', color: '#666', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                      No {transportMode === 'bus' ? 'bus' : 'train'} stops found nearby. Try a different address.
+                    </div>
+                  )}
+                </div>
+                <div style={{ flexShrink: 0 }}>
+                  <MapStreetViewToggle 
+                    key="transit-stop-view" 
+                    location={selectedStop ? selectedStop.location : null} 
+                    width={400} 
+                    height={300} 
+                  />
+                </div>
+              </div>
+
+              {/* Leg 1 Mode Selector - shown when a stop is selected */}
+              {selectedStop && (
+                <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '0.5rem', 
+                      color: '#000', 
+                      fontWeight: '500',
+                      fontSize: '1rem'
+                    }}>
+                      How to get to stop?
+                    </label>
+                    <select
+                      value={leg1Mode || 'driving'}
+                      onChange={(e) => setLeg1Mode(e.target.value as 'walking' | 'driving')}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        fontSize: '1rem',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        color: '#000',
+                        backgroundColor: '#fff',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <option value="walking">🚶 Walk</option>
+                      <option value="driving">🚗 Drive</option>
+                    </select>
+                  </div>
+                  <div style={{ flexShrink: 0, width: '400px' }}>
+                    {/* Spacer to match address field width */}
+                  </div>
                 </div>
               )}
             </>
@@ -745,53 +764,6 @@ export default function Home() {
           </button>
         </form>
       </div>
-
-      {results && (
-        <div style={{ 
-          border: '1px solid #ddd', 
-          borderRadius: '8px', 
-          padding: '2rem',
-          backgroundColor: results.error ? '#fee' : '#efe'
-        }}>
-          <h2 style={{ marginTop: 0, color: '#000', marginBottom: '1rem' }}>
-            Search Results
-          </h2>
-          
-          {results.error && (
-            <div style={{ 
-              padding: '1rem', 
-              backgroundColor: '#fcc', 
-              borderRadius: '4px',
-              color: '#c00',
-              marginBottom: '1rem'
-            }}>
-              <strong>Error:</strong> {results.error}
-            </div>
-          )}
-
-          {results.address && (
-            <div style={{ marginBottom: '1rem' }}>
-              <strong>Address:</strong> {results.address}
-            </div>
-          )}
-
-          {results.location && (
-            <div style={{ marginBottom: '1rem' }}>
-              <strong>Location:</strong> {results.location.lat.toFixed(6)}, {results.location.lng.toFixed(6)}
-            </div>
-          )}
-
-          {results.zillowData && (
-            <div style={{ marginBottom: '1rem' }}>
-              <strong>Zillow ZPID:</strong> {results.zillowData.zpid}
-              <br />
-              <strong>URL:</strong> <a href={results.zillowData.url} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3' }}>
-                {results.zillowData.url}
-              </a>
-            </div>
-          )}
-        </div>
-      )}
 
       {(commuteResults || (destinationAddress && results)) && (
         <div style={{ 
@@ -831,60 +803,105 @@ export default function Home() {
 
           {/* Multi-leg transit results */}
           {commuteResults?.leg1 && commuteResults?.leg2 && commuteResults?.total && (
-            <>
-              <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
-                <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Leg 1: {leg1Mode === 'walking' ? '🚶 Walking' : '🚗 Driving'} to {transitType === 'bus' ? 'Bus' : 'Train'} Stop
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Leg 1: {leg1Mode === 'walking' ? '🚶 Walking' : '🚗 Driving'} to {transitType === 'bus' ? 'Bus' : 'Train'} Stop
+                  </div>
+                  <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                    {commuteResults.leg1.duration} ({commuteResults.leg1.distance})
+                  </div>
                 </div>
-                <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
-                  {commuteResults.leg1.duration} ({commuteResults.leg1.distance})
+
+                <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Leg 2: {transitType === 'bus' ? '🚌 Bus' : '🚂 Train'} to Destination
+                  </div>
+                  <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                    {commuteResults.leg2.duration} ({commuteResults.leg2.distance})
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#e6f2ff', borderRadius: '4px', border: '2px solid #0070f3' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Total Journey
+                  </div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem', color: '#0070f3' }}>
+                    {commuteResults.total.duration}
+                  </div>
+                  <div style={{ fontSize: '1rem', color: '#666' }}>
+                    {commuteResults.total.distance}
+                  </div>
                 </div>
               </div>
 
-              <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
-                <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Leg 2: {transitType === 'bus' ? '🚌 Bus' : '🚂 Train'} to Destination
+              {/* Commute Route Map */}
+              {results?.location && destinationLocation && selectedStop && leg1Mode && transitType && (
+                <div style={{ flexShrink: 0 }}>
+                  <CommuteMap
+                    origin={results.location}
+                    transitStop={{
+                      lat: selectedStop.location.lat,
+                      lng: selectedStop.location.lng,
+                      name: selectedStop.name,
+                    }}
+                    destination={destinationLocation}
+                    leg1Mode={leg1Mode}
+                    transitType={transitType}
+                    width={400}
+                    height={300}
+                  />
                 </div>
-                <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
-                  {commuteResults.leg2.duration} ({commuteResults.leg2.distance})
-                </div>
-              </div>
-
-              <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#e6f2ff', borderRadius: '4px', border: '2px solid #0070f3' }}>
-                <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Total Journey
-                </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem', color: '#0070f3' }}>
-                  {commuteResults.total.duration}
-                </div>
-                <div style={{ fontSize: '1rem', color: '#666' }}>
-                  {commuteResults.total.distance}
-                </div>
-              </div>
-            </>
+              )}
+            </div>
           )}
 
           {/* Single-leg results (non-transit or old format) */}
           {commuteResults?.duration && !commuteResults?.leg1 && (
-            <div style={{ marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: '600' }}>
-              <strong>Travel Time:</strong> {commuteResults.duration}
-            </div>
-          )}
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    {commuteResults.mode === 'transit' ? '🚌 Bus / Train' :
+                     commuteResults.mode === 'walking' ? '🚶 Walking' :
+                     commuteResults.mode === 'bicycling' ? '🚴 Bicycling' :
+                     '🚗 Driving'} to Destination
+                  </div>
+                  <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                    {commuteResults.duration} {commuteResults.distance && `(${commuteResults.distance})`}
+                  </div>
+                </div>
 
-          {commuteResults?.distance && !commuteResults?.leg1 && (
-            <div style={{ marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: '600' }}>
-              <strong>Distance:</strong> {commuteResults.distance}
-            </div>
-          )}
+                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#e6f2ff', borderRadius: '4px', border: '2px solid #0070f3' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Total Journey
+                  </div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem', color: '#0070f3' }}>
+                    {commuteResults.duration}
+                  </div>
+                  {commuteResults.distance && (
+                    <div style={{ fontSize: '1rem', color: '#666' }}>
+                      {commuteResults.distance}
+                    </div>
+                  )}
+                </div>
+              </div>
 
-          {commuteResults?.mode && !commuteResults?.leg1 && (
-            <div style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
-              <strong>Transportation Mode:</strong> {
-                commuteResults.mode === 'transit' ? '🚌 Bus / Train' :
-                commuteResults.mode === 'walking' ? '🚶 Walking' :
-                commuteResults.mode === 'bicycling' ? '🚴 Bicycling' :
-                '🚗 Driving'
-              }
+              {/* Commute Route Map for single-leg journeys */}
+              {results?.location && destinationLocation && (
+                <div style={{ flexShrink: 0 }}>
+                  <CommuteMap
+                    origin={results.location}
+                    destination={destinationLocation}
+                    mode={commuteResults.mode === 'transit' ? 'transit' : 
+                          commuteResults.mode === 'walking' ? 'walking' :
+                          commuteResults.mode === 'bicycling' ? 'bicycling' : 'driving'}
+                    width={400}
+                    height={300}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
