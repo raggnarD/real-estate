@@ -11,10 +11,23 @@ interface SearchResults {
   error?: string
 }
 
+interface TransitStop {
+  name: string
+  address: string
+  location: { lat: number; lng: number }
+  distance: string
+  distanceValue: number
+  placeId: string
+}
+
 interface CommuteResults {
   distance?: string
   duration?: string
   mode?: string
+  leg1?: { distance: string; duration: string; distanceValue: number; durationValue: number }
+  leg2?: { distance: string; duration: string; distanceValue: number; durationValue: number }
+  total?: { distance: string; duration: string; distanceValue: number; durationValue: number }
+  transitType?: 'bus' | 'train'
   error?: string
 }
 
@@ -26,18 +39,18 @@ export default function Home() {
   const [address, setAddress] = useState('')
   const [destinationAddress, setDestinationAddress] = useState('')
   const [zillowUrl, setZillowUrl] = useState('')
-  const [transportMode, setTransportMode] = useState<'driving' | 'transit' | 'walking' | 'bicycling'>('driving')
+  const [transportMode, setTransportMode] = useState<'driving' | 'bus' | 'train' | 'walking' | 'bicycling'>('driving')
+  const [transitType, setTransitType] = useState<'bus' | 'train' | null>(null)
+  const [transitStops, setTransitStops] = useState<TransitStop[]>([])
+  const [selectedStop, setSelectedStop] = useState<TransitStop | null>(null)
+  const [leg1Mode, setLeg1Mode] = useState<'walking' | 'driving' | null>(null)
+  const [isLoadingStops, setIsLoadingStops] = useState(false)
   const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null)
   const [results, setResults] = useState<SearchResults | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [addressHistory, setAddressHistory] = useState<string[]>([])
   const [destinationHistory, setDestinationHistory] = useState<string[]>([])
-  const [commuteResults, setCommuteResults] = useState<{
-    distance?: string
-    duration?: string
-    mode?: string
-    error?: string
-  } | null>(null)
+  const [commuteResults, setCommuteResults] = useState<CommuteResults | null>(null)
 
   // Load address history from localStorage on mount
   useEffect(() => {
@@ -133,6 +146,38 @@ export default function Home() {
     if (place.formatted_address) {
       setAddress(place.formatted_address)
     }
+    // Reset transit-related state when address changes
+    setTransitStops([])
+    setSelectedStop(null)
+    setLeg1Mode(null)
+  }
+
+  // Fetch transit stops when address is geocoded and bus/train is selected
+  const fetchTransitStops = async (lat: number, lng: number, type: 'bus' | 'train') => {
+    setIsLoadingStops(true)
+    try {
+      const response = await fetch(
+        `/api/transit-stops?lat=${lat}&lng=${lng}&type=${type}`
+      )
+      const data = await response.json()
+      
+      if (response.ok && data.stops) {
+        setTransitStops(data.stops)
+        // Auto-select first stop if available
+        if (data.stops.length > 0) {
+          setSelectedStop(data.stops[0])
+        }
+      } else {
+        setTransitStops([])
+        setSelectedStop(null)
+      }
+    } catch (error) {
+      console.error('Error fetching transit stops:', error)
+      setTransitStops([])
+      setSelectedStop(null)
+    } finally {
+      setIsLoadingStops(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,6 +205,11 @@ export default function Home() {
             originAddress = geocodeData.address
             // Save successful address to history
             saveToHistory(geocodeData.address)
+            
+            // Fetch transit stops if bus/train is selected
+            if ((transportMode === 'bus' || transportMode === 'train') && geocodeData.location) {
+              fetchTransitStops(geocodeData.location.lat, geocodeData.location.lng, transportMode)
+            }
           } else {
             searchResults.error = geocodeData.error || 'Failed to geocode address'
           }
@@ -215,17 +265,48 @@ export default function Home() {
       // Calculate commute if both addresses are geocoded
       if (originAddress && destinationAddressGeocoded) {
         try {
-          console.log('Calculating commute:', { originAddress, destinationAddressGeocoded, transportMode })
-          const commuteResponse = await fetch(
-            `/api/commute?origin=${encodeURIComponent(originAddress)}&destination=${encodeURIComponent(destinationAddressGeocoded)}&mode=${transportMode}`
-          )
-          const commuteData = await commuteResponse.json()
-          console.log('Commute response:', commuteData)
-          
-          if (commuteResponse.ok) {
-            setCommuteResults(commuteData)
+          // Check if this is a multi-leg transit journey
+          if ((transportMode === 'bus' || transportMode === 'train') && selectedStop && leg1Mode) {
+            console.log('Calculating multi-leg commute:', { 
+              originAddress, 
+              destinationAddressGeocoded, 
+              transportMode,
+              transitStop: selectedStop.placeId,
+              leg1Mode,
+              transitType: transportMode
+            })
+            const commuteResponse = await fetch(
+              `/api/commute?origin=${encodeURIComponent(originAddress)}&destination=${encodeURIComponent(destinationAddressGeocoded)}&mode=transit&transitStop=${encodeURIComponent(selectedStop.placeId)}&leg1Mode=${leg1Mode}&transitType=${transportMode}`
+            )
+            const commuteData = await commuteResponse.json()
+            console.log('Multi-leg commute response:', commuteData)
+            
+            if (commuteResponse.ok) {
+              setCommuteResults(commuteData)
+            } else {
+              setCommuteResults({ error: commuteData.error || 'Failed to calculate commute' })
+            }
+          } else if (transportMode === 'bus' || transportMode === 'train') {
+            // Bus/train selected but missing required info
+            if (!selectedStop) {
+              setCommuteResults({ error: 'Please select a transit stop' })
+            } else if (!leg1Mode) {
+              setCommuteResults({ error: 'Please select how to get to the transit stop (walk or drive)' })
+            }
           } else {
-            setCommuteResults({ error: commuteData.error || 'Failed to calculate commute' })
+            // Standard single-leg journey
+            console.log('Calculating commute:', { originAddress, destinationAddressGeocoded, transportMode })
+            const commuteResponse = await fetch(
+              `/api/commute?origin=${encodeURIComponent(originAddress)}&destination=${encodeURIComponent(destinationAddressGeocoded)}&mode=${transportMode}`
+            )
+            const commuteData = await commuteResponse.json()
+            console.log('Commute response:', commuteData)
+            
+            if (commuteResponse.ok) {
+              setCommuteResults(commuteData)
+            } else {
+              setCommuteResults({ error: commuteData.error || 'Failed to calculate commute' })
+            }
           }
         } catch (error) {
           console.error('Commute calculation error:', error)
@@ -336,7 +417,25 @@ export default function Home() {
             </label>
             <select
               value={transportMode}
-              onChange={(e) => setTransportMode(e.target.value as 'driving' | 'transit' | 'walking' | 'bicycling')}
+              onChange={(e) => {
+                const newMode = e.target.value as 'driving' | 'bus' | 'train' | 'walking' | 'bicycling'
+                setTransportMode(newMode)
+                setCommuteResults(null) // Clear previous commute results
+                
+                // Reset transit-related state when switching modes
+                if (newMode === 'bus' || newMode === 'train') {
+                  setTransitType(newMode)
+                  // Fetch stops if we have location
+                  if (results?.location) {
+                    fetchTransitStops(results.location.lat, results.location.lng, newMode)
+                  }
+                } else {
+                  setTransitType(null)
+                  setTransitStops([])
+                  setSelectedStop(null)
+                  setLeg1Mode(null)
+                }
+              }}
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -348,11 +447,105 @@ export default function Home() {
               }}
             >
               <option value="driving">🚗 Driving</option>
-              <option value="transit">🚌 Bus / Train (Transit)</option>
+              <option value="bus">🚌 Bus</option>
+              <option value="train">🚂 Train</option>
               <option value="walking">🚶 Walking</option>
               <option value="bicycling">🚴 Bicycling</option>
             </select>
           </div>
+
+          {/* Transit Stop Selection - shown when bus/train is selected */}
+          {(transportMode === 'bus' || transportMode === 'train') && results?.location && (
+            <>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  color: '#000', 
+                  fontWeight: '500',
+                  fontSize: '1rem'
+                }}>
+                  Nearest {transportMode === 'bus' ? 'Bus' : 'Train'} Stops:
+                </label>
+                {isLoadingStops ? (
+                  <div style={{ padding: '1rem', color: '#666' }}>Loading stops...</div>
+                ) : transitStops.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {transitStops.map((stop, index) => (
+                      <label
+                        key={stop.placeId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '0.75rem',
+                          border: selectedStop?.placeId === stop.placeId ? '2px solid #0070f3' : '1px solid #ccc',
+                          borderRadius: '4px',
+                          backgroundColor: selectedStop?.placeId === stop.placeId ? '#e6f2ff' : '#fff',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="transitStop"
+                          value={stop.placeId}
+                          checked={selectedStop?.placeId === stop.placeId}
+                          onChange={() => setSelectedStop(stop)}
+                          style={{ marginRight: '0.75rem' }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>
+                            {stop.name}
+                          </div>
+                          <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
+                            {stop.address}
+                          </div>
+                          <div style={{ fontSize: '0.875rem', color: '#0070f3' }}>
+                            {stop.distance} away
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ padding: '1rem', color: '#666', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                    No {transportMode === 'bus' ? 'bus' : 'train'} stops found nearby. Try a different address.
+                  </div>
+                )}
+              </div>
+
+              {/* Leg 1 Mode Selector - shown when a stop is selected */}
+              {selectedStop && (
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    color: '#000', 
+                    fontWeight: '500',
+                    fontSize: '1rem'
+                  }}>
+                    How to get to stop?
+                  </label>
+                  <select
+                    value={leg1Mode || ''}
+                    onChange={(e) => setLeg1Mode(e.target.value as 'walking' | 'driving' || null)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      fontSize: '1rem',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      color: '#000',
+                      backgroundColor: '#fff'
+                    }}
+                  >
+                    <option value="">Select...</option>
+                    <option value="walking">🚶 Walk</option>
+                    <option value="driving">🚗 Drive</option>
+                  </select>
+                </div>
+              )}
+            </>
+          )}
 
           <div>
             <label style={{ 
@@ -484,19 +677,55 @@ export default function Home() {
             </div>
           )}
 
-          {commuteResults?.duration && (
+          {/* Multi-leg transit results */}
+          {commuteResults?.leg1 && commuteResults?.leg2 && commuteResults?.total && (
+            <>
+              <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
+                <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Leg 1: {leg1Mode === 'walking' ? '🚶 Walking' : '🚗 Driving'} to {transitType === 'bus' ? 'Bus' : 'Train'} Stop
+                </div>
+                <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                  {commuteResults.leg1.duration} ({commuteResults.leg1.distance})
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
+                <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Leg 2: {transitType === 'bus' ? '🚌 Bus' : '🚂 Train'} to Destination
+                </div>
+                <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                  {commuteResults.leg2.duration} ({commuteResults.leg2.distance})
+                </div>
+              </div>
+
+              <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#e6f2ff', borderRadius: '4px', border: '2px solid #0070f3' }}>
+                <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Total Journey
+                </div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem', color: '#0070f3' }}>
+                  {commuteResults.total.duration}
+                </div>
+                <div style={{ fontSize: '1rem', color: '#666' }}>
+                  {commuteResults.total.distance}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Single-leg results (non-transit or old format) */}
+          {commuteResults?.duration && !commuteResults?.leg1 && (
             <div style={{ marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: '600' }}>
               <strong>Travel Time:</strong> {commuteResults.duration}
             </div>
           )}
 
-          {commuteResults?.distance && (
+          {commuteResults?.distance && !commuteResults?.leg1 && (
             <div style={{ marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: '600' }}>
               <strong>Distance:</strong> {commuteResults.distance}
             </div>
           )}
 
-          {commuteResults?.mode && (
+          {commuteResults?.mode && !commuteResults?.leg1 && (
             <div style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
               <strong>Transportation Mode:</strong> {
                 commuteResults.mode === 'transit' ? '🚌 Bus / Train' :
