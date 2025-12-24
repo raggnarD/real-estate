@@ -18,10 +18,15 @@ export default function AddressHistory({
   return (
     <div style={{
       marginTop: '1rem',
+      marginLeft: 0,
+      marginRight: 0,
       padding: '1rem',
       backgroundColor: '#f0f0f0',
       borderRadius: '4px',
-      border: '1px solid #ddd'
+      border: '1px solid #ddd',
+      width: '100%',
+      maxWidth: '100%',
+      boxSizing: 'border-box'
     }}>
       <div style={{
         display: 'flex',
@@ -72,7 +77,9 @@ export default function AddressHistory({
               border: '1px solid #ddd',
               borderRadius: '4px',
               cursor: 'pointer',
-              transition: 'background-color 0.2s'
+              transition: 'background-color 0.2s',
+              width: '100%',
+              boxSizing: 'border-box'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = '#f5f5f5'

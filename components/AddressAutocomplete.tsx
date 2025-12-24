@@ -65,7 +65,7 @@ export default function AddressAutocomplete({
   }, [onPlaceSelected, onChange])
 
   return (
-    <div style={{ position: 'relative', width: '100%' }}>
+    <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
       <input
         ref={inputRef}
         type="text"
@@ -76,12 +76,13 @@ export default function AddressAutocomplete({
         }}
         style={{
           width: '100%',
-          padding: '0.75rem',
-          fontSize: '1rem',
-          border: '1px solid #ccc',
+          padding: '0.5rem',
+          fontSize: '0.875rem',
+          border: '1px solid #ddd',
           borderRadius: '4px',
-          color: '#000',
+          color: '#333',
           backgroundColor: '#fff',
+          boxSizing: 'border-box'
         }}
       />
       {isLoading && (

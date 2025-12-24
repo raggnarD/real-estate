@@ -450,7 +450,7 @@ export default function Home() {
           </div>
 
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <label style={{ 
                 display: 'block', 
                 marginBottom: '0.5rem', 
@@ -460,12 +460,19 @@ export default function Home() {
               }}>
                 Address (with autocomplete):
               </label>
-              <AddressAutocomplete
-                placeholder="Start typing an address..."
-                value={address}
-                onChange={setAddress}
-                onPlaceSelected={handlePlaceSelected}
-              />
+              <div style={{ 
+                width: '100%', 
+                boxSizing: 'border-box',
+                margin: 0,
+                padding: 0
+              }}>
+                <AddressAutocomplete
+                  placeholder="Start typing an address..."
+                  value={address}
+                  onChange={setAddress}
+                  onPlaceSelected={handlePlaceSelected}
+                />
+              </div>
               <AddressHistory
                 addresses={addressHistory}
                 onSelectAddress={handleSelectFromHistory}
