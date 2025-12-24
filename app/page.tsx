@@ -34,7 +34,7 @@ interface CommuteResults {
 
 const ADDRESS_HISTORY_KEY = 'real-estate-address-history'
 const DESTINATION_HISTORY_KEY = 'real-estate-destination-history'
-const MAX_HISTORY_ITEMS = 10
+const MAX_HISTORY_ITEMS = 3
 
 export default function Home() {
   const [address, setAddress] = useState('')
@@ -201,7 +201,21 @@ export default function Home() {
           ? place.geometry.location.lng()
           : place.geometry.location.lng
       }
-      setResults(prev => ({ ...prev, location }))
+      setResults(prev => ({ 
+        ...prev, 
+        location,
+        address: place.formatted_address || prev?.address
+      }))
+      
+      // Save to history immediately when we have a valid address and location (street view can be fetched)
+      if (place.formatted_address) {
+        saveToHistory(place.formatted_address)
+        
+        // Fetch transit stops if bus/train is selected
+        if ((transportMode === 'bus' || transportMode === 'train')) {
+          fetchTransitStops(location.lat, location.lng, transportMode)
+        }
+      }
     }
     // Reset transit-related state when address changes
     setTransitStops([])

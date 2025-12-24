@@ -64,7 +64,7 @@ export default function AddressHistory({
         flexDirection: 'column',
         gap: '0.5rem'
       }}>
-        {addresses.map((addr, index) => (
+        {addresses.slice(0, 3).map((addr, index) => (
           <button
             key={index}
             onClick={() => onSelectAddress(addr)}
