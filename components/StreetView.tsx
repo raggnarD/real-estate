@@ -22,6 +22,7 @@ export default function StreetView({
 }: StreetViewProps) {
   const panoramaRef = useRef<HTMLDivElement>(null)
   const streetViewRef = useRef<google.maps.StreetViewPanorama | null>(null)
+  const lastLocationRef = useRef<{ lat: number; lng: number } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
@@ -64,26 +65,57 @@ export default function StreetView({
 
   // Initialize Street View Panorama
   useEffect(() => {
-    if (!isInitialized || !location || !panoramaRef.current) {
+    if (!isInitialized || !panoramaRef.current) {
       // Clean up existing panorama if location is cleared
       if (!location && streetViewRef.current) {
         streetViewRef.current = null
+        lastLocationRef.current = null
       }
       return
     }
 
-    // Clean up existing panorama before creating new one
-    if (streetViewRef.current) {
-      streetViewRef.current = null
+    // Check if location actually changed (avoid recreating for same coordinates)
+    const locationChanged = !lastLocationRef.current || 
+      !location ||
+      Math.abs(lastLocationRef.current.lat - location.lat) > 0.0001 ||
+      Math.abs(lastLocationRef.current.lng - location.lng) > 0.0001
+
+    if (!location) {
+      if (streetViewRef.current) {
+        streetViewRef.current = null
+        lastLocationRef.current = null
+      }
+      return
     }
 
+    // If location hasn't changed and panorama exists, just update position if needed
+    if (!locationChanged && streetViewRef.current) {
+      const currentPos = streetViewRef.current.getPosition()
+      if (currentPos) {
+        const latDiff = Math.abs(currentPos.lat() - location.lat)
+        const lngDiff = Math.abs(currentPos.lng() - location.lng)
+        if (latDiff > 0.0001 || lngDiff > 0.0001) {
+          // Position changed slightly, update it
+          streetViewRef.current.setPosition({ lat: location.lat, lng: location.lng })
+        }
+      }
+      lastLocationRef.current = { lat: location.lat, lng: location.lng }
+      return
+    }
+
+    // Location changed or panorama doesn't exist - create new one
     setIsLoading(true)
     setError(null)
 
     try {
       // Small delay to ensure DOM is ready
       setTimeout(() => {
-        if (!panoramaRef.current) return
+        if (!panoramaRef.current || !location) return
+
+        // Clean up existing panorama before creating new one
+        if (streetViewRef.current) {
+          streetViewRef.current = null
+        }
 
         // Create Street View Panorama
         const panorama = new google.maps.StreetViewPanorama(panoramaRef.current, {
@@ -119,6 +151,7 @@ export default function StreetView({
         })
 
         streetViewRef.current = panorama
+        lastLocationRef.current = { lat: location.lat, lng: location.lng }
       }, 100)
     } catch (err) {
       console.error('Error initializing Street View:', err)
@@ -127,9 +160,7 @@ export default function StreetView({
     }
 
     return () => {
-      if (streetViewRef.current) {
-        streetViewRef.current = null
-      }
+      // Don't clean up on every render - only on unmount
     }
   }, [location?.lat, location?.lng, isInitialized, heading, pitch])
 

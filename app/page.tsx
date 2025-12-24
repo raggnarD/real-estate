@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 import AddressHistory from '@/components/AddressHistory'
-import StreetView from '@/components/StreetView'
+import MapStreetViewToggle from '@/components/MapStreetViewToggle'
 
 interface SearchResults {
   address?: string
@@ -53,6 +53,12 @@ export default function Home() {
   const [destinationHistory, setDestinationHistory] = useState<string[]>([])
   const [commuteResults, setCommuteResults] = useState<CommuteResults | null>(null)
   const [destinationLocation, setDestinationLocation] = useState<{ lat: number; lng: number } | null>(null)
+
+  // Memoize origin location to prevent unnecessary re-renders
+  const originLocation = useMemo(() => results?.location || null, [
+    results?.location?.lat, 
+    results?.location?.lng
+  ])
 
   // Load address history from localStorage on mount
   useEffect(() => {
@@ -235,7 +241,6 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setResults(null)
     setCommuteResults(null)
 
     try {
@@ -243,8 +248,23 @@ export default function Home() {
       let originAddress: string | null = null
       let destinationAddressGeocoded: string | null = null
 
-      // Geocode origin address if provided
-      if (address) {
+      // Preserve existing results if origin address hasn't changed
+      const originAddressChanged = address !== results?.address
+      
+      // Only clear results if origin address changed
+      if (originAddressChanged) {
+        setResults(null)
+      } else {
+        // Preserve existing location if address hasn't changed
+        if (results?.location) {
+          searchResults.location = results.location
+          searchResults.address = results.address
+          originAddress = results.address
+        }
+      }
+
+      // Geocode origin address if provided and it changed
+      if (address && originAddressChanged) {
         try {
           const geocodeResponse = await fetch(
             `/api/geocode?address=${encodeURIComponent(address)}`
@@ -272,6 +292,11 @@ export default function Home() {
         } catch (error) {
           console.error('Geocoding error:', error)
           searchResults.error = 'Failed to geocode address'
+        }
+      } else if (address && !originAddressChanged && results?.location) {
+        // Address hasn't changed, but we still need to fetch transit stops if mode changed
+        if ((transportMode === 'bus' || transportMode === 'train') && results.location) {
+          fetchTransitStops(results.location.lat, results.location.lng, transportMode)
         }
       }
 
@@ -322,7 +347,28 @@ export default function Home() {
         }
       }
 
-      setResults(searchResults)
+      // Update results, preserving origin location if it hasn't changed
+      setResults(prev => {
+        // If origin address didn't change, preserve existing location and address completely
+        if (!originAddressChanged && prev?.location) {
+          // Only update if there are actual changes (like zillowData)
+          const hasChanges = Object.keys(searchResults).some(key => 
+            key !== 'location' && key !== 'address' && searchResults[key as keyof SearchResults] !== prev[key as keyof SearchResults]
+          )
+          if (!hasChanges) {
+            // No changes, return previous to prevent re-render
+            return prev
+          }
+          return { 
+            ...prev, 
+            ...searchResults,
+            location: prev.location, // Keep same object reference
+            address: prev.address 
+          }
+        }
+        // Origin changed or no previous results - use new searchResults
+        return searchResults
+      })
 
       // Calculate commute if both addresses are geocoded
       if (originAddress && destinationAddressGeocoded) {
@@ -458,7 +504,7 @@ export default function Home() {
                 fontWeight: '500',
                 fontSize: '1rem'
               }}>
-                Address (with autocomplete):
+                Starting Address:
               </label>
               <div style={{ 
                 width: '100%', 
@@ -480,16 +526,12 @@ export default function Home() {
               />
             </div>
             <div style={{ flexShrink: 0 }}>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '0.5rem', 
-                color: '#000', 
-                fontWeight: '500',
-                fontSize: '1rem'
-              }}>
-                Street View:
-              </label>
-              <StreetView location={results?.location || null} width={400} height={300} />
+              <MapStreetViewToggle 
+                key="origin-view" 
+                location={originLocation} 
+                width={400} 
+                height={300} 
+              />
             </div>
           </div>
 
@@ -502,7 +544,7 @@ export default function Home() {
                 fontWeight: '500',
                 fontSize: '1rem'
               }}>
-                Destination Address (for commute):
+                Destination Address:
               </label>
               <AddressAutocomplete
                 placeholder="Enter destination address..."
@@ -516,6 +558,12 @@ export default function Home() {
               />
             </div>
             <div style={{ flexShrink: 0 }}>
+              <MapStreetViewToggle key="destination-view" location={destinationLocation} width={400} height={300} />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
               <label style={{ 
                 display: 'block', 
                 marginBottom: '0.5rem', 
@@ -523,59 +571,50 @@ export default function Home() {
                 fontWeight: '500',
                 fontSize: '1rem'
               }}>
-                Street View:
+                Transportation Mode:
               </label>
-              <StreetView location={destinationLocation} width={400} height={300} />
-            </div>
-          </div>
-
-          <div>
-            <label style={{ 
-              display: 'block', 
-              marginBottom: '0.5rem', 
-              color: '#000', 
-              fontWeight: '500',
-              fontSize: '1rem'
-            }}>
-              Transportation Mode:
-            </label>
-            <select
-              value={transportMode}
-              onChange={(e) => {
-                const newMode = e.target.value as 'driving' | 'bus' | 'train' | 'walking' | 'bicycling'
-                setTransportMode(newMode)
-                setCommuteResults(null) // Clear previous commute results
-                
-                // Reset transit-related state when switching modes
-                if (newMode === 'bus' || newMode === 'train') {
-                  setTransitType(newMode)
-                  // Fetch stops if we have location
-                  if (results?.location) {
-                    fetchTransitStops(results.location.lat, results.location.lng, newMode)
+              <select
+                value={transportMode}
+                onChange={(e) => {
+                  const newMode = e.target.value as 'driving' | 'bus' | 'train' | 'walking' | 'bicycling'
+                  setTransportMode(newMode)
+                  setCommuteResults(null) // Clear previous commute results
+                  
+                  // Reset transit-related state when switching modes
+                  if (newMode === 'bus' || newMode === 'train') {
+                    setTransitType(newMode)
+                    // Fetch stops if we have location
+                    if (results?.location) {
+                      fetchTransitStops(results.location.lat, results.location.lng, newMode)
+                    }
+                  } else {
+                    setTransitType(null)
+                    setTransitStops([])
+                    setSelectedStop(null)
+                    setLeg1Mode(null)
                   }
-                } else {
-                  setTransitType(null)
-                  setTransitStops([])
-                  setSelectedStop(null)
-                  setLeg1Mode(null)
-                }
-              }}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                color: '#000',
-                backgroundColor: '#fff'
-              }}
-            >
-              <option value="driving">🚗 Driving</option>
-              <option value="bus">🚌 Bus</option>
-              <option value="train">🚂 Train</option>
-              <option value="walking">🚶 Walking</option>
-              <option value="bicycling">🚴 Bicycling</option>
-            </select>
+                }}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  fontSize: '1rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  color: '#000',
+                  backgroundColor: '#fff',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <option value="driving">🚗 Driving</option>
+                <option value="bus">🚌 Bus</option>
+                <option value="train">🚂 Train</option>
+                <option value="walking">🚶 Walking</option>
+                <option value="bicycling">🚴 Bicycling</option>
+              </select>
+            </div>
+            <div style={{ flexShrink: 0, width: '400px' }}>
+              {/* Spacer to match address field width */}
+            </div>
           </div>
 
           {/* Transit Stop Selection - shown when bus/train is selected */}
