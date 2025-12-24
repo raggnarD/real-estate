@@ -166,6 +166,7 @@ export default function Home() {
         // Auto-select first stop if available
         if (data.stops.length > 0) {
           setSelectedStop(data.stops[0])
+          setLeg1Mode('driving') // Default to driving
         }
       } else {
         setTransitStops([])
@@ -368,6 +369,33 @@ export default function Home() {
               fontWeight: '500',
               fontSize: '1rem'
             }}>
+              Zillow URL:
+            </label>
+            <input 
+              type="url" 
+              placeholder="https://www.zillow.com/homedetails/..."
+              value={zillowUrl}
+              onChange={(e) => setZillowUrl(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                fontSize: '1rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                color: '#000',
+                backgroundColor: '#fff'
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '0.5rem', 
+              color: '#000', 
+              fontWeight: '500',
+              fontSize: '1rem'
+            }}>
               Address (with autocomplete):
             </label>
             <AddressAutocomplete
@@ -489,7 +517,10 @@ export default function Home() {
                           name="transitStop"
                           value={stop.placeId}
                           checked={selectedStop?.placeId === stop.placeId}
-                          onChange={() => setSelectedStop(stop)}
+                          onChange={() => {
+                            setSelectedStop(stop)
+                            setLeg1Mode('driving') // Default to driving when stop is selected
+                          }}
                           style={{ marginRight: '0.75rem' }}
                         />
                         <div style={{ flex: 1 }}>
@@ -526,8 +557,8 @@ export default function Home() {
                     How to get to stop?
                   </label>
                   <select
-                    value={leg1Mode || ''}
-                    onChange={(e) => setLeg1Mode(e.target.value as 'walking' | 'driving' || null)}
+                    value={leg1Mode || 'driving'}
+                    onChange={(e) => setLeg1Mode(e.target.value as 'walking' | 'driving')}
                     style={{
                       width: '100%',
                       padding: '0.75rem',
@@ -538,7 +569,6 @@ export default function Home() {
                       backgroundColor: '#fff'
                     }}
                   >
-                    <option value="">Select...</option>
                     <option value="walking">🚶 Walk</option>
                     <option value="driving">🚗 Drive</option>
                   </select>
@@ -546,33 +576,6 @@ export default function Home() {
               )}
             </>
           )}
-
-          <div>
-            <label style={{ 
-              display: 'block', 
-              marginBottom: '0.5rem', 
-              color: '#000', 
-              fontWeight: '500',
-              fontSize: '1rem'
-            }}>
-              Zillow URL:
-            </label>
-            <input 
-              type="url" 
-              placeholder="https://www.zillow.com/homedetails/..."
-              value={zillowUrl}
-              onChange={(e) => setZillowUrl(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                color: '#000',
-                backgroundColor: '#fff'
-              }}
-            />
-          </div>
 
           <button 
             type="submit"
