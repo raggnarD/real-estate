@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Loader } from '@googlemaps/js-api-loader'
 
 interface StreetViewProps {
   location: { lat: number; lng: number } | null
@@ -19,160 +20,119 @@ export default function StreetView({
   heading = 0,
   pitch = 0
 }: StreetViewProps) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const panoramaRef = useRef<HTMLDivElement>(null)
+  const streetViewRef = useRef<google.maps.StreetViewPanorama | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isInitialized, setIsInitialized] = useState(false)
 
+  // Initialize Google Maps API
   useEffect(() => {
-    if (!location) {
-      setImageUrl(null)
-      setError(null)
+    const initStreetView = async () => {
+      if (isInitialized) return
+
+      try {
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        if (!apiKey) {
+          setError('Google Maps API key not configured')
+          return
+        }
+
+        // Check if Google Maps is already loaded
+        if (window.google && window.google.maps) {
+          setIsInitialized(true)
+          return
+        }
+
+        // Use the same libraries as AddressAutocomplete to avoid conflicts
+        const loader = new Loader({
+          apiKey: apiKey,
+          version: 'weekly',
+          libraries: ['places'], // Match AddressAutocomplete to avoid loader conflicts
+        })
+
+        await loader.load()
+        setIsInitialized(true)
+      } catch (error) {
+        console.error('Error loading Google Maps:', error)
+        setError('Failed to load Google Maps. Please check your API key and ensure Maps JavaScript API is enabled.')
+      }
+    }
+
+    initStreetView()
+  }, [isInitialized])
+
+  // Initialize Street View Panorama
+  useEffect(() => {
+    if (!isInitialized || !location || !panoramaRef.current) {
+      // Clean up existing panorama if location is cleared
+      if (!location && streetViewRef.current) {
+        streetViewRef.current = null
+      }
       return
+    }
+
+    // Clean up existing panorama before creating new one
+    if (streetViewRef.current) {
+      streetViewRef.current = null
     }
 
     setIsLoading(true)
     setError(null)
 
-    // Use our API route to fetch Street View
-    const fetchStreetView = async () => {
-      try {
-        const response = await fetch(
-          `/api/streetview?lat=${location.lat}&lng=${location.lng}&width=${width}&height=${height}&fov=${fov}&heading=${heading}&pitch=${pitch}`
-        )
+    try {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        if (!panoramaRef.current) return
 
-        if (response.ok) {
-          // Check if response is actually an image
-          const contentType = response.headers.get('content-type')
-          if (contentType?.startsWith('image/')) {
-            // Convert blob to object URL
-            const blob = await response.blob()
-            const url = URL.createObjectURL(blob)
-            setImageUrl(url)
+        // Create Street View Panorama
+        const panorama = new google.maps.StreetViewPanorama(panoramaRef.current, {
+          position: { lat: location.lat, lng: location.lng },
+          pov: {
+            heading: heading,
+            pitch: pitch,
+          },
+          zoom: 1,
+          visible: true,
+          enableCloseButton: false,
+          addressControl: false,
+          linksControl: true,
+          panControl: true,
+          zoomControl: true,
+          fullscreenControl: false,
+        })
+
+        // Handle Street View status
+        panorama.addListener('status_changed', () => {
+          const status = panorama.getStatus()
+          setIsLoading(false)
+          
+          if (status === google.maps.StreetViewStatus.OK) {
             setError(null)
+          } else if (status === google.maps.StreetViewStatus.ZERO_RESULTS) {
+            setError('Street View imagery is not available for this location')
+          } else if (status === google.maps.StreetViewStatus.NOT_FOUND) {
+            setError('Street View not found for this location')
           } else {
-            // Response might be JSON error
-            const errorData = await response.json().catch(() => ({}))
-            console.error('Street View API Error:', errorData)
-            setError(errorData.error || errorData.details || 'Street View not available')
-            setImageUrl(null)
+            setError('Street View is not available')
           }
-        } else {
-          const errorData = await response.json().catch(() => ({}))
-          console.error('Street View API Error:', errorData)
-          let errorMessage = errorData.error || 'Street View not available'
-          
-          // Provide helpful error messages
-          if (errorData.details) {
-            errorMessage += ` (${errorData.details})`
-          } else if (errorData.status === 'REQUEST_DENIED') {
-            errorMessage = 'Street View API not enabled. Please enable Street View Static API in Google Cloud Console.'
-          } else if (errorData.status === 'ZERO_RESULTS') {
-            errorMessage = 'Street View imagery is not available for this location'
-          }
-          
-          setError(errorMessage)
-          setImageUrl(null)
-        }
-      } catch (err) {
-        console.error('Error fetching Street View:', err)
-        setError('Failed to load Street View')
-        setImageUrl(null)
-      } finally {
-        setIsLoading(false)
-      }
+        })
+
+        streetViewRef.current = panorama
+      }, 100)
+    } catch (err) {
+      console.error('Error initializing Street View:', err)
+      setError('Failed to initialize Street View')
+      setIsLoading(false)
     }
 
-    fetchStreetView()
-
-    // Cleanup object URL on unmount or location change
     return () => {
-      if (imageUrl) {
-        URL.revokeObjectURL(imageUrl)
+      if (streetViewRef.current) {
+        streetViewRef.current = null
       }
     }
-  }, [location?.lat, location?.lng, width, height, fov, heading, pitch])
+  }, [location?.lat, location?.lng, isInitialized, heading, pitch])
 
-  if (!location) {
-    return (
-      <div style={{
-        width: `${width}px`,
-        height: `${height}px`,
-        backgroundColor: '#f0f0f0',
-        border: '1px solid #ddd',
-        borderRadius: '8px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#666',
-        fontSize: '0.875rem'
-      }}>
-        Enter an address to see Street View
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div style={{
-        width: `${width}px`,
-        height: `${height}px`,
-        backgroundColor: '#f0f0f0',
-        border: '1px solid #ddd',
-        borderRadius: '8px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#666',
-        fontSize: '0.875rem'
-      }}>
-        Loading Street View...
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div style={{
-        width: `${width}px`,
-        height: `${height}px`,
-        backgroundColor: '#f0f0f0',
-        border: '1px solid #ddd',
-        borderRadius: '8px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#666',
-        fontSize: '0.875rem',
-        padding: '1rem',
-        textAlign: 'center'
-      }}>
-        <div style={{ marginBottom: '0.5rem' }}>{error}</div>
-        <div style={{ fontSize: '0.75rem', color: '#999' }}>
-          Lat: {location.lat.toFixed(6)}, Lng: {location.lng.toFixed(6)}
-        </div>
-      </div>
-    )
-  }
-
-  if (!imageUrl) {
-    return (
-      <div style={{
-        width: `${width}px`,
-        height: `${height}px`,
-        backgroundColor: '#f0f0f0',
-        border: '1px solid #ddd',
-        borderRadius: '8px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#666',
-        fontSize: '0.875rem'
-      }}>
-        No image available
-      </div>
-    )
-  }
 
   return (
     <div style={{
@@ -181,15 +141,68 @@ export default function StreetView({
       borderRadius: '8px',
       overflow: 'hidden',
       border: '1px solid #ddd',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      position: 'relative',
+      backgroundColor: '#f0f0f0'
     }}>
-      <img
-        src={imageUrl}
-        alt="Street View"
+      {!location && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          color: '#666',
+          fontSize: '0.875rem',
+          textAlign: 'center',
+          zIndex: 1
+        }}>
+          Enter an address to see Street View
+        </div>
+      )}
+      {isLoading && location && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          color: '#666',
+          fontSize: '0.875rem',
+          zIndex: 2,
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          padding: '0.5rem 1rem',
+          borderRadius: '4px'
+        }}>
+          Loading Street View...
+        </div>
+      )}
+      {error && location && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          color: '#666',
+          fontSize: '0.875rem',
+          textAlign: 'center',
+          padding: '1rem',
+          zIndex: 2,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: '4px',
+          maxWidth: '90%',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ marginBottom: '0.5rem', fontWeight: '500' }}>{error}</div>
+          <div style={{ fontSize: '0.75rem', color: '#999' }}>
+            Lat: {location.lat.toFixed(6)}, Lng: {location.lng.toFixed(6)}
+          </div>
+        </div>
+      )}
+      <div
+        ref={panoramaRef}
         style={{
           width: '100%',
           height: '100%',
-          objectFit: 'cover'
+          minHeight: '100%'
         }}
       />
     </div>
