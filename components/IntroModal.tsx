@@ -32,7 +32,8 @@ export default function IntroModal() {
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 10000,
-      padding: '1rem'
+      padding: '0.5rem',
+      overflow: 'auto'
     }} onClick={handleClose}>
       <div style={{
         backgroundColor: '#fff',
@@ -42,11 +43,12 @@ export default function IntroModal() {
         maxHeight: '90vh',
         overflow: 'auto',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-        position: 'relative'
+        position: 'relative',
+        margin: '0 auto'
       }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={{
-          padding: '1.5rem 2rem',
+          padding: '1rem 1.5rem',
           borderBottom: '1px solid #e0e0e0',
           background: 'linear-gradient(135deg, #0070f3 0%, #0051cc 100%)',
           borderRadius: '12px 12px 0 0',
@@ -73,7 +75,7 @@ export default function IntroModal() {
 
         {/* Content */}
         <div style={{
-          padding: '2rem',
+          padding: '1.5rem',
           fontSize: '1rem',
           lineHeight: '1.7',
           color: '#333'
@@ -103,13 +105,13 @@ export default function IntroModal() {
           {/* Feature Cards */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
             gap: '1.5rem',
             marginBottom: '2rem'
           }}>
             {/* True Commute Time Card */}
             <div style={{
-              padding: '1.25rem',
+              padding: '1rem',
               border: '2px solid #e0e0e0',
               borderRadius: '12px',
               backgroundColor: '#fff',
@@ -118,7 +120,8 @@ export default function IntroModal() {
               transition: 'all 0.2s',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
               aspectRatio: '1',
-              minHeight: '200px'
+              minHeight: '200px',
+              minWidth: '0' // Prevent overflow
             }}>
               <h3 style={{
                 marginTop: 0,
@@ -160,7 +163,7 @@ export default function IntroModal() {
 
             {/* Neighborhood Finder Card */}
             <div style={{
-              padding: '1.25rem',
+              padding: '1rem',
               border: '2px solid #e0e0e0',
               borderRadius: '12px',
               backgroundColor: '#fff',
@@ -169,7 +172,8 @@ export default function IntroModal() {
               transition: 'all 0.2s',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
               aspectRatio: '1',
-              minHeight: '200px'
+              minHeight: '200px',
+              minWidth: '0' // Prevent overflow
             }}>
               <h3 style={{
                 marginTop: 0,
@@ -199,7 +203,7 @@ export default function IntroModal() {
 
         {/* Footer */}
         <div style={{
-          padding: '1.5rem 2rem',
+          padding: '1rem 1.5rem',
           borderTop: '1px solid #e0e0e0',
           display: 'flex',
           justifyContent: 'flex-end',
