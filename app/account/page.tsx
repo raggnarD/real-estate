@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useApiKey } from '@/contexts/ApiKeyContext'
 import TermsModal from '@/components/TermsModal'
 
 export default function AccountPage() {
+  const router = useRouter()
   const { 
     apiKey, 
     setApiKey, 
@@ -108,6 +110,57 @@ export default function AccountPage() {
     }
     
     setTimeout(() => setSaveMessage(null), 3000)
+  }
+
+  const handleResetEverything = async () => {
+    if (!window.confirm('Are you sure you want to reset everything? This will:\n\n• Clear your API key\n• Revoke the 24-hour shared key\n• Clear all site cache\n• Show the intro modal again\n\nThis action cannot be undone.')) {
+      return
+    }
+
+    try {
+      // 1. Clear user's API key
+      setApiKey(null)
+      setInputValue('')
+      
+      // 2. Revoke shared key if active
+      if (sharedKeyActive) {
+        try {
+          await revokeSharedKey()
+        } catch (error) {
+          console.error('Error revoking shared key:', error)
+        }
+      }
+      
+      // 3. Clear all localStorage items
+      localStorage.removeItem('google_maps_api_key')
+      localStorage.removeItem('hasSeenIntro')
+      
+      // 4. Clear sessionStorage
+      sessionStorage.clear()
+      
+      // 5. Clear any other relevant cache
+      // Clear address history if stored
+      try {
+        const addressHistory = localStorage.getItem('address_history')
+        if (addressHistory) {
+          localStorage.removeItem('address_history')
+        }
+      } catch (e) {
+        // Ignore errors
+      }
+      
+      // 6. Redirect to home page to show intro modal
+      router.push('/')
+      
+      // Small delay to ensure state is cleared before navigation
+      setTimeout(() => {
+        window.location.reload()
+      }, 100)
+    } catch (error) {
+      console.error('Error resetting everything:', error)
+      setSaveMessage('Error resetting. Please try again.')
+      setTimeout(() => setSaveMessage(null), 5000)
+    }
   }
 
   // Update input value when apiKey changes externally
@@ -485,6 +538,46 @@ export default function AccountPage() {
             </span>
           )}
         </div>
+      </div>
+
+      {/* Reset Everything Section */}
+      <div style={{ 
+        border: '1px solid #ddd', 
+        borderRadius: '8px', 
+        padding: '2rem',
+        backgroundColor: '#fff3cd',
+        marginBottom: '2rem',
+        borderColor: '#ffc107'
+      }}>
+        <h2 style={{ marginTop: 0, color: '#000', marginBottom: '1rem' }}>
+          Reset Everything
+        </h2>
+        <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '0.9375rem' }}>
+          This will clear your API key, revoke the 24-hour shared key, clear all site cache, and show the intro modal again. Use this if you want to start fresh.
+        </p>
+        <button
+          type="button"
+          onClick={handleResetEverything}
+          style={{
+            padding: '0.75rem 1.5rem',
+            fontSize: '1rem',
+            backgroundColor: '#dc3545',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: '500',
+            transition: 'background-color 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#c82333'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#dc3545'
+          }}
+        >
+          Reset Everything
+        </button>
       </div>
 
       <div style={{ 
