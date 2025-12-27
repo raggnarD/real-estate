@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Navigation from '@/components/Navigation'
+import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
 
 export const metadata: Metadata = {
   title: 'Real Estate App',
@@ -20,8 +21,10 @@ export default function RootLayout({
         backgroundColor: '#fff',
         color: '#000'
       }}>
-        <Navigation />
-        {children}
+        <ApiKeyProvider>
+          <Navigation />
+          {children}
+        </ApiKeyProvider>
       </body>
     </html>
   )

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Loader } from '@googlemaps/js-api-loader'
+import { useApiKey } from '@/contexts/ApiKeyContext'
 
 interface AddressAutocompleteProps {
   onPlaceSelected?: (place: google.maps.places.PlaceResult) => void
@@ -21,14 +22,21 @@ export default function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { apiKey, isLoading: apiKeyLoading, isDemoMode } = useApiKey()
 
   useEffect(() => {
     const initAutocomplete = async () => {
-      if (!inputRef.current) return
+      if (!inputRef.current || apiKeyLoading) return
+      
+      // Don't initialize if in demo mode (will be handled in demo mode later)
+      if (isDemoMode || !apiKey) {
+        setIsLoading(false)
+        return
+      }
 
       try {
         const loader = new Loader({
-          apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+          apiKey: apiKey,
           version: 'weekly',
           libraries: ['places'],
         })
@@ -64,7 +72,7 @@ export default function AddressAutocomplete({
     }
 
     initAutocomplete()
-  }, [onPlaceSelected, onChange])
+  }, [onPlaceSelected, onChange, apiKey, apiKeyLoading, isDemoMode])
 
   const isEmpty = !value || value.trim() === ''
 
