@@ -453,9 +453,6 @@ export default function AccountPage() {
                     </div>
                   )}
                 </div>
-                <p style={{ fontSize: '0.8125rem', color: '#666', marginBottom: '0.75rem' }}>
-                  The shared key will automatically expire after 24 hours. Click Save to continue using it.
-                </p>
                 <button
                   type="button"
                   onClick={async () => {
