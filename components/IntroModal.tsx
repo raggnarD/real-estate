@@ -22,6 +22,10 @@ export default function IntroModal() {
     localStorage.setItem('hasSeenIntro', 'true')
     // Activate wizard mode - WizardOnboardingModal will detect this and show
     setWizardActive(true)
+    // Dispatch custom event to immediately trigger modal
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('wizard-started'))
+    }
   }
 
   const handleClose = () => {

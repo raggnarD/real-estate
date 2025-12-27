@@ -137,9 +137,16 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
     }
   }
 
-  // Don't render if not open, or if already seen and not in wizard mode
+  // Don't render if not open
   if (!isOpen) return null
-  if (!wizardActive && hasSeenIntro) return null
+  
+  // Only auto-close if not in wizard mode and already seen
+  if (!wizardActive) {
+    const seen = localStorage.getItem('hasSeenNeighborhoodFinderIntro')
+    if (seen === 'true') {
+      return null
+    }
+  }
 
   return (
     <div style={{
