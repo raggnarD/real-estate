@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Navigation from '@/components/Navigation'
 import ApiKeyBanner from '@/components/ApiKeyBanner'
+import IntroModal from '@/components/IntroModal'
 import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default function RootLayout({
         color: '#000'
       }}>
         <ApiKeyProvider>
+          <IntroModal />
           <ApiKeyBanner />
           <Navigation />
           {children}
