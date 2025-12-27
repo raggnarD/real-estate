@@ -146,8 +146,6 @@ export default function StreetView({
             setError(null)
           } else if (status === google.maps.StreetViewStatus.ZERO_RESULTS) {
             setError('Street View imagery is not available for this location')
-          } else if (status === google.maps.StreetViewStatus.NOT_FOUND) {
-            setError('Street View not found for this location')
           } else {
             setError('Street View is not available')
           }
