@@ -8,10 +8,14 @@ export default function Navigation() {
 
   return (
     <nav style={{
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000,
       backgroundColor: '#fff',
       borderBottom: '1px solid #ddd',
       padding: '1rem 2rem',
-      marginBottom: '2rem'
+      marginBottom: '2rem',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
     }}>
       <div style={{
         display: 'flex',

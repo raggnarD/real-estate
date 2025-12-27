@@ -895,15 +895,15 @@ export default function Home() {
 
           <button 
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !address || !destinationAddress}
             style={{
               padding: '0.75rem 1.5rem',
               fontSize: '1rem',
-              backgroundColor: isLoading ? '#ccc' : '#0070f3',
+              backgroundColor: (isLoading || !address || !destinationAddress) ? '#ccc' : '#0070f3',
               color: '#fff',
               border: 'none',
               borderRadius: '4px',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
+              cursor: (isLoading || !address || !destinationAddress) ? 'not-allowed' : 'pointer',
               fontWeight: '500',
               alignSelf: 'flex-start'
             }}
