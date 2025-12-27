@@ -28,24 +28,20 @@ export default function AddressAutocomplete({
     const initAutocomplete = async () => {
       if (!inputRef.current || apiKeyLoading) return
       
-      // Note: Shared key only works for server-side API routes, not client-side Google Maps JS API
-      // For client-side Google Maps JS API, we need the actual API key
-      if (!apiKey && !sharedKeyActive) {
-        setIsLoading(false)
-        return
-      }
+      // Determine which API key to use:
+      // 1. User's own API key (if set)
+      // 2. Shared key from environment variable (if shared key is active)
+      // 3. Environment variable as fallback
+      const apiKeyToUse = apiKey || (sharedKeyActive ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY : null) || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
       
-      // For client-side Google Maps JS API, we need the actual API key
-      // If user has their own key, use it. Otherwise, we can't initialize autocomplete
-      // (shared key is only for server-side routes)
-      if (!apiKey) {
+      if (!apiKeyToUse) {
         setIsLoading(false)
         return
       }
 
       try {
         const loader = new Loader({
-          apiKey: apiKey,
+          apiKey: apiKeyToUse,
           version: 'weekly',
           libraries: ['places'],
         })

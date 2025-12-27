@@ -37,7 +37,7 @@ export default function NeighborhoodMap({
   const infoWindowsRef = useRef<google.maps.InfoWindow[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { apiKey: contextApiKey, isLoading: apiKeyLoading } = useApiKey()
+  const { apiKey: contextApiKey, isLoading: apiKeyLoading, sharedKeyActive } = useApiKey()
 
   useEffect(() => {
     if (!workLocation || cities.length === 0 || apiKeyLoading) {
@@ -47,8 +47,11 @@ export default function NeighborhoodMap({
 
     const initMap = async () => {
       try {
-        // Use API key from context (user's key) or fallback to env variable
-        const apiKey = contextApiKey || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        // Determine which API key to use:
+        // 1. User's own API key (if set)
+        // 2. Shared key from environment variable (if shared key is active)
+        // 3. Environment variable as fallback
+        const apiKey = contextApiKey || (sharedKeyActive ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY : null) || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
         if (!apiKey) {
           setIsLoading(false)
           return

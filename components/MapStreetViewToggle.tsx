@@ -20,7 +20,7 @@ function MapStreetViewToggle({
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const markerRef = useRef<google.maps.Marker | null>(null)
   const [isMapInitialized, setIsMapInitialized] = useState(false)
-  const { apiKey: contextApiKey, isLoading: apiKeyLoading } = useApiKey()
+  const { apiKey: contextApiKey, isLoading: apiKeyLoading, sharedKeyActive } = useApiKey()
 
   // Initialize map when switching to map view
   useEffect(() => {
@@ -30,8 +30,11 @@ function MapStreetViewToggle({
 
     const initMap = async () => {
       try {
-        // Use API key from context (user's key) or fallback to env variable
-        const apiKey = contextApiKey || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        // Determine which API key to use:
+        // 1. User's own API key (if set)
+        // 2. Shared key from environment variable (if shared key is active)
+        // 3. Environment variable as fallback
+        const apiKey = contextApiKey || (sharedKeyActive ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY : null) || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
         if (!apiKey) {
           return
         }
