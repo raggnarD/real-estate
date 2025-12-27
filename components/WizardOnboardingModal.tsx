@@ -15,14 +15,17 @@ export default function WizardOnboardingModal() {
   useEffect(() => {
     // Check if we should show the modal
     const checkShouldShow = () => {
-      const hasSeenIntro = localStorage.getItem('hasSeenIntro')
-      const hasSeenHowItWorks = localStorage.getItem('hasSeenNeighborhoodFinderIntro')
-      
-      // Show if wizard is active AND intro was seen but how-it-works hasn't been seen
-      if (wizardActive && hasSeenIntro === 'true' && !hasSeenHowItWorks) {
-        setShowModal(true)
-      } else {
-        setShowModal(false)
+      try {
+        const hasSeenIntro = localStorage.getItem('hasSeenIntro')
+        const hasSeenHowItWorks = localStorage.getItem('hasSeenNeighborhoodFinderIntro')
+        const wizardActiveFromStorage = localStorage.getItem('wizard_active') === 'true'
+        
+        // Show if (wizard is active in context OR in storage) AND intro was seen but how-it-works hasn't been seen
+        const shouldShow = (wizardActive || wizardActiveFromStorage) && hasSeenIntro === 'true' && !hasSeenHowItWorks
+        
+        setShowModal(shouldShow)
+      } catch (error) {
+        console.error('Error checking wizard modal state:', error)
       }
     }
 
@@ -30,8 +33,8 @@ export default function WizardOnboardingModal() {
     checkShouldShow()
 
     // Poll for changes (since localStorage changes in same window don't trigger storage events)
-    // Check more frequently to catch the change quickly
-    const interval = setInterval(checkShouldShow, 100)
+    // Check frequently to catch the change quickly
+    const interval = setInterval(checkShouldShow, 50)
 
     return () => clearInterval(interval)
   }, [wizardActive])

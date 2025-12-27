@@ -39,7 +39,11 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
         onClose() // Auto-close if already seen and not in wizard
       }
     }
-  }, [onClose, wizardActive])
+    // If in wizard mode and modal is open, ensure it stays open
+    if (wizardActive && isOpen && !hasSeenIntro) {
+      setHasSeenIntro(false) // Reset to ensure modal shows
+    }
+  }, [onClose, wizardActive, isOpen])
 
   useEffect(() => {
     // Set default to shared key
@@ -133,7 +137,9 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
     }
   }
 
+  // Don't render if not open, or if already seen and not in wizard mode
   if (!isOpen) return null
+  if (!wizardActive && hasSeenIntro) return null
 
   return (
     <div style={{

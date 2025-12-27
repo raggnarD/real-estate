@@ -131,7 +131,7 @@ export default function IntroModal() {
               transition: 'all 0.2s',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
               aspectRatio: '1',
-              minHeight: '200px',
+              minHeight: '150px',
               minWidth: '0' // Prevent overflow
             }}>
               <h3 style={{
@@ -149,7 +149,6 @@ export default function IntroModal() {
               </h3>
               <p style={{ 
                 margin: 0, 
-                marginBottom: '0.75rem', 
                 fontSize: '0.8125rem',
                 lineHeight: '1.5',
                 color: '#333',
@@ -157,19 +156,6 @@ export default function IntroModal() {
               }}>
                 Get accurate commute times using real-time traffic, multiple transport modes, and actual road networks.
               </p>
-              <ul style={{
-                marginLeft: '1.25rem',
-                marginTop: '0.5rem',
-                marginBottom: 0,
-                paddingLeft: 0,
-                fontSize: '0.75rem',
-                lineHeight: '1.5',
-                color: '#666'
-              }}>
-                <li style={{ marginBottom: '0.25rem' }}>Real-time traffic</li>
-                <li style={{ marginBottom: '0.25rem' }}>Multiple transport modes</li>
-                <li style={{ marginBottom: '0.25rem' }}>Actual road networks</li>
-              </ul>
             </div>
 
             {/* Neighborhood Finder Card */}
@@ -183,7 +169,7 @@ export default function IntroModal() {
               transition: 'all 0.2s',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
               aspectRatio: '1',
-              minHeight: '200px',
+              minHeight: '150px',
               minWidth: '0' // Prevent overflow
             }}>
               <h3 style={{
