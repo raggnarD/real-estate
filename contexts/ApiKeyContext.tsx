@@ -23,18 +23,27 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem('google_maps_api_key')
     const envKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
     
+    // Priority: stored key > env key > null (demo mode)
+    let loadedKey: string | null = null
+    if (stored) {
+      loadedKey = stored
+      setApiKeyState(stored)
+    } else if (envKey) {
+      loadedKey = envKey
+      setApiKeyState(envKey)
+    }
+    
     // Load force demo mode preference
     const storedForceDemo = localStorage.getItem('force_demo_mode')
-    if (storedForceDemo === 'true') {
+    
+    // If no API key is available, automatically enable demo mode
+    if (!loadedKey) {
+      setForceDemoModeState(true)
+      localStorage.setItem('force_demo_mode', 'true')
+    } else if (storedForceDemo === 'true') {
       setForceDemoModeState(true)
     }
     
-    // Priority: stored key > env key > null (demo mode)
-    if (stored) {
-      setApiKeyState(stored)
-    } else if (envKey) {
-      setApiKeyState(envKey)
-    }
     setIsLoading(false)
   }, [])
 
@@ -45,6 +54,9 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
     } else {
       localStorage.removeItem('google_maps_api_key')
       setApiKeyState(null)
+      // Automatically enable demo mode when API key is cleared
+      setForceDemoModeState(true)
+      localStorage.setItem('force_demo_mode', 'true')
     }
   }
 
