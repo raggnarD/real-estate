@@ -1,5 +1,7 @@
 'use client'
 
+import { buildZillowUrl } from '@/utils/zillowUrlBuilder'
+
 interface CityResult {
   name: string
   address: string
@@ -71,13 +73,39 @@ export default function NeighborhoodResults({
           <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>
             {city.address}
           </div>
-          <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={{ color: '#0070f3', fontWeight: '500' }}>
               ⏱️ {city.commuteTimeText}
             </span>
             <span style={{ color: '#666' }}>
               📍 {city.distance}
             </span>
+            <a
+              href={buildZillowUrl(city.address, city.name)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                color: '#0070f3',
+                textDecoration: 'none',
+                fontWeight: '500',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                cursor: 'pointer',
+                transition: 'opacity 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '0.8'
+                e.currentTarget.style.textDecoration = 'underline'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '1'
+                e.currentTarget.style.textDecoration = 'none'
+              }}
+            >
+              🏠 View on Zillow
+            </a>
           </div>
         </div>
       ))}
