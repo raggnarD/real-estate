@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { resolveApiKey } from '@/utils/apiKeyResolver'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const address = searchParams.get('address')
+  const userApiKey = searchParams.get('apiKey') // Optional user API key from client
 
   if (!address) {
     return NextResponse.json(
@@ -12,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    const apiKey = resolveApiKey(request, userApiKey)
     if (!apiKey) {
       return NextResponse.json(
         { error: 'Google Maps API key not configured' },

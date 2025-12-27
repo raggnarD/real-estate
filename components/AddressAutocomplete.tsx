@@ -22,14 +22,23 @@ export default function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { apiKey, isLoading: apiKeyLoading, isDemoMode } = useApiKey()
+  const { apiKey, isLoading: apiKeyLoading, sharedKeyActive } = useApiKey()
 
   useEffect(() => {
     const initAutocomplete = async () => {
       if (!inputRef.current || apiKeyLoading) return
       
-      // Don't initialize if in demo mode (will be handled in demo mode later)
-      if (isDemoMode || !apiKey) {
+      // Note: Shared key only works for server-side API routes, not client-side Google Maps JS API
+      // For client-side Google Maps JS API, we need the actual API key
+      if (!apiKey && !sharedKeyActive) {
+        setIsLoading(false)
+        return
+      }
+      
+      // For client-side Google Maps JS API, we need the actual API key
+      // If user has their own key, use it. Otherwise, we can't initialize autocomplete
+      // (shared key is only for server-side routes)
+      if (!apiKey) {
         setIsLoading(false)
         return
       }
@@ -72,7 +81,7 @@ export default function AddressAutocomplete({
     }
 
     initAutocomplete()
-  }, [onPlaceSelected, onChange, apiKey, apiKeyLoading, isDemoMode])
+  }, [onPlaceSelected, onChange, apiKey, apiKeyLoading, sharedKeyActive])
 
   const isEmpty = !value || value.trim() === ''
 

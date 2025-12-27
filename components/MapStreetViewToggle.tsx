@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, memo } from 'react'
 import StreetView from './StreetView'
+import { useApiKey } from '@/contexts/ApiKeyContext'
 
 interface MapStreetViewToggleProps {
   location: { lat: number; lng: number } | null
@@ -19,20 +20,27 @@ function MapStreetViewToggle({
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const markerRef = useRef<google.maps.Marker | null>(null)
   const [isMapInitialized, setIsMapInitialized] = useState(false)
+  const { apiKey: contextApiKey, isLoading: apiKeyLoading } = useApiKey()
 
   // Initialize map when switching to map view
   useEffect(() => {
-    if (viewMode !== 'map' || !location) {
+    if (viewMode !== 'map' || !location || apiKeyLoading) {
       return
     }
 
     const initMap = async () => {
       try {
+        // Use API key from context (user's key) or fallback to env variable
+        const apiKey = contextApiKey || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        if (!apiKey) {
+          return
+        }
+
         // Check if Google Maps is already loaded
         if (!window.google || !window.google.maps) {
           const { Loader } = await import('@googlemaps/js-api-loader')
           const loader = new Loader({
-            apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+            apiKey: apiKey,
             version: 'weekly',
             libraries: ['places'],
           })
@@ -81,7 +89,7 @@ function MapStreetViewToggle({
     }
 
     initMap()
-  }, [viewMode, location?.lat, location?.lng])
+  }, [viewMode, location?.lat, location?.lng, contextApiKey, apiKeyLoading])
 
 
   if (!location) {

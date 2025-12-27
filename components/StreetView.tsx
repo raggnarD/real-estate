@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Loader } from '@googlemaps/js-api-loader'
+import { useApiKey } from '@/contexts/ApiKeyContext'
 
 interface StreetViewProps {
   location: { lat: number; lng: number } | null
@@ -26,14 +27,16 @@ export default function StreetView({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
+  const { apiKey: contextApiKey, isLoading: apiKeyLoading } = useApiKey()
 
   // Initialize Google Maps API
   useEffect(() => {
     const initStreetView = async () => {
-      if (isInitialized) return
+      if (isInitialized || apiKeyLoading) return
 
       try {
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        // Use API key from context (user's key) or fallback to env variable
+        const apiKey = contextApiKey || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
         if (!apiKey) {
           setError('Google Maps API key not configured')
           return
@@ -61,7 +64,7 @@ export default function StreetView({
     }
 
     initStreetView()
-  }, [isInitialized])
+  }, [isInitialized, contextApiKey, apiKeyLoading])
 
   // Initialize Street View Panorama
   useEffect(() => {

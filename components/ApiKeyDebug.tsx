@@ -7,7 +7,7 @@ import { useApiKey } from '@/contexts/ApiKeyContext'
  * Remove this component after testing is complete
  */
 export default function ApiKeyDebug() {
-  const { apiKey, isDemoMode, isLoading, forceDemoMode } = useApiKey()
+  const { apiKey, isLoading, sharedKeyActive } = useApiKey()
 
   if (process.env.NODE_ENV === 'production') {
     return null // Don't show in production
@@ -35,13 +35,10 @@ export default function ApiKeyDebug() {
         <strong>Loading:</strong> {isLoading ? '⏳ Yes' : '✅ No'}
       </div>
       <div style={{ marginBottom: '0.25rem' }}>
-        <strong>Demo Mode:</strong> {isDemoMode ? '✅ Yes' : '❌ No'}
-      </div>
-      <div style={{ marginBottom: '0.25rem' }}>
-        <strong>Force Demo:</strong> {forceDemoMode ? '✅ On' : '❌ Off'}
-      </div>
-      <div style={{ marginBottom: '0.25rem' }}>
         <strong>API Key:</strong> {apiKey ? `✅ Set (${apiKey.substring(0, 10)}...)` : '❌ Not Set'}
+      </div>
+      <div style={{ marginBottom: '0.25rem' }}>
+        <strong>Shared Key:</strong> {sharedKeyActive ? '✅ Active' : '❌ Not Active'}
       </div>
       <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #ccc', fontSize: '0.7rem', color: '#666' }}>
         Env Key: {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? '✅ Set' : '❌ Not Set'}

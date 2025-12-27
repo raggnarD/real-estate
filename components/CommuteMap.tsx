@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useApiKey } from '@/contexts/ApiKeyContext'
 
 interface CommuteMapProps {
   origin: { lat: number; lng: number } | null
@@ -32,9 +33,10 @@ export default function CommuteMap({
   const markersRef = useRef<google.maps.Marker[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { apiKey: contextApiKey, isLoading: apiKeyLoading } = useApiKey()
 
   useEffect(() => {
-    if (!origin || !destination) {
+    if (!origin || !destination || apiKeyLoading) {
       setIsLoading(false)
       return
     }
@@ -44,11 +46,18 @@ export default function CommuteMap({
 
     const initMap = async () => {
       try {
+        // Use API key from context (user's key) or fallback to env variable
+        const apiKey = contextApiKey || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        if (!apiKey) {
+          setIsLoading(false)
+          return
+        }
+
         // Check if Google Maps is already loaded
         if (!window.google || !window.google.maps) {
           const { Loader } = await import('@googlemaps/js-api-loader')
           const loader = new Loader({
-            apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+            apiKey: apiKey,
             version: 'weekly',
             libraries: ['places'],
           })
@@ -325,7 +334,7 @@ export default function CommuteMap({
       markersRef.current.forEach(marker => marker.setMap(null))
       markersRef.current = []
     }
-  }, [origin, transitStop, destination, leg1Mode, transitType, mode])
+  }, [origin, transitStop, destination, leg1Mode, transitType, mode, contextApiKey, apiKeyLoading])
 
   if (!origin || !destination) {
     return (

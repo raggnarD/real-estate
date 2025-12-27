@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import ApiKeyDebug from '@/components/ApiKeyDebug'
@@ -8,15 +9,38 @@ import { useApiKey } from '@/contexts/ApiKeyContext'
 export default function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
-  const { apiKey, forceDemoMode, setForceDemoMode, isDemoMode } = useApiKey()
+  const { 
+    apiKey, 
+    sharedKeyActive,
+    sharedKeyTimeRemaining,
+    revokeSharedKey
+  } = useApiKey()
+  const [countdown, setCountdown] = useState<number | null>(null)
 
-  const handleToggleChange = (checked: boolean) => {
-    if (!checked && !apiKey) {
-      // User trying to turn off demo mode but no API key - redirect to account page
-      router.push('/account')
+  // Live countdown timer for shared key
+  useEffect(() => {
+    if (sharedKeyTimeRemaining !== null && sharedKeyTimeRemaining > 0) {
+      setCountdown(sharedKeyTimeRemaining)
+      const interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null || prev <= 1000) {
+            return null
+          }
+          return prev - 1000
+        })
+      }, 1000)
+
+      return () => clearInterval(interval)
     } else {
-      setForceDemoMode(checked)
+      setCountdown(null)
     }
+  }, [sharedKeyTimeRemaining])
+
+  const formatTime = (ms: number | null) => {
+    if (!ms || ms <= 0) return 'Expired'
+    const hours = Math.floor(ms / (1000 * 60 * 60))
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60))
+    return `${hours}h ${minutes}m`
   }
 
   return (
@@ -37,6 +61,31 @@ export default function Navigation() {
         maxWidth: '1200px',
         margin: '0 auto'
       }}>
+        {/* Platform Logo */}
+        <Link 
+          href="/"
+          style={{
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            marginRight: '1rem'
+          }}
+        >
+          <img
+            src="/rushroost-logo.png"
+            alt="RushRoost"
+            style={{
+              height: '40px',
+              width: 'auto',
+              objectFit: 'contain'
+            }}
+            onError={(e) => {
+              // Fallback if image doesn't load
+              console.error('Logo image failed to load')
+            }}
+          />
+        </Link>
+        
         <Link 
           href="/"
           style={{
@@ -65,7 +114,7 @@ export default function Navigation() {
             backgroundColor: pathname === '/neighborhood-finder' ? '#e6f2ff' : 'transparent'
           }}
         >
-          🧭 Neighborhood Finder
+          📍 Neighborhood Finder
         </Link>
         
         {/* Spacer to push right-side items to the right */}
@@ -114,118 +163,6 @@ export default function Navigation() {
               />
             </svg>
           </Link>
-          
-          {/* Demo Mode Toggle */}
-          <div 
-            role="group"
-            aria-label="Demo mode toggle"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              padding: '0.5rem 1rem',
-              backgroundColor: !apiKey 
-                ? '#e9ecef' 
-                : (isDemoMode ? '#fff3cd' : '#e6f2ff'),
-              borderRadius: '4px',
-              border: `1px solid ${!apiKey 
-                ? '#adb5bd' 
-                : (isDemoMode ? '#ffc107' : '#0070f3')}`
-            }}>
-            <span 
-              style={{
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                color: !apiKey 
-                  ? '#6c757d' 
-                  : (isDemoMode ? '#856404' : '#004085')
-              }}
-            >
-              🎭 Demo Mode
-            </span>
-            {!apiKey ? (
-              <div
-                role="img"
-                aria-label="Locked - API key required to unlock demo mode toggle"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '24px',
-                  height: '24px',
-                  color: '#6c757d'
-                }}
-              >
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{ color: 'currentColor' }}
-                  aria-hidden="true"
-                >
-                  <path 
-                    d="M18 11H17V9C17 6.24 14.76 4 12 4C9.24 4 7 6.24 7 9V11H6C5.45 11 5 11.45 5 12V20C5 20.55 5.45 21 6 21H18C18.55 21 19 20.55 19 20V12C19 11.45 18.55 11 18 11ZM9 9C9 7.34 10.34 6 12 6C13.66 6 15 7.34 15 9V11H9V9ZM17 19H7V13H17V19Z" 
-                    fill="currentColor"
-                  />
-                </svg>
-              </div>
-            ) : (
-              <label 
-                style={{
-                  position: 'relative',
-                  display: 'inline-block',
-                  width: '44px',
-                  height: '24px',
-                  cursor: 'pointer'
-                }}
-                aria-label={`Demo mode is ${forceDemoMode ? 'on' : 'off'}. Click to toggle.`}
-              >
-                <input
-                  type="checkbox"
-                  checked={forceDemoMode}
-                  onChange={(e) => handleToggleChange(e.target.checked)}
-                  aria-label={`Toggle demo mode. Currently ${forceDemoMode ? 'on' : 'off'}.`}
-                  style={{
-                    opacity: 0,
-                    width: 0,
-                    height: 0,
-                    position: 'absolute'
-                  }}
-                />
-                <span 
-                  role="switch"
-                  aria-checked={forceDemoMode}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: forceDemoMode ? '#ffc107' : '#6c757d',
-                    borderRadius: '24px',
-                    transition: 'background-color 0.3s',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <span style={{
-                    position: 'absolute',
-                    content: '""',
-                    height: '18px',
-                    width: '18px',
-                    left: '3px',
-                    bottom: '3px',
-                    backgroundColor: '#fff',
-                    borderRadius: '50%',
-                    transition: 'transform 0.3s',
-                    transform: forceDemoMode ? 'translateX(20px)' : 'translateX(0)',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                  }} />
-                </span>
-              </label>
-            )}
-          </div>
         </div>
       </div>
       <ApiKeyDebug />

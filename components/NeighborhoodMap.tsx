@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useApiKey } from '@/contexts/ApiKeyContext'
 
 interface CityResult {
   name: string
@@ -36,20 +37,28 @@ export default function NeighborhoodMap({
   const infoWindowsRef = useRef<google.maps.InfoWindow[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { apiKey: contextApiKey, isLoading: apiKeyLoading } = useApiKey()
 
   useEffect(() => {
-    if (!workLocation || cities.length === 0) {
+    if (!workLocation || cities.length === 0 || apiKeyLoading) {
       setIsLoading(false)
       return
     }
 
     const initMap = async () => {
       try {
+        // Use API key from context (user's key) or fallback to env variable
+        const apiKey = contextApiKey || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        if (!apiKey) {
+          setIsLoading(false)
+          return
+        }
+
         // Check if Google Maps is already loaded
         if (!window.google || !window.google.maps) {
           const { Loader } = await import('@googlemaps/js-api-loader')
           const loader = new Loader({
-            apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+            apiKey: apiKey,
             version: 'weekly',
             libraries: ['places'],
           })
@@ -189,7 +198,7 @@ export default function NeighborhoodMap({
       markersRef.current = []
       infoWindowsRef.current = []
     }
-  }, [workLocation, cities, selectedCityId, onCitySelect])
+  }, [workLocation, cities, selectedCityId, onCitySelect, contextApiKey, apiKeyLoading])
 
   if (!workLocation || cities.length === 0) {
     return (

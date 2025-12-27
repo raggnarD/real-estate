@@ -2,28 +2,111 @@
 
 import { useState, useEffect } from 'react'
 import { useApiKey } from '@/contexts/ApiKeyContext'
+import TermsModal from '@/components/TermsModal'
 
 export default function AccountPage() {
-  const { apiKey, setApiKey, isDemoMode, forceDemoMode } = useApiKey()
+  const { 
+    apiKey, 
+    setApiKey, 
+    sharedKeyActive,
+    sharedKeyExpiresAt,
+    sharedKeyTimeRemaining,
+    hasExpiredCookie,
+    activateSharedKey,
+    revokeSharedKey,
+    checkSharedKeyStatus
+  } = useApiKey()
   const [inputValue, setInputValue] = useState(apiKey || '')
   const [showKey, setShowKey] = useState(false)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [isActivating, setIsActivating] = useState(false)
+  const [isRevoking, setIsRevoking] = useState(false)
+  const [countdown, setCountdown] = useState<number | null>(null)
+  const [keyType, setKeyType] = useState<'shared' | 'own'>(apiKey ? 'own' : (sharedKeyActive ? 'shared' : 'own'))
+  const [pendingChanges, setPendingChanges] = useState(false)
 
-  const handleSave = () => {
-    if (inputValue.trim()) {
-      setApiKey(inputValue.trim())
-      setSaveMessage('API key saved successfully!')
-      setTimeout(() => setSaveMessage(null), 3000)
+  const handleSave = async () => {
+    if (keyType === 'shared') {
+      // User wants to use shared key
+      if (!sharedKeyActive) {
+        // Need to activate shared key - show terms modal first
+        setShowTermsModal(true)
+        return
+      } else {
+        // Already active, just clear user's API key if they had one
+        if (apiKey) {
+          setApiKey(null)
+          setInputValue('')
+        }
+        setPendingChanges(false)
+        setSaveMessage('Switched to shared API key')
+        setTimeout(() => setSaveMessage(null), 3000)
+      }
     } else {
-      setSaveMessage('Please enter a valid API key')
-      setTimeout(() => setSaveMessage(null), 3000)
+      // User wants to use their own API key
+      if (inputValue.trim()) {
+        setApiKey(inputValue.trim())
+        // Revoke shared key if active
+        if (sharedKeyActive) {
+          try {
+            await revokeSharedKey()
+          } catch (error) {
+            console.error('Error revoking shared key:', error)
+          }
+        }
+        setPendingChanges(false)
+        setSaveMessage('API key saved successfully!')
+        setTimeout(() => setSaveMessage(null), 3000)
+      } else {
+        setSaveMessage('Please enter a valid API key')
+        setTimeout(() => setSaveMessage(null), 3000)
+      }
     }
   }
 
-  const handleClear = () => {
+  const handleActivateSharedKey = async () => {
+    setIsActivating(true)
+    try {
+      await activateSharedKey()
+      setShowTermsModal(false)
+      // Clear user's API key if they had one
+      if (apiKey) {
+        setApiKey(null)
+        setInputValue('')
+      }
+      setPendingChanges(false)
+      setSaveMessage('24-hour shared API key activated successfully!')
+      setTimeout(() => setSaveMessage(null), 5000)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to activate shared key'
+      setSaveMessage(errorMessage)
+      setTimeout(() => setSaveMessage(null), 10000) // Show error longer
+      // Keep modal open on error so user can see the error message
+      throw error // Re-throw so modal knows there was an error
+    } finally {
+      setIsActivating(false)
+    }
+  }
+
+  const handleClear = async () => {
+    // Clear the user's API key from localStorage
     setApiKey(null)
     setInputValue('')
-    setSaveMessage('API key cleared')
+    
+    // Also revoke shared key if it's active
+    if (sharedKeyActive) {
+      try {
+        await revokeSharedKey()
+        setSaveMessage('API key and shared key cleared')
+      } catch (error) {
+        console.error('Error revoking shared key:', error)
+        setSaveMessage('API key cleared, but failed to revoke shared key')
+      }
+    } else {
+      setSaveMessage('API key cleared')
+    }
+    
     setTimeout(() => setSaveMessage(null), 3000)
   }
 
@@ -31,6 +114,83 @@ export default function AccountPage() {
   useEffect(() => {
     setInputValue(apiKey || '')
   }, [apiKey])
+
+  // Update keyType when apiKey or sharedKeyActive changes
+  useEffect(() => {
+    if (apiKey) {
+      setKeyType('own')
+    } else if (sharedKeyActive) {
+      setKeyType('shared')
+    }
+  }, [apiKey, sharedKeyActive])
+
+  // Track when user makes changes
+  useEffect(() => {
+    if (keyType === 'shared' && !sharedKeyActive && !apiKey) {
+      setPendingChanges(false) // No changes if nothing is set
+    } else if (keyType === 'own' && inputValue.trim() !== (apiKey || '')) {
+      setPendingChanges(true)
+    } else if (keyType === 'shared' && sharedKeyActive && apiKey) {
+      setPendingChanges(true) // Switching from own to shared
+    } else if (keyType === 'own' && sharedKeyActive && !apiKey) {
+      setPendingChanges(true) // Switching from shared to own
+    } else {
+      setPendingChanges(false)
+    }
+  }, [keyType, inputValue, apiKey, sharedKeyActive])
+
+  // Update countdown timer and check for expiration
+  useEffect(() => {
+    if (sharedKeyTimeRemaining !== null && sharedKeyTimeRemaining > 0) {
+      setCountdown(sharedKeyTimeRemaining)
+      const interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null || prev <= 1000) {
+            // Expired - refresh status
+            checkSharedKeyStatus()
+            // Show expiration message if there's an expired cookie
+            if (hasExpiredCookie) {
+              setSaveMessage('Shared API key has expired. Please re-activate to continue using the shared key.')
+              setTimeout(() => setSaveMessage(null), 10000)
+            }
+            return null
+          }
+          return prev - 1000
+        })
+      }, 1000)
+
+      return () => clearInterval(interval)
+    } else {
+      setCountdown(null)
+      // Only show expiration message if there's an expired cookie (user previously activated)
+      if (hasExpiredCookie && !sharedKeyActive) {
+        setSaveMessage('Shared API key has expired. Please re-activate to continue using the shared key.')
+        setTimeout(() => setSaveMessage(null), 10000)
+      }
+    }
+  }, [sharedKeyTimeRemaining, sharedKeyActive, hasExpiredCookie, checkSharedKeyStatus])
+
+  const formatTimeRemaining = (ms: number | null) => {
+    if (ms === null || ms <= 0) return 'Expired'
+    const hours = Math.floor(ms / (1000 * 60 * 60))
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60))
+    const seconds = Math.floor((ms % (1000 * 60)) / 1000)
+    return `${hours}h ${minutes}m ${seconds}s`
+  }
+
+  const handleRevokeSharedKey = async () => {
+    setIsRevoking(true)
+    try {
+      await revokeSharedKey()
+      setSaveMessage('Shared API key revoked successfully')
+      setTimeout(() => setSaveMessage(null), 3000)
+    } catch (error) {
+      setSaveMessage(error instanceof Error ? error.message : 'Failed to revoke shared key')
+      setTimeout(() => setSaveMessage(null), 5000)
+    } finally {
+      setIsRevoking(false)
+    }
+  }
 
   return (
     <div style={{ 
@@ -45,40 +205,6 @@ export default function AccountPage() {
         Manage your Google Maps API key and account preferences.
       </p>
 
-      {/* Warning callout if user tried to turn off demo mode without API key */}
-      {forceDemoMode && !apiKey && (
-        <div style={{
-          padding: '1rem 1.5rem',
-          backgroundColor: '#fff3cd',
-          border: '2px solid #ffc107',
-          borderRadius: '8px',
-          marginBottom: '2rem',
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '1rem'
-        }}>
-          <div style={{ fontSize: '1.5rem', flexShrink: 0 }}>⚠️</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ 
-              fontWeight: '600', 
-              fontSize: '1rem', 
-              color: '#856404',
-              marginBottom: '0.5rem'
-            }}>
-              API Key Required to Disable Demo Mode
-            </div>
-            <div style={{ 
-              fontSize: '0.875rem', 
-              color: '#856404',
-              lineHeight: '1.5'
-            }}>
-              You need to enter a valid Google Maps API key below to turn off demo mode. 
-              Demo mode is currently active because no API key is set.
-            </div>
-          </div>
-        </div>
-      )}
-
       <div style={{ 
         border: '1px solid #ddd', 
         borderRadius: '8px', 
@@ -90,23 +216,76 @@ export default function AccountPage() {
           Google Maps API Key
         </h2>
 
-        {isDemoMode && (
-          <div style={{
-            padding: '1rem',
-            backgroundColor: '#fff3cd',
-            border: '1px solid #ffc107',
-            borderRadius: '4px',
-            marginBottom: '1.5rem',
-            fontSize: '0.875rem'
+        {/* Key Type Selection */}
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ 
+            display: 'block', 
+            marginBottom: '1rem', 
+            color: '#000', 
+            fontWeight: '500',
+            fontSize: '1rem'
           }}>
-            <strong>Demo Mode Active</strong>
-            <div style={{ marginTop: '0.5rem', color: '#856404' }}>
-              {apiKey 
-                ? 'You have an API key saved, but demo mode is currently enabled. Toggle demo mode off in the navigation to use your API key.'
-                : 'No API key is set. Enter your Google Maps API key below to enable full functionality.'}
-            </div>
+            Select API Key Type:
+          </label>
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              padding: '0.75rem 1rem',
+              border: `2px solid ${keyType === 'own' ? '#0070f3' : '#ddd'}`,
+              borderRadius: '4px',
+              backgroundColor: keyType === 'own' ? '#e6f2ff' : '#fff',
+              transition: 'all 0.2s',
+              flex: 1,
+              minWidth: '200px'
+            }}>
+              <input
+                type="radio"
+                name="keyType"
+                value="own"
+                checked={keyType === 'own'}
+                onChange={() => {
+                  setKeyType('own')
+                  setPendingChanges(true)
+                }}
+                style={{ cursor: 'pointer' }}
+              />
+              <span style={{ fontWeight: keyType === 'own' ? '600' : '400' }}>
+                My Own API Key
+              </span>
+            </label>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              padding: '0.75rem 1rem',
+              border: `2px solid ${keyType === 'shared' ? '#28a745' : '#ddd'}`,
+              borderRadius: '4px',
+              backgroundColor: keyType === 'shared' ? '#d4edda' : '#fff',
+              transition: 'all 0.2s',
+              flex: 1,
+              minWidth: '200px'
+            }}>
+              <input
+                type="radio"
+                name="keyType"
+                value="shared"
+                checked={keyType === 'shared'}
+                onChange={() => {
+                  setKeyType('shared')
+                  setPendingChanges(true)
+                }}
+                style={{ cursor: 'pointer' }}
+              />
+              <span style={{ fontWeight: keyType === 'shared' ? '600' : '400' }}>
+                24-Hour Shared Key
+              </span>
+            </label>
           </div>
-        )}
+        </div>
 
         {saveMessage && (
           <div style={{
@@ -128,16 +307,18 @@ export default function AccountPage() {
           </div>
         )}
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ 
-            display: 'block', 
-            marginBottom: '0.5rem', 
-            color: '#000', 
-            fontWeight: '500',
-            fontSize: '1rem'
-          }}>
-            API Key:
-          </label>
+        {/* Show input field only if "My Own API Key" is selected */}
+        {keyType === 'own' && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '0.5rem', 
+              color: '#000', 
+              fontWeight: '500',
+              fontSize: '1rem'
+            }}>
+              API Key:
+            </label>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <input
               type={showKey ? 'text' : 'password'}
@@ -184,53 +365,135 @@ export default function AccountPage() {
               Current key: {showKey ? apiKey : `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}`}
             </div>
           )}
-        </div>
+          </div>
+        )}
 
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        {/* Show shared key info if "24-Hour Shared Key" is selected */}
+        {keyType === 'shared' && (
+          <div style={{
+            marginBottom: '1.5rem',
+            padding: '1rem',
+            backgroundColor: '#f0f8ff',
+            border: '1px solid #b3d9ff',
+            borderRadius: '4px'
+          }}>
+            {sharedKeyActive ? (
+              <div>
+                <div style={{ marginBottom: '0.75rem', fontSize: '0.875rem', color: '#004085' }}>
+                  <strong>✅ Shared API Key Active</strong>
+                  <div style={{ marginTop: '0.5rem' }}>
+                    {countdown !== null && countdown > 0 ? (
+                      <div>
+                        Time remaining: <strong>{formatTimeRemaining(countdown)}</strong>
+                      </div>
+                    ) : sharedKeyTimeRemaining !== null ? (
+                      <div>
+                        Time remaining: <strong>{formatTimeRemaining(sharedKeyTimeRemaining)}</strong>
+                      </div>
+                    ) : (
+                      <div>Checking expiration time...</div>
+                    )}
+                  </div>
+                  {sharedKeyTimeRemaining !== null && sharedKeyTimeRemaining < 60 * 60 * 1000 && (
+                    <div style={{ marginTop: '0.5rem', color: '#856404' }}>
+                      ⚠️ Less than 1 hour remaining
+                    </div>
+                  )}
+                </div>
+                <p style={{ fontSize: '0.8125rem', color: '#666', marginBottom: '0.75rem' }}>
+                  The shared key will automatically expire after 24 hours. Click Save to continue using it.
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (confirm('Are you sure you want to revoke the shared API key? You can re-activate it later.')) {
+                      try {
+                        await handleRevokeSharedKey()
+                        setPendingChanges(true) // Allow user to save/reactivate if they want
+                      } catch (error) {
+                        console.error('Error revoking shared key:', error)
+                      }
+                    }
+                  }}
+                  disabled={isRevoking}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    backgroundColor: isRevoking ? '#ccc' : '#dc3545',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: isRevoking ? 'not-allowed' : 'pointer',
+                    fontWeight: '500'
+                  }}
+                >
+                  {isRevoking ? 'Revoking...' : 'Revoke Shared Key'}
+                </button>
+              </div>
+            ) : (
+              <div>
+                <p style={{ fontSize: '0.875rem', color: '#004085', marginBottom: '0.75rem' }}>
+                  <strong>No shared key active</strong>
+                </p>
+                <p style={{ fontSize: '0.8125rem', color: '#666', marginBottom: '0.75rem' }}>
+                  Activate a 24-hour shared API key. You'll need to accept the terms and conditions.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  disabled={isActivating}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    backgroundColor: isActivating ? '#ccc' : '#28a745',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: isActivating ? 'not-allowed' : 'pointer',
+                    fontWeight: '500'
+                  }}
+                >
+                  {isActivating ? 'Activating...' : 'Activate 24-Hour Shared Key'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Save button */}
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <button
             type="button"
             onClick={handleSave}
-            disabled={!inputValue.trim()}
+            disabled={!pendingChanges || (keyType === 'own' && !inputValue.trim()) || isActivating}
             style={{
               padding: '0.75rem 1.5rem',
               fontSize: '1rem',
-              backgroundColor: inputValue.trim() ? '#0070f3' : '#ccc',
+              backgroundColor: (pendingChanges && (keyType === 'shared' || inputValue.trim())) && !isActivating ? '#0070f3' : '#ccc',
               color: '#fff',
               border: 'none',
               borderRadius: '4px',
-              cursor: inputValue.trim() ? 'pointer' : 'not-allowed',
+              cursor: (pendingChanges && (keyType === 'shared' || inputValue.trim())) && !isActivating ? 'pointer' : 'not-allowed',
               fontWeight: '500'
             }}
           >
-            Save API Key
+            {isActivating ? 'Activating...' : 'Save Changes'}
           </button>
-          {apiKey && (
-            <button
-              type="button"
-              onClick={handleClear}
-              style={{
-                padding: '0.75rem 1.5rem',
-                fontSize: '1rem',
-                backgroundColor: '#dc3545',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: '500'
-              }}
-            >
-              Clear API Key
-            </button>
+          {pendingChanges && (
+            <span style={{ fontSize: '0.875rem', color: '#666' }}>
+              You have unsaved changes
+            </span>
           )}
         </div>
+      </div>
 
-        <div style={{ 
-          marginTop: '2rem', 
-          padding: '1.5rem', 
-          backgroundColor: '#e7f3ff', 
-          borderRadius: '8px',
-          border: '1px solid #b3d9ff'
-        }}>
+      <div style={{ 
+        marginTop: '2rem', 
+        padding: '1.5rem', 
+        backgroundColor: '#e7f3ff', 
+        borderRadius: '8px',
+        border: '1px solid #b3d9ff'
+      }}>
           <h3 style={{ 
             marginTop: 0, 
             marginBottom: '0.5rem', 
@@ -483,7 +746,12 @@ export default function AccountPage() {
             </div>
           </div>
         </div>
-      </div>
+
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={handleActivateSharedKey}
+      />
     </div>
   )
 }

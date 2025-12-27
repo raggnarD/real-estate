@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { resolveApiKey } from '@/utils/apiKeyResolver'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -6,6 +7,7 @@ export async function GET(request: NextRequest) {
   const workLng = searchParams.get('lng')
   const mode = searchParams.get('mode') || 'driving'
   const maxTime = searchParams.get('maxTime') // in minutes
+  const userApiKey = searchParams.get('apiKey') // Optional user API key from client
 
   if (!workLat || !workLng || !maxTime) {
     return NextResponse.json(
@@ -23,7 +25,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    const apiKey = resolveApiKey(request, userApiKey)
     if (!apiKey) {
       return NextResponse.json(
         { error: 'Google Maps API key not configured' },
