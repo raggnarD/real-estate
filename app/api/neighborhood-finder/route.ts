@@ -278,9 +278,15 @@ export async function GET(request: NextRequest) {
 
     for (let i = 0; i < citiesWithCenters.length; i += batchSize) {
       const batch = citiesWithCenters.slice(i, i + batchSize)
-      const destinations = batch.map((city: any) => 
-        `${city.geometry.location.lat},${city.geometry.location.lng}`
-      ).join('|')
+      const destinations = batch.map((city: any) => {
+        const lat = typeof city.geometry.location.lat === 'function' 
+          ? city.geometry.location.lat() 
+          : city.geometry.location.lat
+        const lng = typeof city.geometry.location.lng === 'function'
+          ? city.geometry.location.lng()
+          : city.geometry.location.lng
+        return `${lat},${lng}`
+      }).join('|')
 
       // Determine travel mode for Distance Matrix
       let travelMode = 'driving'

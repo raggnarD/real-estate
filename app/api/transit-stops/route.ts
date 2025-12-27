@@ -112,9 +112,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ stops: [] })
     }
 
-    const destinations = places.map((place: any) => 
-      `${place.geometry.location.lat},${place.geometry.location.lng}`
-    ).join('|')
+    const destinations = places.map((place: any) => {
+      const lat = typeof place.geometry.location.lat === 'function' 
+        ? place.geometry.location.lat() 
+        : place.geometry.location.lat
+      const lng = typeof place.geometry.location.lng === 'function'
+        ? place.geometry.location.lng()
+        : place.geometry.location.lng
+      return `${lat},${lng}`
+    }).join('|')
 
     const distanceMatrixUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${lat},${lng}&destinations=${destinations}&mode=walking&key=${apiKey}&units=imperial`
     
@@ -131,12 +137,18 @@ export async function GET(request: NextRequest) {
     // Combine place data with distance data
     const stopsWithDistance = places.map((place: any, index: number) => {
       const element = distanceData.rows[0]?.elements[index]
+      const lat = typeof place.geometry.location.lat === 'function' 
+        ? place.geometry.location.lat() 
+        : place.geometry.location.lat
+      const lng = typeof place.geometry.location.lng === 'function'
+        ? place.geometry.location.lng()
+        : place.geometry.location.lng
       return {
         name: place.name,
         address: place.vicinity || place.formatted_address || 'Address not available',
         location: {
-          lat: place.geometry.location.lat,
-          lng: place.geometry.location.lng,
+          lat: Number(lat),
+          lng: Number(lng),
         },
         distance: element?.distance?.text || 'Unknown',
         distanceValue: element?.distance?.value || 0,

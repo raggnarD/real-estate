@@ -200,13 +200,13 @@ export default function Home() {
     }
     // Set location immediately if available from place selection
     if (place.geometry?.location) {
-      const location = {
-        lat: typeof place.geometry.location.lat === 'function' 
-          ? place.geometry.location.lat() 
-          : place.geometry.location.lat,
-        lng: typeof place.geometry.location.lng === 'function'
-          ? place.geometry.location.lng()
-          : place.geometry.location.lng
+      const locationObj = place.geometry.location
+      const lat = typeof locationObj.lat === 'function' ? locationObj.lat() : locationObj.lat
+      const lng = typeof locationObj.lng === 'function' ? locationObj.lng() : locationObj.lng
+      
+      const location: { lat: number; lng: number } = {
+        lat: Number(lat),
+        lng: Number(lng)
       }
       setResults(prev => ({ 
         ...prev, 
