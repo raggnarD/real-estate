@@ -1,6 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useApiKey } from '@/contexts/ApiKeyContext'
+import { useWizard } from '@/contexts/WizardContext'
+import TermsModal from '@/components/TermsModal'
 
 interface NeighborhoodFinderIntroProps {
   isOpen: boolean
@@ -9,23 +13,127 @@ interface NeighborhoodFinderIntroProps {
 
 export default function NeighborhoodFinderIntro({ isOpen, onClose }: NeighborhoodFinderIntroProps) {
   const [hasSeenIntro, setHasSeenIntro] = useState(false)
+  const [showApiKeySetup, setShowApiKeySetup] = useState(false)
+  const [keyType, setKeyType] = useState<'shared' | 'own'>('shared')
+  const [inputValue, setInputValue] = useState('')
+  const [showKey, setShowKey] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [isActivating, setIsActivating] = useState(false)
+  const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const router = useRouter()
+  const { 
+    apiKey, 
+    setApiKey, 
+    sharedKeyActive,
+    activateSharedKey,
+    revokeSharedKey
+  } = useApiKey()
+  const { wizardActive, setWizardStep } = useWizard()
 
   useEffect(() => {
-    // Check if user has seen this intro before
-    const seen = localStorage.getItem('hasSeenNeighborhoodFinderIntro')
-    if (seen === 'true') {
-      setHasSeenIntro(true)
-      onClose() // Auto-close if already seen
+    // Don't auto-close if in wizard mode - let the flow control it
+    if (!wizardActive) {
+      const seen = localStorage.getItem('hasSeenNeighborhoodFinderIntro')
+      if (seen === 'true') {
+        setHasSeenIntro(true)
+        onClose() // Auto-close if already seen and not in wizard
+      }
     }
-  }, [onClose])
+  }, [onClose, wizardActive])
 
-  const handleGotIt = () => {
-    localStorage.setItem('hasSeenNeighborhoodFinderIntro', 'true')
-    setHasSeenIntro(true)
-    onClose()
+  useEffect(() => {
+    // Set default to shared key
+    if (apiKey) {
+      setKeyType('own')
+      setInputValue(apiKey)
+    } else if (sharedKeyActive) {
+      setKeyType('shared')
+    }
+  }, [apiKey, sharedKeyActive])
+
+  const handleSetupApiKey = () => {
+    setShowApiKeySetup(true)
   }
 
-  if (!isOpen || hasSeenIntro) return null
+  const handleSave = async () => {
+    if (keyType === 'shared') {
+      // User wants to use shared key
+      if (!sharedKeyActive) {
+        // Need to activate shared key - show terms modal first
+        setShowTermsModal(true)
+        return
+      } else {
+        // Already active, just clear user's API key if they had one
+        if (apiKey) {
+          setApiKey(null)
+          setInputValue('')
+        }
+        setSaveMessage('Switched to shared API key')
+        setTimeout(() => setSaveMessage(null), 3000)
+        // Navigate to neighborhood finder
+        handleApiKeyComplete()
+      }
+    } else {
+      // User wants to use their own API key
+      if (inputValue.trim()) {
+        setApiKey(inputValue.trim())
+        // Revoke shared key if active
+        if (sharedKeyActive) {
+          try {
+            await revokeSharedKey()
+          } catch (error) {
+            console.error('Error revoking shared key:', error)
+          }
+        }
+        setSaveMessage('API key saved successfully!')
+        setTimeout(() => setSaveMessage(null), 3000)
+        // Navigate to neighborhood finder
+        handleApiKeyComplete()
+      } else {
+        setSaveMessage('Please enter a valid API key')
+        setTimeout(() => setSaveMessage(null), 3000)
+      }
+    }
+  }
+
+  const handleActivateSharedKey = async () => {
+    setIsActivating(true)
+    try {
+      await activateSharedKey()
+      setShowTermsModal(false)
+      // Clear user's API key if they had one
+      if (apiKey) {
+        setApiKey(null)
+        setInputValue('')
+      }
+      setSaveMessage('24-hour shared API key activated successfully!')
+      setTimeout(() => setSaveMessage(null), 3000)
+      // Navigate to neighborhood finder
+      handleApiKeyComplete()
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to activate shared key'
+      setSaveMessage(errorMessage)
+      setTimeout(() => setSaveMessage(null), 10000)
+      throw error
+    } finally {
+      setIsActivating(false)
+    }
+  }
+
+  const handleApiKeyComplete = () => {
+    localStorage.setItem('hasSeenNeighborhoodFinderIntro', 'true')
+    if (wizardActive) {
+      setWizardStep('neighborhood-finder')
+      setTimeout(() => {
+        onClose()
+        router.push('/neighborhood-finder')
+      }, 1000)
+    } else {
+      onClose()
+    }
+  }
+
+  if (!isOpen) return null
 
   return (
     <div style={{
@@ -41,7 +149,12 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
       zIndex: 10000,
       padding: '0.5rem',
       overflow: 'auto'
-    }} onClick={handleGotIt}>
+    }} onClick={() => {
+      // Don't close on backdrop click if in wizard mode or showing API setup
+      if (!wizardActive && !showApiKeySetup) {
+        onClose()
+      }
+    }}>
       <div style={{
         backgroundColor: '#fff',
         borderRadius: '12px',
@@ -51,7 +164,9 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
         overflow: 'auto',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
         position: 'relative',
-        margin: '0 auto'
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column'
       }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={{
@@ -83,7 +198,9 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
           padding: '2rem',
           fontSize: '1rem',
           lineHeight: '1.7',
-          color: '#333'
+          color: '#333',
+          flex: 1,
+          overflowY: 'auto'
         }}>
           {/* Step 1 */}
           <div style={{
@@ -254,40 +371,283 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
           </div>
         </div>
 
+        {/* API Key Setup Section */}
+        {showApiKeySetup && (
+          <div style={{
+            padding: '2rem',
+            borderTop: '2px solid #e0e0e0',
+            backgroundColor: '#f9f9f9'
+          }}>
+            <h3 style={{
+              margin: '0 0 1.5rem 0',
+              fontSize: '1.25rem',
+              fontWeight: '600',
+              color: '#000'
+            }}>
+              Setup API Key
+            </h3>
+
+            {/* Key Type Selection */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '1rem', 
+                color: '#000', 
+                fontWeight: '500',
+                fontSize: '1rem'
+              }}>
+                Select API Key Type:
+              </label>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  padding: '0.75rem 1rem',
+                  border: `2px solid ${keyType === 'shared' ? '#28a745' : '#ddd'}`,
+                  borderRadius: '4px',
+                  backgroundColor: keyType === 'shared' ? '#d4edda' : '#fff',
+                  transition: 'all 0.2s',
+                  flex: 1,
+                  minWidth: '200px'
+                }}>
+                  <input
+                    type="radio"
+                    name="keyType"
+                    value="shared"
+                    checked={keyType === 'shared'}
+                    onChange={() => setKeyType('shared')}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span style={{ fontWeight: keyType === 'shared' ? '600' : '400' }}>
+                    24-Hour Shared Key
+                  </span>
+                </label>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  padding: '0.75rem 1rem',
+                  border: `2px solid ${keyType === 'own' ? '#0070f3' : '#ddd'}`,
+                  borderRadius: '4px',
+                  backgroundColor: keyType === 'own' ? '#e6f2ff' : '#fff',
+                  transition: 'all 0.2s',
+                  flex: 1,
+                  minWidth: '200px'
+                }}>
+                  <input
+                    type="radio"
+                    name="keyType"
+                    value="own"
+                    checked={keyType === 'own'}
+                    onChange={() => setKeyType('own')}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span style={{ fontWeight: keyType === 'own' ? '600' : '400' }}>
+                    My Own API Key
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {saveMessage && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                backgroundColor: saveMessage.includes('success') || saveMessage.includes('cleared') 
+                  ? '#d4edda' 
+                  : '#f8d7da',
+                border: `1px solid ${saveMessage.includes('success') || saveMessage.includes('cleared') 
+                  ? '#28a745' 
+                  : '#dc3545'}`,
+                borderRadius: '4px',
+                marginBottom: '1rem',
+                color: saveMessage.includes('success') || saveMessage.includes('cleared')
+                  ? '#155724'
+                  : '#721c24',
+                fontSize: '0.875rem'
+              }}>
+                {saveMessage}
+              </div>
+            )}
+
+            {/* Show input field only if "My Own API Key" is selected */}
+            {keyType === 'own' && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  color: '#000', 
+                  fontWeight: '500',
+                  fontSize: '1rem'
+                }}>
+                  API Key:
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    type={showKey ? 'text' : 'password'}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="Enter your Google Maps API key"
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      fontSize: '1rem',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      color: '#000',
+                      backgroundColor: '#fff',
+                      boxSizing: 'border-box',
+                      fontFamily: showKey ? 'monospace' : 'inherit'
+                    }}
+                  />
+                  {apiKey && inputValue && (
+                    <button
+                      type="button"
+                      onClick={() => setShowKey(!showKey)}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: '#6c757d',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {showKey ? '👁️ Hide' : '👁️ Show'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Show shared key info if "24-Hour Shared Key" is selected */}
+            {keyType === 'shared' && (
+              <div style={{
+                marginBottom: '1.5rem',
+                padding: '1rem',
+                backgroundColor: '#f0f8ff',
+                border: '1px solid #b3d9ff',
+                borderRadius: '4px'
+              }}>
+                {sharedKeyActive ? (
+                  <div style={{ fontSize: '0.875rem', color: '#004085' }}>
+                    <strong>✅ Shared API Key Active</strong>
+                    <p style={{ margin: '0.5rem 0 0 0' }}>
+                      You're all set! The shared key is active and ready to use.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.875rem', color: '#004085' }}>
+                    <strong>24-Hour Shared Key</strong>
+                    <p style={{ margin: '0.5rem 0 0 0' }}>
+                      Use our shared API key for 24 hours. You'll need to accept the terms and conditions to activate it.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Footer */}
         <div style={{
           padding: '1rem 1.5rem',
           borderTop: '1px solid #e0e0e0',
           display: 'flex',
           justifyContent: 'flex-end',
+          gap: '1rem',
           backgroundColor: '#f9f9f9',
-          borderRadius: '0 0 12px 12px'
+          borderRadius: showApiKeySetup ? '0' : '0 0 12px 12px'
         }}>
-          <button
-            onClick={handleGotIt}
-            style={{
-              padding: '0.75rem 2rem',
-              fontSize: '1rem',
-              backgroundColor: '#0070f3',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              transition: 'background-color 0.2s',
-              boxShadow: '0 2px 4px rgba(0, 112, 243, 0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#0056b3'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#0070f3'
-            }}
-          >
-            Got it!
-          </button>
+          {!showApiKeySetup ? (
+            <button
+              onClick={handleSetupApiKey}
+              style={{
+                padding: '0.75rem 2rem',
+                fontSize: '1rem',
+                backgroundColor: '#0070f3',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'background-color 0.2s',
+                boxShadow: '0 2px 4px rgba(0, 112, 243, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#0056b3'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#0070f3'
+              }}
+            >
+              Setup API Key
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => setShowApiKeySetup(false)}
+                style={{
+                  padding: '0.75rem 2rem',
+                  fontSize: '1rem',
+                  backgroundColor: '#6c757d',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#5a6268'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#6c757d'
+                }}
+              >
+                Back
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isActivating || (keyType === 'own' && !inputValue.trim())}
+                style={{
+                  padding: '0.75rem 2rem',
+                  fontSize: '1rem',
+                  backgroundColor: (isActivating || (keyType === 'own' && !inputValue.trim())) ? '#ccc' : '#28a745',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: (isActivating || (keyType === 'own' && !inputValue.trim())) ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  transition: 'background-color 0.2s',
+                  boxShadow: '0 2px 4px rgba(40, 167, 69, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActivating && !(keyType === 'own' && !inputValue.trim())) {
+                    e.currentTarget.style.backgroundColor = '#218838'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActivating && !(keyType === 'own' && !inputValue.trim())) {
+                    e.currentTarget.style.backgroundColor = '#28a745'
+                  }
+                }}
+              >
+                {isActivating ? 'Activating...' : 'Save & Continue'}
+              </button>
+            </>
+          )}
         </div>
       </div>
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={handleActivateSharedKey}
+      />
     </div>
   )
 }

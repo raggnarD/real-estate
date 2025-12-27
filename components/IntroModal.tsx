@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWizard } from '@/contexts/WizardContext'
+import NeighborhoodFinderIntro from '@/components/NeighborhoodFinderIntro'
 
 export default function IntroModal() {
   const [isOpen, setIsOpen] = useState(false)
+  const [showHowItWorks, setShowHowItWorks] = useState(false)
   const router = useRouter()
   const { setWizardActive, setWizardStep } = useWizard()
 
@@ -20,10 +22,9 @@ export default function IntroModal() {
   const handleGetStarted = () => {
     setIsOpen(false)
     localStorage.setItem('hasSeenIntro', 'true')
-    // Activate wizard mode and navigate to account page
+    // Activate wizard mode and show "How RushRoost Works" modal
     setWizardActive(true)
-    setWizardStep('account')
-    router.push('/account')
+    setShowHowItWorks(true)
   }
 
   const handleClose = () => {
@@ -248,6 +249,12 @@ export default function IntroModal() {
           </button>
         </div>
       </div>
+      {showHowItWorks && (
+        <NeighborhoodFinderIntro 
+          isOpen={showHowItWorks}
+          onClose={() => setShowHowItWorks(false)}
+        />
+      )}
     </div>
   )
 }

@@ -88,21 +88,6 @@ export default function Navigation() {
         </div>
         
         <Link 
-          href="/"
-          style={{
-            textDecoration: 'none',
-            color: pathname === '/' ? '#0070f3' : '#333',
-            fontWeight: pathname === '/' ? '600' : '400',
-            fontSize: '1rem',
-            padding: '0.5rem 1rem',
-            borderRadius: '4px',
-            transition: 'all 0.2s',
-            backgroundColor: pathname === '/' ? '#e6f2ff' : 'transparent'
-          }}
-        >
-          ⏱️ True Commute Time
-        </Link>
-        <Link 
           href="/neighborhood-finder"
           style={{
             textDecoration: 'none',
@@ -116,6 +101,21 @@ export default function Navigation() {
           }}
         >
           📍 Neighborhood Finder
+        </Link>
+        <Link 
+          href="/"
+          style={{
+            textDecoration: 'none',
+            color: pathname === '/' ? '#0070f3' : '#333',
+            fontWeight: pathname === '/' ? '600' : '400',
+            fontSize: '1rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '4px',
+            transition: 'all 0.2s',
+            backgroundColor: pathname === '/' ? '#e6f2ff' : 'transparent'
+          }}
+        >
+          ⏱️ True Commute Time
         </Link>
         
         {/* Spacer to push right-side items to the right */}
