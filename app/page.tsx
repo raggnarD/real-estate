@@ -378,7 +378,7 @@ export default function Home() {
       if (!originAddressChanged && results?.location) {
         searchResults.location = results.location
         searchResults.address = results.address
-        originAddress = results.address
+        originAddress = results.address ?? null
       }
 
       // Geocode origin address if provided and it changed
@@ -398,13 +398,13 @@ export default function Home() {
               // Same location, preserve object reference - address hasn't actually changed
               searchResults.location = results.location
               searchResults.address = results.address || geocodeData.address
-              originAddress = results.address || geocodeData.address
+              originAddress = (results.address || geocodeData.address) ?? null
               originAddressChanged = false // Mark as unchanged to preserve in setResults
             } else {
               // Different location or no previous location - address has changed
               searchResults.address = geocodeData.address
               searchResults.location = geocodeData.location
-              originAddress = geocodeData.address
+              originAddress = geocodeData.address ?? null
               originAddressChanged = true
               // Update address field with geocoded address (might be more accurate)
               setAddress(geocodeData.address)
