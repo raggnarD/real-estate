@@ -3,6 +3,7 @@ import Navigation from '@/components/Navigation'
 import ApiKeyBanner from '@/components/ApiKeyBanner'
 import IntroModal from '@/components/IntroModal'
 import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
+import { WizardProvider } from '@/contexts/WizardContext'
 
 export const metadata: Metadata = {
   title: 'Real Estate App',
@@ -24,10 +25,12 @@ export default function RootLayout({
         color: '#000'
       }}>
         <ApiKeyProvider>
-          <IntroModal />
-          <ApiKeyBanner />
-          <Navigation />
-          {children}
+          <WizardProvider>
+            <IntroModal />
+            <ApiKeyBanner />
+            <Navigation />
+            {children}
+          </WizardProvider>
         </ApiKeyProvider>
       </body>
     </html>

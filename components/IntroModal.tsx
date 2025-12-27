@@ -1,9 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useWizard } from '@/contexts/WizardContext'
 
 export default function IntroModal() {
   const [isOpen, setIsOpen] = useState(false)
+  const router = useRouter()
+  const { setWizardActive, setWizardStep } = useWizard()
 
   useEffect(() => {
     // Check if user has seen the intro before
@@ -12,6 +16,15 @@ export default function IntroModal() {
       setIsOpen(true)
     }
   }, [])
+
+  const handleGetStarted = () => {
+    setIsOpen(false)
+    localStorage.setItem('hasSeenIntro', 'true')
+    // Activate wizard mode and navigate to account page
+    setWizardActive(true)
+    setWizardStep('account')
+    router.push('/account')
+  }
 
   const handleClose = () => {
     setIsOpen(false)
@@ -211,7 +224,7 @@ export default function IntroModal() {
           borderRadius: '0 0 12px 12px'
         }}>
           <button
-            onClick={handleClose}
+            onClick={handleGetStarted}
             style={{
               padding: '0.75rem 2rem',
               fontSize: '1rem',

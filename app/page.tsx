@@ -7,6 +7,7 @@ import MapStreetViewToggle from '@/components/MapStreetViewToggle'
 import CommuteMap from '@/components/CommuteMap'
 import { useScrollToResults } from '@/hooks/useScrollToResults'
 import { useApiKey } from '@/contexts/ApiKeyContext'
+import { useWizard } from '@/contexts/WizardContext'
 
 interface SearchResults {
   address?: string
@@ -41,6 +42,7 @@ const MAX_HISTORY_ITEMS = 3
 
 export default function Home() {
   const { apiKey } = useApiKey()
+  const { wizardActive, workAddress: wizardWorkAddress, setWizardStep } = useWizard()
   const [address, setAddress] = useState('')
   const [destinationAddress, setDestinationAddress] = useState('')
   const [zillowUrl, setZillowUrl] = useState('')
@@ -57,6 +59,7 @@ export default function Home() {
   const [destinationHistory, setDestinationHistory] = useState<string[]>([])
   const [commuteResults, setCommuteResults] = useState<CommuteResults | null>(null)
   const [destinationLocation, setDestinationLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [showWizardMessage, setShowWizardMessage] = useState(false)
 
   // Memoize origin location to prevent unnecessary re-renders
   const originLocation = useMemo(() => results?.location || null, [
@@ -93,6 +96,19 @@ export default function Home() {
       }
     }
   }, [])
+
+  // Prepopulate work address from wizard if active
+  useEffect(() => {
+    if (wizardActive && wizardWorkAddress && !address) {
+      setAddress(wizardWorkAddress)
+      setWizardStep('commute-time')
+      setShowWizardMessage(true)
+      // Hide message after 5 seconds
+      setTimeout(() => {
+        setShowWizardMessage(false)
+      }, 5000)
+    }
+  }, [wizardActive, wizardWorkAddress, address, setWizardStep])
 
   // Save address to history
   const saveToHistory = (addr: string) => {
@@ -682,6 +698,20 @@ export default function Home() {
               {/* Spacer to match address field width */}
             </div>
           </div>
+
+          {showWizardMessage && wizardWorkAddress && (
+            <div style={{
+              padding: '1rem',
+              backgroundColor: '#e6f2ff',
+              border: '1px solid #0070f3',
+              borderRadius: '4px',
+              marginBottom: '1.5rem',
+              fontSize: '0.875rem',
+              color: '#004085'
+            }}>
+              <strong>✨ Work address prepopulated:</strong> Your work address from the Neighborhood Finder has been automatically filled in. Paste a Zillow URL below to see the true commute time!
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>

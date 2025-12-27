@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApiKey } from '@/contexts/ApiKeyContext'
+import { useWizard } from '@/contexts/WizardContext'
 import TermsModal from '@/components/TermsModal'
 
 export default function AccountPage() {
@@ -18,6 +19,7 @@ export default function AccountPage() {
     revokeSharedKey,
     checkSharedKeyStatus
   } = useApiKey()
+  const { wizardActive, setWizardStep } = useWizard()
   const [inputValue, setInputValue] = useState(apiKey || '')
   const [showKey, setShowKey] = useState(false)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
@@ -60,6 +62,14 @@ export default function AccountPage() {
         setPendingChanges(false)
         setSaveMessage('API key saved successfully!')
         setTimeout(() => setSaveMessage(null), 3000)
+        
+        // If wizard is active, navigate to neighborhood finder
+        if (wizardActive) {
+          setWizardStep('neighborhood-finder')
+          setTimeout(() => {
+            router.push('/neighborhood-finder')
+          }, 1000) // Small delay to show success message
+        }
       } else {
         setSaveMessage('Please enter a valid API key')
         setTimeout(() => setSaveMessage(null), 3000)
@@ -80,6 +90,14 @@ export default function AccountPage() {
       setPendingChanges(false)
       setSaveMessage('24-hour shared API key activated successfully!')
       setTimeout(() => setSaveMessage(null), 5000)
+      
+      // If wizard is active, navigate to neighborhood finder
+      if (wizardActive) {
+        setWizardStep('neighborhood-finder')
+        setTimeout(() => {
+          router.push('/neighborhood-finder')
+        }, 1000) // Small delay to show success message
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to activate shared key'
       setSaveMessage(errorMessage)

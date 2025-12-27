@@ -6,8 +6,10 @@ import AddressHistory from '@/components/AddressHistory'
 import NeighborhoodResults from '@/components/NeighborhoodResults'
 import NeighborhoodMap from '@/components/NeighborhoodMap'
 import MapStreetViewToggle from '@/components/MapStreetViewToggle'
+import NeighborhoodFinderIntro from '@/components/NeighborhoodFinderIntro'
 import { useScrollToResults } from '@/hooks/useScrollToResults'
 import { useApiKey } from '@/contexts/ApiKeyContext'
+import { useWizard } from '@/contexts/WizardContext'
 
 interface CityResult {
   name: string
@@ -25,6 +27,7 @@ const MAX_HISTORY_ITEMS = 3
 
 export default function NeighborhoodFinder() {
   const { apiKey } = useApiKey()
+  const { wizardActive, setWizardStep, setWorkAddress: setWizardWorkAddress } = useWizard()
   const [workAddress, setWorkAddress] = useState('')
   const [workLocation, setWorkLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [transportMode, setTransportMode] = useState<'driving' | 'bus' | 'train' | 'walking' | 'bicycling'>('driving')
@@ -35,6 +38,7 @@ export default function NeighborhoodFinder() {
   const [addressHistory, setAddressHistory] = useState<string[]>([])
   const [selectedCityId, setSelectedCityId] = useState<string | undefined>(undefined)
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'both'>('both')
+  const [showIntroModal, setShowIntroModal] = useState(false)
 
   // Auto-scroll to results when they are displayed
   // Use isLoading as trigger so scroll happens when submission completes
@@ -52,6 +56,18 @@ export default function NeighborhoodFinder() {
       }
     }
   }, [])
+
+  // Check if wizard is active and show intro modal
+  useEffect(() => {
+    if (wizardActive) {
+      setWizardStep('neighborhood-finder')
+      // Check if intro has been seen
+      const hasSeenIntro = localStorage.getItem('hasSeenNeighborhoodFinderIntro')
+      if (!hasSeenIntro) {
+        setShowIntroModal(true)
+      }
+    }
+  }, [wizardActive, setWizardStep])
 
   // Load address history from localStorage on mount
   useEffect(() => {
@@ -107,6 +123,10 @@ export default function NeighborhoodFinder() {
   // Select address from history
   const handleSelectFromHistory = async (addr: string) => {
     setWorkAddress(addr)
+    // Store in wizard context if wizard is active
+    if (wizardActive) {
+      setWizardWorkAddress(addr)
+    }
     try {
       const geocodeResponse = await fetch(
         buildApiUrl('/api/geocode', { address: addr })
@@ -126,6 +146,10 @@ export default function NeighborhoodFinder() {
     if (place.formatted_address) {
       setWorkAddress(place.formatted_address)
       saveToHistory(place.formatted_address)
+      // Store in wizard context if wizard is active
+      if (wizardActive) {
+        setWizardWorkAddress(place.formatted_address)
+      }
     }
     
     if (place.geometry?.location) {
@@ -168,6 +192,10 @@ export default function NeighborhoodFinder() {
           locationToUse = geocodeData.location
           setWorkLocation(geocodeData.location)
           saveToHistory(geocodeData.address)
+          // Store in wizard context if wizard is active
+          if (wizardActive) {
+            setWizardWorkAddress(geocodeData.address)
+          }
         } else {
           setError('Could not find location for work address')
           setIsLoading(false)
@@ -224,6 +252,10 @@ export default function NeighborhoodFinder() {
       margin: '0 auto', 
       padding: '2rem'
     }}>
+      <NeighborhoodFinderIntro 
+        isOpen={showIntroModal} 
+        onClose={() => setShowIntroModal(false)} 
+      />
       <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem' }}>
         Neighborhood Finder
       </h1>
