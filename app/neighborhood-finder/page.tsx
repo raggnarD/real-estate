@@ -114,15 +114,14 @@ export default function NeighborhoodFinder() {
     }
     
     if (place.geometry?.location) {
-      const location = {
-        lat: typeof place.geometry.location.lat === 'function' 
-          ? place.geometry.location.lat() 
-          : place.geometry.location.lat,
-        lng: typeof place.geometry.location.lng === 'function'
-          ? place.geometry.location.lng()
-          : place.geometry.location.lng
-      }
-      setWorkLocation(location)
+      const location = place.geometry.location
+      const lat = typeof location.lat === 'function' ? location.lat() : location.lat
+      const lng = typeof location.lng === 'function' ? location.lng() : location.lng
+      
+      setWorkLocation({
+        lat: Number(lat),
+        lng: Number(lng)
+      })
     }
   }
 
