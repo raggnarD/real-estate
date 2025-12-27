@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Navigation from '@/components/Navigation'
 import ApiKeyBanner from '@/components/ApiKeyBanner'
 import IntroModal from '@/components/IntroModal'
+import WizardOnboardingModal from '@/components/WizardOnboardingModal'
 import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
 import { WizardProvider } from '@/contexts/WizardContext'
 
@@ -27,6 +28,7 @@ export default function RootLayout({
         <ApiKeyProvider>
           <WizardProvider>
             <IntroModal />
+            <WizardOnboardingModal />
             <ApiKeyBanner />
             <Navigation />
             {children}
