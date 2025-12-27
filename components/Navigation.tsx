@@ -62,10 +62,8 @@ export default function Navigation() {
         margin: '0 auto'
       }}>
         {/* Platform Logo */}
-        <Link 
-          href="/"
+        <div 
           style={{
-            textDecoration: 'none',
             display: 'flex',
             alignItems: 'center',
             marginRight: '1rem'
@@ -74,17 +72,20 @@ export default function Navigation() {
           <img
             src="/rushroost-logo.png"
             alt="RushRoost"
+            width={409}
+            height={610}
             style={{
-              height: '40px',
+              height: '60px',
               width: 'auto',
-              objectFit: 'contain'
+              objectFit: 'contain',
+              cursor: 'default'
             }}
             onError={(e) => {
               // Fallback if image doesn't load
               console.error('Logo image failed to load')
             }}
           />
-        </Link>
+        </div>
         
         <Link 
           href="/"
