@@ -173,7 +173,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
           padding: '1.5rem',
           borderBottom: '1px solid #e0e0e0',
           background: 'linear-gradient(135deg, #0070f3 0%, #0051cc 100%)',
-          borderRadius: '12px 12px 0 0',
+          borderRadius: showApiKeySetup ? '12px 12px 0 0' : '12px 12px 0 0',
           color: '#fff'
         }}>
           <h2 style={{
@@ -182,200 +182,205 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
             fontWeight: '700',
             color: '#fff'
           }}>
-            How RushRoost Works
+            {showApiKeySetup ? 'Setup API Key' : 'How RushRoost Works'}
           </h2>
-          <p style={{
-            margin: '0.5rem 0 0 0',
-            fontSize: '1rem',
-            color: 'rgba(255, 255, 255, 0.9)'
-          }}>
-            Follow these 4 simple steps to find your perfect home
-          </p>
+          {!showApiKeySetup && (
+            <p style={{
+              margin: '0.5rem 0 0 0',
+              fontSize: '1rem',
+              color: 'rgba(255, 255, 255, 0.9)'
+            }}>
+              Follow these 4 simple steps to find your perfect home
+            </p>
+          )}
         </div>
 
         {/* Content */}
-        <div style={{
-          padding: '2rem',
-          fontSize: '1rem',
-          lineHeight: '1.7',
-          color: '#333',
-          flex: 1,
-          overflowY: 'auto'
-        }}>
-          {/* Step 1 */}
+        {!showApiKeySetup && (
           <div style={{
-            display: 'flex',
-            gap: '1.5rem',
-            marginBottom: '2rem',
-            alignItems: 'flex-start'
+            padding: '2rem',
+            fontSize: '1rem',
+            lineHeight: '1.7',
+            color: '#333',
+            flex: 1,
+            overflowY: 'auto'
           }}>
+            {/* Step 1 */}
             <div style={{
-              flexShrink: 0,
-              width: '50px',
-              height: '50px',
-              borderRadius: '50%',
-              backgroundColor: '#0070f3',
-              color: '#fff',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem',
-              fontWeight: '700'
+              gap: '1.5rem',
+              marginBottom: '2rem',
+              alignItems: 'flex-start'
             }}>
-              1
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{
-                margin: '0 0 0.5rem 0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: '#000'
+              <div style={{
+                flexShrink: 0,
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                backgroundColor: '#0070f3',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                fontWeight: '700'
               }}>
-                Enter Your Work Address
-              </h3>
-              <p style={{
-                margin: 0,
-                fontSize: '1rem',
-                color: '#666',
-                lineHeight: '1.6'
-              }}>
-                Start by entering your work address. This will be your reference point for calculating commute times to potential homes.
-              </p>
+                1
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{
+                  margin: '0 0 0.5rem 0',
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  color: '#000'
+                }}>
+                  Enter Your Work Address
+                </h3>
+                <p style={{
+                  margin: 0,
+                  fontSize: '1rem',
+                  color: '#666',
+                  lineHeight: '1.6'
+                }}>
+                  Start by entering your work address. This will be your reference point for calculating commute times to potential homes.
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Step 2 */}
-          <div style={{
-            display: 'flex',
-            gap: '1.5rem',
-            marginBottom: '2rem',
-            alignItems: 'flex-start'
-          }}>
+            {/* Step 2 */}
             <div style={{
-              flexShrink: 0,
-              width: '50px',
-              height: '50px',
-              borderRadius: '50%',
-              backgroundColor: '#0070f3',
-              color: '#fff',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem',
-              fontWeight: '700'
+              gap: '1.5rem',
+              marginBottom: '2rem',
+              alignItems: 'flex-start'
             }}>
-              2
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{
-                margin: '0 0 0.5rem 0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: '#000'
+              <div style={{
+                flexShrink: 0,
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                backgroundColor: '#0070f3',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                fontWeight: '700'
               }}>
-                Find Towns Within Your Commute Time
-              </h3>
-              <p style={{
-                margin: 0,
-                fontSize: '1rem',
-                color: '#666',
-                lineHeight: '1.6'
-              }}>
-                Set your maximum commute time and discover all the cities and towns that are within your desired travel time. Browse through the results to find areas that interest you.
-              </p>
+                2
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{
+                  margin: '0 0 0.5rem 0',
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  color: '#000'
+                }}>
+                  Find Towns Within Your Commute Time
+                </h3>
+                <p style={{
+                  margin: 0,
+                  fontSize: '1rem',
+                  color: '#666',
+                  lineHeight: '1.6'
+                }}>
+                  Set your maximum commute time and discover all the cities and towns that are within your desired travel time. Browse through the results to find areas that interest you.
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Step 3 */}
-          <div style={{
-            display: 'flex',
-            gap: '1.5rem',
-            marginBottom: '2rem',
-            alignItems: 'flex-start'
-          }}>
+            {/* Step 3 */}
             <div style={{
-              flexShrink: 0,
-              width: '50px',
-              height: '50px',
-              borderRadius: '50%',
-              backgroundColor: '#0070f3',
-              color: '#fff',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem',
-              fontWeight: '700'
+              gap: '1.5rem',
+              marginBottom: '2rem',
+              alignItems: 'flex-start'
             }}>
-              3
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{
-                margin: '0 0 0.5rem 0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: '#000'
+              <div style={{
+                flexShrink: 0,
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                backgroundColor: '#0070f3',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                fontWeight: '700'
               }}>
-                Find a Home on Zillow
-              </h3>
-              <p style={{
-                margin: 0,
-                fontSize: '1rem',
-                color: '#666',
-                lineHeight: '1.6'
-              }}>
-                Click "View on Zillow" for any town that catches your interest. Browse available homes on Zillow and find a property you'd like to explore further.
-              </p>
+                3
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{
+                  margin: '0 0 0.5rem 0',
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  color: '#000'
+                }}>
+                  Find a Home on Zillow
+                </h3>
+                <p style={{
+                  margin: 0,
+                  fontSize: '1rem',
+                  color: '#666',
+                  lineHeight: '1.6'
+                }}>
+                  Click "View on Zillow" for any town that catches your interest. Browse available homes on Zillow and find a property you'd like to explore further.
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Step 4 */}
-          <div style={{
-            display: 'flex',
-            gap: '1.5rem',
-            marginBottom: '0',
-            alignItems: 'flex-start'
-          }}>
+            {/* Step 4 */}
             <div style={{
-              flexShrink: 0,
-              width: '50px',
-              height: '50px',
-              borderRadius: '50%',
-              backgroundColor: '#0070f3',
-              color: '#fff',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem',
-              fontWeight: '700'
+              gap: '1.5rem',
+              marginBottom: '0',
+              alignItems: 'flex-start'
             }}>
-              4
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{
-                margin: '0 0 0.5rem 0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: '#000'
+              <div style={{
+                flexShrink: 0,
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                backgroundColor: '#0070f3',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                fontWeight: '700'
               }}>
-                See the True Commute Time
-              </h3>
-              <p style={{
-                margin: 0,
-                fontSize: '1rem',
-                color: '#666',
-                lineHeight: '1.6'
-              }}>
-                Copy the Zillow URL for a property you're interested in and paste it into the True Commute Time page. Your work address will be automatically filled in, and you'll get an accurate, real-time commute time calculation.
-              </p>
+                4
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{
+                  margin: '0 0 0.5rem 0',
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  color: '#000'
+                }}>
+                  See the True Commute Time
+                </h3>
+                <p style={{
+                  margin: 0,
+                  fontSize: '1rem',
+                  color: '#666',
+                  lineHeight: '1.6'
+                }}>
+                  Copy the Zillow URL for a property you're interested in and paste it into the True Commute Time page. Your work address will be automatically filled in, and you'll get an accurate, real-time commute time calculation.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* API Key Setup Section */}
         {showApiKeySetup && (
           <div style={{
             padding: '2rem',
-            borderTop: '2px solid #e0e0e0',
+            flex: 1,
+            overflowY: 'auto',
             backgroundColor: '#f9f9f9'
           }}>
             <h3 style={{
