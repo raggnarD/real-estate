@@ -5,6 +5,7 @@ import AddressAutocomplete from '@/components/AddressAutocomplete'
 import AddressHistory from '@/components/AddressHistory'
 import NeighborhoodResults from '@/components/NeighborhoodResults'
 import NeighborhoodMap from '@/components/NeighborhoodMap'
+import { useScrollToResults } from '@/hooks/useScrollToResults'
 
 interface CityResult {
   name: string
@@ -31,6 +32,10 @@ export default function NeighborhoodFinder() {
   const [addressHistory, setAddressHistory] = useState<string[]>([])
   const [selectedCityId, setSelectedCityId] = useState<string | undefined>(undefined)
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'both'>('both')
+
+  // Auto-scroll to results when they are displayed
+  // Use isLoading as trigger so scroll happens when submission completes
+  const resultsRef = useScrollToResults(results.length > 0, 20, isLoading)
 
   // Inject spinner animation styles
   useEffect(() => {
@@ -401,12 +406,15 @@ export default function NeighborhoodFinder() {
       )}
 
       {results.length > 0 && (
-        <div style={{ 
-          border: '1px solid #ddd', 
-          borderRadius: '8px', 
-          padding: '2rem',
-          backgroundColor: '#f9f9f9'
-        }}>
+        <div 
+          id="results-section"
+          ref={resultsRef}
+          style={{ 
+            border: '1px solid #ddd', 
+            borderRadius: '8px', 
+            padding: '2rem',
+            backgroundColor: '#f9f9f9'
+          }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2 style={{ margin: 0, color: '#000' }}>
               Found {results.length} {results.length === 1 ? 'City' : 'Cities'} within {maxCommuteTime} minutes

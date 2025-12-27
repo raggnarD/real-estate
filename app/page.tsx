@@ -5,6 +5,7 @@ import AddressAutocomplete from '@/components/AddressAutocomplete'
 import AddressHistory from '@/components/AddressHistory'
 import MapStreetViewToggle from '@/components/MapStreetViewToggle'
 import CommuteMap from '@/components/CommuteMap'
+import { useScrollToResults } from '@/hooks/useScrollToResults'
 
 interface SearchResults {
   address?: string
@@ -60,6 +61,11 @@ export default function Home() {
     results?.location?.lat, 
     results?.location?.lng
   ])
+
+  // Auto-scroll to results when they are displayed
+  // Use isLoading as trigger so scroll happens when submission completes
+  const hasResults = !!(commuteResults || (destinationAddress && results))
+  const resultsRef = useScrollToResults(hasResults, 20, isLoading)
 
   // Load address history from localStorage on mount
   useEffect(() => {
@@ -908,13 +914,16 @@ export default function Home() {
       </div>
 
       {(commuteResults || (destinationAddress && results)) && (
-        <div style={{ 
-          border: '1px solid #ddd', 
-          borderRadius: '8px', 
-          padding: '2rem',
-          backgroundColor: commuteResults?.error ? '#fee' : '#eef',
-          marginTop: '2rem'
-        }}>
+        <div 
+          id="results-section"
+          ref={resultsRef}
+          style={{ 
+            border: '1px solid #ddd', 
+            borderRadius: '8px', 
+            padding: '2rem',
+            backgroundColor: commuteResults?.error ? '#fee' : '#eef',
+            marginTop: '2rem'
+          }}>
           <h2 style={{ marginTop: 0, color: '#000', marginBottom: '1rem' }}>
             Commute Information
           </h2>
