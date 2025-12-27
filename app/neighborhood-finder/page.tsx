@@ -6,6 +6,7 @@ import AddressHistory from '@/components/AddressHistory'
 import NeighborhoodResults from '@/components/NeighborhoodResults'
 import NeighborhoodMap from '@/components/NeighborhoodMap'
 import { useScrollToResults } from '@/hooks/useScrollToResults'
+import { useApiKey } from '@/contexts/ApiKeyContext'
 
 interface CityResult {
   name: string
@@ -22,6 +23,7 @@ const WORK_ADDRESS_HISTORY_KEY = 'neighborhood-finder-work-address-history'
 const MAX_HISTORY_ITEMS = 3
 
 export default function NeighborhoodFinder() {
+  const { apiKey } = useApiKey()
   const [workAddress, setWorkAddress] = useState('')
   const [workLocation, setWorkLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [transportMode, setTransportMode] = useState<'driving' | 'bus' | 'train' | 'walking' | 'bicycling'>('driving')
@@ -89,12 +91,24 @@ export default function NeighborhoodFinder() {
     }
   }
 
+  // Helper function to build API URL with apiKey parameter
+  const buildApiUrl = (baseUrl: string, params: Record<string, string>) => {
+    const url = new URL(baseUrl, window.location.origin)
+    Object.entries(params).forEach(([key, value]) => {
+      url.searchParams.append(key, value)
+    })
+    if (apiKey) {
+      url.searchParams.append('apiKey', apiKey)
+    }
+    return url.toString()
+  }
+
   // Select address from history
   const handleSelectFromHistory = async (addr: string) => {
     setWorkAddress(addr)
     try {
       const geocodeResponse = await fetch(
-        `/api/geocode?address=${encodeURIComponent(addr)}`
+        buildApiUrl('/api/geocode', { address: addr })
       )
       const geocodeData = await geocodeResponse.json()
       
@@ -145,7 +159,7 @@ export default function NeighborhoodFinder() {
 
       try {
         const geocodeResponse = await fetch(
-          `/api/geocode?address=${encodeURIComponent(workAddress)}`
+          buildApiUrl('/api/geocode', { address: workAddress })
         )
         const geocodeData = await geocodeResponse.json()
         
@@ -175,7 +189,12 @@ export default function NeighborhoodFinder() {
 
     try {
       const response = await fetch(
-        `/api/neighborhood-finder?lat=${locationToUse.lat}&lng=${locationToUse.lng}&mode=${transportMode}&maxTime=${maxCommuteTime}`
+        buildApiUrl('/api/neighborhood-finder', {
+          lat: locationToUse.lat.toString(),
+          lng: locationToUse.lng.toString(),
+          mode: transportMode,
+          maxTime: maxCommuteTime.toString()
+        })
       )
       const data = await response.json()
 

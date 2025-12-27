@@ -6,6 +6,7 @@ import AddressHistory from '@/components/AddressHistory'
 import MapStreetViewToggle from '@/components/MapStreetViewToggle'
 import CommuteMap from '@/components/CommuteMap'
 import { useScrollToResults } from '@/hooks/useScrollToResults'
+import { useApiKey } from '@/contexts/ApiKeyContext'
 
 interface SearchResults {
   address?: string
@@ -39,6 +40,7 @@ const DESTINATION_HISTORY_KEY = 'real-estate-destination-history'
 const MAX_HISTORY_ITEMS = 3
 
 export default function Home() {
+  const { apiKey } = useApiKey()
   const [address, setAddress] = useState('')
   const [destinationAddress, setDestinationAddress] = useState('')
   const [zillowUrl, setZillowUrl] = useState('')
@@ -146,13 +148,25 @@ export default function Home() {
     }
   }
 
+  // Helper function to build API URL with apiKey parameter
+  const buildApiUrl = (baseUrl: string, params: Record<string, string>) => {
+    const url = new URL(baseUrl, window.location.origin)
+    Object.entries(params).forEach(([key, value]) => {
+      url.searchParams.append(key, value)
+    })
+    if (apiKey) {
+      url.searchParams.append('apiKey', apiKey)
+    }
+    return url.toString()
+  }
+
   // Select address from history
   const handleSelectFromHistory = async (addr: string) => {
     setAddress(addr)
     // Geocode immediately to show Street View
     try {
       const geocodeResponse = await fetch(
-        `/api/geocode?address=${encodeURIComponent(addr)}`
+        buildApiUrl('/api/geocode', { address: addr })
       )
       const geocodeData = await geocodeResponse.json()
       
@@ -178,7 +192,7 @@ export default function Home() {
     // Geocode immediately to show Street View
     try {
       const geocodeResponse = await fetch(
-        `/api/geocode?address=${encodeURIComponent(addr)}`
+        buildApiUrl('/api/geocode', { address: addr })
       )
       const geocodeData = await geocodeResponse.json()
       
@@ -235,7 +249,7 @@ export default function Home() {
     setIsLoadingStops(true)
     try {
       const response = await fetch(
-        `/api/transit-stops?lat=${lat}&lng=${lng}&type=${type}`
+        buildApiUrl('/api/transit-stops', { lat: lat.toString(), lng: lng.toString(), type })
       )
       const data = await response.json()
       
@@ -279,7 +293,7 @@ export default function Home() {
         
         // Geocode the extracted address
         const geocodeResponse = await fetch(
-          `/api/geocode?address=${encodeURIComponent(zillowData.address)}`
+          buildApiUrl('/api/geocode', { address: zillowData.address })
         )
         const geocodeData = await geocodeResponse.json()
         
@@ -385,7 +399,7 @@ export default function Home() {
       if (addressToUse && originAddressChanged) {
         try {
           const geocodeResponse = await fetch(
-            `/api/geocode?address=${encodeURIComponent(addressToUse)}`
+            buildApiUrl('/api/geocode', { address: addressToUse })
           )
           const geocodeData = await geocodeResponse.json()
           
@@ -438,7 +452,7 @@ export default function Home() {
       if (destinationAddress) {
         try {
           const destGeocodeResponse = await fetch(
-            `/api/geocode?address=${encodeURIComponent(destinationAddress)}`
+            buildApiUrl('/api/geocode', { address: destinationAddress })
           )
           const destGeocodeData = await destGeocodeResponse.json()
           
@@ -523,7 +537,14 @@ export default function Home() {
               transitType: transportMode
             })
             const commuteResponse = await fetch(
-              `/api/commute?origin=${encodeURIComponent(originAddress)}&destination=${encodeURIComponent(destinationAddressGeocoded)}&mode=transit&transitStop=${encodeURIComponent(selectedStop.placeId)}&leg1Mode=${leg1Mode}&transitType=${transportMode}`
+              buildApiUrl('/api/commute', {
+                origin: originAddress,
+                destination: destinationAddressGeocoded,
+                mode: 'transit',
+                transitStop: selectedStop.placeId,
+                leg1Mode: leg1Mode,
+                transitType: transportMode
+              })
             )
             const commuteData = await commuteResponse.json()
             console.log('Multi-leg commute response:', commuteData)
@@ -544,7 +565,11 @@ export default function Home() {
             // Standard single-leg journey
             console.log('Calculating commute:', { originAddress, destinationAddressGeocoded, transportMode })
             const commuteResponse = await fetch(
-              `/api/commute?origin=${encodeURIComponent(originAddress)}&destination=${encodeURIComponent(destinationAddressGeocoded)}&mode=${transportMode}`
+              buildApiUrl('/api/commute', {
+                origin: originAddress,
+                destination: destinationAddressGeocoded,
+                mode: transportMode
+              })
             )
             const commuteData = await commuteResponse.json()
             console.log('Commute response:', commuteData)
