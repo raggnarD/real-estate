@@ -5,6 +5,7 @@ import AddressAutocomplete from '@/components/AddressAutocomplete'
 import AddressHistory from '@/components/AddressHistory'
 import NeighborhoodResults from '@/components/NeighborhoodResults'
 import NeighborhoodMap from '@/components/NeighborhoodMap'
+import MapStreetViewToggle from '@/components/MapStreetViewToggle'
 import { useScrollToResults } from '@/hooks/useScrollToResults'
 import { useApiKey } from '@/contexts/ApiKeyContext'
 
@@ -274,8 +275,12 @@ export default function NeighborhoodFinder() {
                 onClearHistory={clearHistory}
               />
             </div>
-            <div style={{ flexShrink: 0, width: '400px' }}>
-              {/* Spacer to match address field width */}
+            <div style={{ flexShrink: 0 }}>
+              <MapStreetViewToggle 
+                location={workLocation} 
+                width={400} 
+                height={300} 
+              />
             </div>
           </div>
 
