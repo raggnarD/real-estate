@@ -22,17 +22,14 @@ export default function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { apiKey, isLoading: apiKeyLoading, sharedKeyActive } = useApiKey()
+  const { isLoading: apiKeyLoading, getEffectiveApiKey } = useApiKey()
 
   useEffect(() => {
     const initAutocomplete = async () => {
       if (!inputRef.current || apiKeyLoading) return
       
-      // Determine which API key to use:
-      // 1. User's own API key (if set)
-      // 2. Shared key from environment variable (if shared key is active)
-      // 3. Environment variable as fallback
-      const apiKeyToUse = apiKey || (sharedKeyActive ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY : null) || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+      // Get the effective API key (user's key or shared key if consented)
+      const apiKeyToUse = await getEffectiveApiKey()
       
       if (!apiKeyToUse) {
         setIsLoading(false)
@@ -77,7 +74,7 @@ export default function AddressAutocomplete({
     }
 
     initAutocomplete()
-  }, [onPlaceSelected, onChange, apiKey, apiKeyLoading, sharedKeyActive])
+  }, [onPlaceSelected, onChange, apiKeyLoading, getEffectiveApiKey])
 
   const isEmpty = !value || value.trim() === ''
 

@@ -41,7 +41,7 @@ export default function ApiKeyDebug() {
         <strong>Shared Key:</strong> {sharedKeyActive ? '✅ Active' : '❌ Not Active'}
       </div>
       <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #ccc', fontSize: '0.7rem', color: '#666' }}>
-        Env Key: {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? '✅ Set' : '❌ Not Set'}
+        Note: Shared key is server-side only and not exposed to client
       </div>
     </div>
   )

@@ -55,7 +55,7 @@
 4. **Set Environment Variables**:
    - Go to Project Settings → Environment Variables
    - Add the following:
-     - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` = Your Google Maps API key
+     - `GOOGLE_MAPS_API_KEY` = Your Google Maps API key (server-side only, for shared key feature)
      - `NEXT_PUBLIC_WALKING_THRESHOLD_MINUTES` = 10 (optional)
 
 5. **Deploy**:
@@ -67,8 +67,12 @@
 
 ### Environment Variables
 Make sure to set these in Vercel Dashboard → Project Settings → Environment Variables:
-- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` - Required for the shared key feature and as fallback
+- `GOOGLE_MAPS_API_KEY` - Required for the shared key feature (server-side only, not exposed to client)
 - `NEXT_PUBLIC_WALKING_THRESHOLD_MINUTES` - Optional, defaults to 10
+
+**Important**: The `GOOGLE_MAPS_API_KEY` is server-side only and will only be used when users consent to use the shared key. By default, all API calls will fail until users either:
+1. Enter their own API key, OR
+2. Consent to use the shared API key
 
 ### Build Settings
 - Vercel will auto-detect Next.js

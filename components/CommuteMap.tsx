@@ -33,7 +33,7 @@ export default function CommuteMap({
   const markersRef = useRef<google.maps.Marker[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { apiKey: contextApiKey, isLoading: apiKeyLoading, sharedKeyActive } = useApiKey()
+  const { isLoading: apiKeyLoading, getEffectiveApiKey } = useApiKey()
 
   useEffect(() => {
     if (!origin || !destination || apiKeyLoading) {
@@ -46,11 +46,8 @@ export default function CommuteMap({
 
     const initMap = async () => {
       try {
-        // Determine which API key to use:
-        // 1. User's own API key (if set)
-        // 2. Shared key from environment variable (if shared key is active)
-        // 3. Environment variable as fallback
-        const apiKey = contextApiKey || (sharedKeyActive ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY : null) || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        // Get the effective API key (user's key or shared key if consented)
+        const apiKey = await getEffectiveApiKey()
         if (!apiKey) {
           setIsLoading(false)
           return
@@ -337,7 +334,7 @@ export default function CommuteMap({
       markersRef.current.forEach(marker => marker.setMap(null))
       markersRef.current = []
     }
-  }, [origin, transitStop, destination, leg1Mode, transitType, mode, contextApiKey, apiKeyLoading])
+  }, [origin, transitStop, destination, leg1Mode, transitType, mode, apiKeyLoading, getEffectiveApiKey])
 
   if (!origin || !destination) {
     return (

@@ -23,24 +23,18 @@ export function resolveApiKey(request: NextRequest, userApiKey?: string | null):
       
       // Check if cookie is still valid (not expired)
       if (now < expiresAt) {
-        const envKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        const envKey = process.env.GOOGLE_MAPS_API_KEY
         if (envKey) {
           return envKey // Use shared key from environment
         }
       }
     } catch (error) {
       console.error('Error parsing shared key cookie:', error)
-      // Fall through to environment variable
+      // Don't fall through - require explicit consent
     }
   }
 
-  // Priority 3: Environment variable (fallback)
-  const envKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-  if (envKey) {
-    return envKey
-  }
-
-  // No API key available
+  // No API key available - user must provide their own or consent to shared key
   return null
 }
 

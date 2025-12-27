@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 
 interface ApiKeyContextType {
   apiKey: string | null
@@ -13,6 +13,7 @@ interface ApiKeyContextType {
   activateSharedKey: () => Promise<void>
   revokeSharedKey: () => Promise<void>
   checkSharedKeyStatus: () => Promise<void>
+  getEffectiveApiKey: () => Promise<string | null>
 }
 
 const ApiKeyContext = createContext<ApiKeyContextType | undefined>(undefined)
@@ -24,6 +25,29 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
   const [sharedKeyExpiresAt, setSharedKeyExpiresAt] = useState<number | null>(null)
   const [sharedKeyTimeRemaining, setSharedKeyTimeRemaining] = useState<number | null>(null)
   const [hasExpiredCookie, setHasExpiredCookie] = useState<boolean>(false)
+  const [sharedKeyValue, setSharedKeyValue] = useState<string | null>(null)
+
+  const fetchSharedKey = useCallback(async () => {
+    try {
+      const response = await fetch('/api/shared-key/get', {
+        method: 'GET',
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setSharedKeyValue(data.apiKey)
+        return data.apiKey
+      } else {
+        setSharedKeyValue(null)
+        return null
+      }
+    } catch (error) {
+      console.error('Error fetching shared key:', error)
+      setSharedKeyValue(null)
+      return null
+    }
+  }, [])
 
   const checkSharedKeyStatusInternal = async () => {
     try {
@@ -40,6 +64,13 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
         setSharedKeyExpiresAt(data.expiresAt)
         setSharedKeyTimeRemaining(data.timeRemaining)
         setHasExpiredCookie(data.hasExpiredCookie || false)
+        
+        // If active, fetch the actual key value
+        if (data.active) {
+          await fetchSharedKey()
+        } else {
+          setSharedKeyValue(null)
+        }
         
         // If expired, automatically disable and show notification
         if (!data.active && wasActive) {
@@ -97,7 +128,8 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
         setSharedKeyActive(true)
         setSharedKeyExpiresAt(data.expiresAt)
         setSharedKeyTimeRemaining(24 * 60 * 60 * 1000) // 24 hours
-        // Refresh status to get accurate time remaining
+        // Fetch the actual key value and refresh status
+        await fetchSharedKey()
         await checkSharedKeyStatusInternal()
       } else {
         const errorData = await response.json()
@@ -121,6 +153,7 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
         setSharedKeyExpiresAt(null)
         setSharedKeyTimeRemaining(null)
         setHasExpiredCookie(false)
+        setSharedKeyValue(null)
       } else {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to revoke shared key')
@@ -130,6 +163,27 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
       throw error
     }
   }
+
+  const getEffectiveApiKey = useCallback(async (): Promise<string | null> => {
+    // Priority 1: User's own API key
+    if (apiKey) {
+      return apiKey
+    }
+    
+    // Priority 2: Shared key (if active and we have the value)
+    if (sharedKeyActive && sharedKeyValue) {
+      return sharedKeyValue
+    }
+    
+    // If shared key is active but we don't have the value, fetch it
+    if (sharedKeyActive && !sharedKeyValue) {
+      const fetchedKey = await fetchSharedKey()
+      return fetchedKey
+    }
+    
+    // No API key available
+    return null
+  }, [apiKey, sharedKeyActive, sharedKeyValue, fetchSharedKey])
 
   const setApiKey = (key: string | null) => {
     if (key) {
@@ -152,7 +206,8 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
       hasExpiredCookie,
       activateSharedKey,
       revokeSharedKey,
-      checkSharedKeyStatus
+      checkSharedKeyStatus,
+      getEffectiveApiKey
     }}>
       {children}
     </ApiKeyContext.Provider>

@@ -27,7 +27,7 @@ export default function StreetView({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
-  const { apiKey: contextApiKey, isLoading: apiKeyLoading, sharedKeyActive } = useApiKey()
+  const { isLoading: apiKeyLoading, getEffectiveApiKey } = useApiKey()
 
   // Initialize Google Maps API
   useEffect(() => {
@@ -35,11 +35,8 @@ export default function StreetView({
       if (isInitialized || apiKeyLoading) return
 
       try {
-        // Determine which API key to use:
-        // 1. User's own API key (if set)
-        // 2. Shared key from environment variable (if shared key is active)
-        // 3. Environment variable as fallback
-        const apiKey = contextApiKey || (sharedKeyActive ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY : null) || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        // Get the effective API key (user's key or shared key if consented)
+        const apiKey = await getEffectiveApiKey()
         if (!apiKey) {
           setError('Google Maps API key not configured')
           return
@@ -67,7 +64,7 @@ export default function StreetView({
     }
 
     initStreetView()
-  }, [isInitialized, contextApiKey, apiKeyLoading])
+  }, [isInitialized, apiKeyLoading, getEffectiveApiKey])
 
   // Initialize Street View Panorama
   useEffect(() => {
