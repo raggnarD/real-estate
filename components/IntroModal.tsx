@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWizard } from '@/contexts/WizardContext'
+import NeighborhoodFinderIntro from '@/components/NeighborhoodFinderIntro'
 
 export default function IntroModal() {
   const [isOpen, setIsOpen] = useState(false)
+  const [showNextModal, setShowNextModal] = useState(false)
   const router = useRouter()
   const { setWizardActive, setWizardStep } = useWizard()
 
@@ -20,15 +22,10 @@ export default function IntroModal() {
   const handleGetStarted = () => {
     setIsOpen(false)
     localStorage.setItem('hasSeenIntro', 'true')
-    // Activate wizard mode - WizardOnboardingModal will detect this and show
+    // Activate wizard mode
     setWizardActive(true)
-    // Dispatch custom event to immediately trigger modal
-    // Use setTimeout to ensure state updates have propagated
-    setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('wizard-started'))
-      }
-    }, 50)
+    // Immediately show the next modal
+    setShowNextModal(true)
   }
 
   const handleClose = () => {
@@ -36,7 +33,13 @@ export default function IntroModal() {
     localStorage.setItem('hasSeenIntro', 'true')
   }
 
-  if (!isOpen) return null
+  const handleNextModalClose = () => {
+    setShowNextModal(false)
+  }
+
+  return (
+    <>
+      {isOpen && (
 
   return (
     <div style={{
@@ -239,7 +242,14 @@ export default function IntroModal() {
           </button>
         </div>
       </div>
-    </div>
+      )}
+      {showNextModal && (
+        <NeighborhoodFinderIntro 
+          isOpen={showNextModal}
+          onClose={handleNextModalClose}
+        />
+      )}
+    </>
   )
 }
 
