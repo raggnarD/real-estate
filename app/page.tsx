@@ -98,10 +98,10 @@ export default function Home() {
     }
   }, [])
 
-  // Prepopulate work address from wizard if active
+  // Prepopulate destination address from wizard if active
   useEffect(() => {
-    if (wizardActive && wizardWorkAddress && !address) {
-      setAddress(wizardWorkAddress)
+    if (wizardActive && wizardWorkAddress && !destinationAddress) {
+      setDestinationAddress(wizardWorkAddress)
       setWizardStep('commute-time')
       setShowWizardMessage(true)
       // Hide message after 5 seconds
@@ -109,7 +109,8 @@ export default function Home() {
         setShowWizardMessage(false)
       }, 5000)
     }
-  }, [wizardActive, wizardWorkAddress, address, setWizardStep])
+  }, [wizardActive, wizardWorkAddress, destinationAddress, setWizardStep])
+
 
   // Save address to history
   const saveToHistory = (addr: string) => {
@@ -176,6 +177,34 @@ export default function Home() {
     }
     return url.toString()
   }
+
+  // Geocode destination address when it's set from wizard
+  useEffect(() => {
+    if (wizardActive && wizardWorkAddress && destinationAddress === wizardWorkAddress && !destinationLocation && apiKey) {
+      // Geocode the destination address to load the map
+      const geocodeDestination = async () => {
+        try {
+          const geocodeResponse = await fetch(
+            buildApiUrl('/api/geocode', { address: wizardWorkAddress })
+          )
+          const geocodeData = await geocodeResponse.json()
+          
+          if (geocodeResponse.ok && geocodeData.location) {
+            setDestinationLocation(geocodeData.location)
+            // Save to history
+            saveDestinationToHistory(geocodeData.address || wizardWorkAddress)
+          } else {
+            setDestinationLocation(null)
+          }
+        } catch (error) {
+          console.error('Destination geocoding error:', error)
+          setDestinationLocation(null)
+        }
+      }
+      
+      geocodeDestination()
+    }
+  }, [wizardActive, wizardWorkAddress, destinationAddress, destinationLocation, apiKey])
 
   // Select address from history
   const handleSelectFromHistory = async (addr: string) => {
@@ -710,7 +739,7 @@ export default function Home() {
               fontSize: '0.875rem',
               color: '#004085'
             }}>
-              <strong>✨ Work address prepopulated:</strong> Your work address from the Neighborhood Finder has been automatically filled in. Paste a Zillow URL below to see the true commute time!
+              <strong>✨ Work address prepopulated:</strong> Your work address from the Neighborhood Finder has been automatically filled in as the destination. Enter the home address above to see the true commute time!
             </div>
           )}
 
