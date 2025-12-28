@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 import AddressHistory from '@/components/AddressHistory'
 import MapStreetViewToggle from '@/components/MapStreetViewToggle'
@@ -167,7 +167,7 @@ export default function Home() {
   }
 
   // Helper function to build API URL with apiKey parameter
-  const buildApiUrl = (baseUrl: string, params: Record<string, string>) => {
+  const buildApiUrl = useCallback((baseUrl: string, params: Record<string, string>) => {
     const url = new URL(baseUrl, window.location.origin)
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, value)
@@ -176,7 +176,7 @@ export default function Home() {
       url.searchParams.append('apiKey', apiKey)
     }
     return url.toString()
-  }
+  }, [apiKey])
 
   // Geocode destination address when it's set from wizard
   useEffect(() => {
@@ -194,6 +194,7 @@ export default function Home() {
             // Save to history
             saveDestinationToHistory(geocodeData.address || wizardWorkAddress)
           } else {
+            console.error('Failed to geocode destination:', geocodeData.error)
             setDestinationLocation(null)
           }
         } catch (error) {
@@ -202,9 +203,12 @@ export default function Home() {
         }
       }
       
-      geocodeDestination()
+      // Small delay to ensure buildApiUrl is available
+      setTimeout(() => {
+        geocodeDestination()
+      }, 100)
     }
-  }, [wizardActive, wizardWorkAddress, destinationAddress, destinationLocation, apiKey])
+  }, [wizardActive, wizardWorkAddress, destinationAddress, destinationLocation, apiKey, buildApiUrl, saveDestinationToHistory])
 
   // Select address from history
   const handleSelectFromHistory = async (addr: string) => {
@@ -820,6 +824,27 @@ export default function Home() {
                 placeholder="Enter destination address..."
                 value={destinationAddress}
                 onChange={setDestinationAddress}
+                onPlaceSelected={(place) => {
+                  if (place.formatted_address) {
+                    setDestinationAddress(place.formatted_address)
+                  }
+                  // Set location immediately if available from place selection
+                  if (place.geometry?.location) {
+                    const locationObj = place.geometry.location
+                    const lat = typeof locationObj.lat === 'function' ? locationObj.lat() : locationObj.lat
+                    const lng = typeof locationObj.lng === 'function' ? locationObj.lng() : locationObj.lng
+                    
+                    const location: { lat: number; lng: number } = {
+                      lat: Number(lat),
+                      lng: Number(lng)
+                    }
+                    setDestinationLocation(location)
+                    // Save to history
+                    if (place.formatted_address) {
+                      saveDestinationToHistory(place.formatted_address)
+                    }
+                  }
+                }}
               />
               <AddressHistory
                 addresses={destinationHistory}
