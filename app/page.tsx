@@ -43,6 +43,7 @@ const MAX_HISTORY_ITEMS = 3
 export default function Home() {
   const { apiKey } = useApiKey()
   const { wizardActive, workAddress: wizardWorkAddress, setWizardStep } = useWizard()
+  const [isMobile, setIsMobile] = useState(false)
   const [address, setAddress] = useState('')
   const [destinationAddress, setDestinationAddress] = useState('')
   const [zillowUrl, setZillowUrl] = useState('')
@@ -614,26 +615,26 @@ export default function Home() {
 
   return (
     <div style={{ 
-      padding: '2rem', 
+      padding: isMobile ? '1rem' : '2rem', 
       maxWidth: '1200px', 
       margin: '0 auto',
       color: '#000',
       backgroundColor: '#fff',
       minHeight: '100vh'
     }}>
-      <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem' }}>
+      <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem', fontSize: isMobile ? '1.5rem' : '2rem' }}>
         True Commute Time
       </h1>
-      <p style={{ color: '#666', marginBottom: '2rem' }}>
+      <p style={{ color: '#666', marginBottom: isMobile ? '1rem' : '2rem', fontSize: isMobile ? '0.875rem' : '1rem' }}>
         Search for properties and calculate commute times.
       </p>
       
       <div style={{ 
         border: '1px solid #ddd', 
         borderRadius: '8px', 
-        padding: '2rem',
+        padding: isMobile ? '1rem' : '2rem',
         backgroundColor: '#f9f9f9',
-        marginBottom: '2rem'
+        marginBottom: isMobile ? '1rem' : '2rem'
       }}>
         <h2 style={{ marginTop: 0, color: '#000', marginBottom: '1.5rem' }}>
           True Commute Time
@@ -713,14 +714,19 @@ export default function Home() {
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '1.5rem', 
+            alignItems: 'flex-start',
+            flexDirection: isMobile ? 'column' : 'row'
+          }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%' }}>
               <label style={{ 
                 display: 'block', 
                 marginBottom: '0.5rem', 
                 color: '#000', 
                 fontWeight: '500',
-                fontSize: '1rem'
+                fontSize: isMobile ? '0.875rem' : '1rem'
               }}>
                 Starting Address:
               </label>
@@ -743,24 +749,41 @@ export default function Home() {
                 onClearHistory={clearHistory}
               />
             </div>
-            <div style={{ flexShrink: 0 }}>
-              <MapStreetViewToggle 
-                key="origin-view" 
-                location={originLocation} 
-                width={400} 
-                height={300} 
-              />
-            </div>
+            {!isMobile && (
+              <div style={{ flexShrink: 0 }}>
+                <MapStreetViewToggle 
+                  key="origin-view" 
+                  location={originLocation} 
+                  width={400} 
+                  height={300} 
+                />
+              </div>
+            )}
+            {isMobile && originLocation && (
+              <div style={{ width: '100%' }}>
+                <MapStreetViewToggle 
+                  key="origin-view" 
+                  location={originLocation} 
+                  width={isMobile ? undefined : 400} 
+                  height={isMobile ? 250 : 300} 
+                />
+              </div>
+            )}
           </div>
 
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '1.5rem', 
+            alignItems: 'flex-start',
+            flexDirection: isMobile ? 'column' : 'row'
+          }}>
+            <div style={{ flex: 1, width: '100%' }}>
               <label style={{ 
                 display: 'block', 
                 marginBottom: '0.5rem', 
                 color: '#000', 
                 fontWeight: '500',
-                fontSize: '1rem'
+                fontSize: isMobile ? '0.875rem' : '1rem'
               }}>
                 Destination Address:
               </label>
@@ -775,9 +798,16 @@ export default function Home() {
                 onClearHistory={clearDestinationHistory}
               />
             </div>
-            <div style={{ flexShrink: 0 }}>
-              <MapStreetViewToggle key="destination-view" location={destinationLocation} width={400} height={300} />
-            </div>
+            {!isMobile && (
+              <div style={{ flexShrink: 0 }}>
+                <MapStreetViewToggle key="destination-view" location={destinationLocation} width={400} height={300} />
+              </div>
+            )}
+            {isMobile && destinationLocation && (
+              <div style={{ width: '100%' }}>
+                <MapStreetViewToggle key="destination-view" location={destinationLocation} width={isMobile ? undefined : 400} height={isMobile ? 250 : 300} />
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>

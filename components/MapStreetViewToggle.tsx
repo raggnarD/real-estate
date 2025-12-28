@@ -16,11 +16,22 @@ function MapStreetViewToggle({
   height = 300,
 }: MapStreetViewToggleProps) {
   const [viewMode, setViewMode] = useState<'street' | 'map'>('map')
+  const [isMobile, setIsMobile] = useState(false)
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const markerRef = useRef<google.maps.Marker | null>(null)
   const [isMapInitialized, setIsMapInitialized] = useState(false)
   const { isLoading: apiKeyLoading, getEffectiveApiKey } = useApiKey()
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Initialize map when switching to map view
   useEffect(() => {
@@ -92,11 +103,14 @@ function MapStreetViewToggle({
   }, [viewMode, location?.lat, location?.lng, apiKeyLoading, getEffectiveApiKey])
 
 
+  const effectiveWidth = width === undefined ? (isMobile ? '100%' : 400) : (isMobile && width > window.innerWidth - 40 ? '100%' : `${width}px`)
+  const effectiveHeight = isMobile ? Math.min(height, 250) : height
+
   if (!location) {
     return (
       <div style={{
-        width: `${width}px`,
-        height: `${height}px`,
+        width: effectiveWidth,
+        height: `${effectiveHeight}px`,
         backgroundColor: '#f0f0f0',
         border: '1px solid #ddd',
         borderRadius: '8px',
@@ -122,8 +136,8 @@ function MapStreetViewToggle({
         <button
           onClick={() => setViewMode('street')}
           style={{
-            padding: '0.5rem 1rem',
-            fontSize: '0.875rem',
+            padding: isMobile ? '0.5rem 0.75rem' : '0.5rem 1rem',
+            fontSize: isMobile ? '0.75rem' : '0.875rem',
             backgroundColor: viewMode === 'street' ? '#0070f3' : '#fff',
             color: viewMode === 'street' ? '#fff' : '#333',
             border: '1px solid #ddd',
@@ -138,8 +152,8 @@ function MapStreetViewToggle({
         <button
           onClick={() => setViewMode('map')}
           style={{
-            padding: '0.5rem 1rem',
-            fontSize: '0.875rem',
+            padding: isMobile ? '0.5rem 0.75rem' : '0.5rem 1rem',
+            fontSize: isMobile ? '0.75rem' : '0.875rem',
             backgroundColor: viewMode === 'map' ? '#0070f3' : '#fff',
             color: viewMode === 'map' ? '#fff' : '#333',
             border: '1px solid #ddd',
@@ -155,8 +169,8 @@ function MapStreetViewToggle({
 
       {/* View container */}
       <div style={{
-        width: `${width}px`,
-        height: `${height}px`,
+        width: effectiveWidth,
+        height: `${effectiveHeight}px`,
         borderRadius: '8px',
         overflow: 'hidden',
         border: '1px solid #ddd',

@@ -28,6 +28,7 @@ const MAX_HISTORY_ITEMS = 3
 export default function NeighborhoodFinder() {
   const { apiKey } = useApiKey()
   const { wizardActive, setWizardStep, setWorkAddress: setWizardWorkAddress } = useWizard()
+  const [isMobile, setIsMobile] = useState(false)
   const [workAddress, setWorkAddress] = useState('')
   const [workLocation, setWorkLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [transportMode, setTransportMode] = useState<'driving' | 'bus' | 'train' | 'walking' | 'bicycling'>('driving')
@@ -55,6 +56,16 @@ export default function NeighborhoodFinder() {
         document.head.appendChild(style)
       }
     }
+  }, [])
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
   // Check if wizard is active and show intro modal
@@ -250,28 +261,33 @@ export default function NeighborhoodFinder() {
     <div style={{ 
       maxWidth: '1200px', 
       margin: '0 auto', 
-      padding: '2rem'
+      padding: isMobile ? '1rem' : '2rem'
     }}>
       <NeighborhoodFinderIntro 
         isOpen={showIntroModal} 
         onClose={() => setShowIntroModal(false)} 
       />
-      <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem' }}>
+      <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem', fontSize: isMobile ? '1.5rem' : '2rem' }}>
         Neighborhood Finder
       </h1>
-      <p style={{ color: '#666', marginBottom: '2rem' }}>
+      <p style={{ color: '#666', marginBottom: isMobile ? '1rem' : '2rem', fontSize: isMobile ? '0.875rem' : '1rem' }}>
         Find cities and towns within your maximum commute time from work.
       </p>
 
       <div style={{ 
         border: '1px solid #ddd', 
         borderRadius: '8px', 
-        padding: '2rem',
+        padding: isMobile ? '1rem' : '2rem',
         backgroundColor: '#f9f9f9',
-        marginBottom: '2rem'
+        marginBottom: isMobile ? '1rem' : '2rem'
       }}>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '1.5rem', 
+            alignItems: 'flex-start',
+            flexDirection: isMobile ? 'column' : 'row'
+          }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <label style={{ 
                 display: 'block', 
@@ -307,13 +323,24 @@ export default function NeighborhoodFinder() {
                 onClearHistory={clearHistory}
               />
             </div>
-            <div style={{ flexShrink: 0 }}>
-              <MapStreetViewToggle 
-                location={workLocation} 
-                width={400} 
-                height={300} 
-              />
-            </div>
+            {!isMobile && (
+              <div style={{ flexShrink: 0 }}>
+                <MapStreetViewToggle 
+                  location={workLocation} 
+                  width={400} 
+                  height={300} 
+                />
+              </div>
+            )}
+            {isMobile && workLocation && (
+              <div style={{ width: '100%' }}>
+                <MapStreetViewToggle 
+                  location={workLocation} 
+                  width={undefined} 
+                  height={250} 
+                />
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>

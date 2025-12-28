@@ -8,8 +8,19 @@ import NeighborhoodFinderIntro from '@/components/NeighborhoodFinderIntro'
 export default function IntroModal() {
   const [isOpen, setIsOpen] = useState(false)
   const [showNextModal, setShowNextModal] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const { setWizardActive, setWizardStep } = useWizard()
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     // Check if user has seen the intro before
@@ -48,20 +59,20 @@ export default function IntroModal() {
       bottom: 0,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: isMobile ? 'flex-start' : 'center',
       justifyContent: 'center',
       zIndex: 10000,
-      padding: '0.5rem',
+      padding: isMobile ? '0' : '0.5rem',
       overflow: 'auto'
     }} onClick={handleClose}>
       <div style={{
         backgroundColor: '#fff',
-        borderRadius: '12px',
-        maxWidth: '600px',
+        borderRadius: isMobile ? '0' : '12px',
+        maxWidth: isMobile ? '100%' : '600px',
         width: '100%',
-        maxHeight: '90vh',
+        maxHeight: isMobile ? '100vh' : '90vh',
         overflow: 'auto',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+        boxShadow: isMobile ? 'none' : '0 8px 32px rgba(0, 0, 0, 0.2)',
         position: 'relative',
         margin: '0 auto'
       }} onClick={(e) => e.stopPropagation()}>

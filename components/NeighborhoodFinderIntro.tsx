@@ -14,6 +14,17 @@ interface NeighborhoodFinderIntroProps {
 export default function NeighborhoodFinderIntro({ isOpen, onClose }: NeighborhoodFinderIntroProps) {
   const [hasSeenIntro, setHasSeenIntro] = useState(false)
   const [showApiKeySetup, setShowApiKeySetup] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
   const [keyType, setKeyType] = useState<'shared' | 'own'>('shared')
   const [inputValue, setInputValue] = useState('')
   const [showKey, setShowKey] = useState(false)
@@ -158,10 +169,10 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
       bottom: 0,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: isMobile ? 'flex-start' : 'center',
       justifyContent: 'center',
       zIndex: 10000,
-      padding: '0.5rem',
+      padding: isMobile ? '0' : '0.5rem',
       overflow: 'auto'
     }} onClick={() => {
       // Don't close on backdrop click if in wizard mode or showing API setup
@@ -171,12 +182,12 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
     }}>
       <div style={{
         backgroundColor: '#fff',
-        borderRadius: '12px',
-        maxWidth: '700px',
+        borderRadius: isMobile ? '0' : '12px',
+        maxWidth: isMobile ? '100%' : '700px',
         width: '100%',
-        maxHeight: '90vh',
+        maxHeight: isMobile ? '100vh' : '90vh',
         overflow: 'auto',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+        boxShadow: isMobile ? 'none' : '0 8px 32px rgba(0, 0, 0, 0.2)',
         position: 'relative',
         margin: '0 auto',
         display: 'flex',

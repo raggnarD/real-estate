@@ -20,6 +20,7 @@ export default function AccountPage() {
     checkSharedKeyStatus
   } = useApiKey()
   const { wizardActive, setWizardStep } = useWizard()
+  const [isMobile, setIsMobile] = useState(false)
   const [inputValue, setInputValue] = useState(apiKey || '')
   const [showKey, setShowKey] = useState(false)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
@@ -29,6 +30,16 @@ export default function AccountPage() {
   const [countdown, setCountdown] = useState<number | null>(null)
   const [keyType, setKeyType] = useState<'shared' | 'own'>(apiKey ? 'own' : (sharedKeyActive ? 'shared' : 'own'))
   const [pendingChanges, setPendingChanges] = useState(false)
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const handleSave = async () => {
     if (keyType === 'shared') {
@@ -267,21 +278,21 @@ export default function AccountPage() {
     <div style={{ 
       maxWidth: '800px', 
       margin: '0 auto', 
-      padding: '2rem'
+      padding: isMobile ? '1rem' : '2rem'
     }}>
-      <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem' }}>
+      <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem', fontSize: isMobile ? '1.5rem' : '2rem' }}>
         Account Settings
       </h1>
-      <p style={{ color: '#666', marginBottom: '2rem' }}>
+      <p style={{ color: '#666', marginBottom: isMobile ? '1rem' : '2rem', fontSize: isMobile ? '0.875rem' : '1rem' }}>
         Manage your Google Maps API key and account preferences.
       </p>
 
       <div style={{ 
         border: '1px solid #ddd', 
         borderRadius: '8px', 
-        padding: '2rem',
+        padding: isMobile ? '1rem' : '2rem',
         backgroundColor: '#f9f9f9',
-        marginBottom: '2rem'
+        marginBottom: isMobile ? '1rem' : '2rem'
       }}>
         <h2 style={{ marginTop: 0, color: '#000', marginBottom: '1.5rem' }}>
           Google Maps API Key
