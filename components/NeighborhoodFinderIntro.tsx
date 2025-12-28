@@ -186,8 +186,9 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
         borderRadius: isMobile ? '0' : '12px',
         maxWidth: isMobile ? '100%' : '700px',
         width: '100%',
+        height: isMobile ? '100vh' : 'auto',
         maxHeight: isMobile ? '100vh' : '90vh',
-        overflow: 'auto',
+        overflow: 'hidden',
         boxShadow: isMobile ? 'none' : '0 8px 32px rgba(0, 0, 0, 0.2)',
         position: 'relative',
         margin: '0 auto',
@@ -224,12 +225,13 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
         {/* Content */}
         {!showApiKeySetup && (
           <div style={{
-            padding: '2rem',
+            padding: isMobile ? '1.5rem' : '2rem',
             fontSize: '1rem',
             lineHeight: '1.7',
             color: '#333',
             flex: 1,
-            overflowY: 'auto'
+            overflowY: 'auto',
+            overflowX: 'hidden'
           }}>
             {/* Step 1 */}
             <div style={{
@@ -404,9 +406,10 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
         {/* API Key Setup Section */}
         {showApiKeySetup && (
           <div style={{
-            padding: '2rem',
+            padding: isMobile ? '1.5rem' : '2rem',
             flex: 1,
             overflowY: 'auto',
+            overflowX: 'hidden',
             backgroundColor: '#f9f9f9'
           }}>
             <h3 style={{
@@ -586,13 +589,18 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
 
         {/* Footer */}
         <div style={{
-          padding: '1rem 1.5rem',
+          padding: isMobile ? '1rem 1.5rem' : '1rem 1.5rem',
+          paddingBottom: isMobile ? 'max(1rem, env(safe-area-inset-bottom))' : '1rem',
           borderTop: '1px solid #e0e0e0',
           display: 'flex',
           justifyContent: 'flex-end',
           gap: '1rem',
           backgroundColor: '#f9f9f9',
-          borderRadius: showApiKeySetup ? '0' : '0 0 12px 12px'
+          borderRadius: isMobile ? '0' : (showApiKeySetup ? '0' : '0 0 12px 12px'),
+          position: isMobile ? 'sticky' : 'relative',
+          bottom: 0,
+          flexShrink: 0,
+          zIndex: 10
         }}>
           {!showApiKeySetup ? (
             <button

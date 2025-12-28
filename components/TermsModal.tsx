@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface TermsModalProps {
   isOpen: boolean
@@ -11,6 +11,17 @@ interface TermsModalProps {
 export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProps) {
   const [accepted, setAccepted] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   if (!isOpen) return null
 
@@ -45,19 +56,23 @@ export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProp
       bottom: 0,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: isMobile ? 'flex-start' : 'center',
       justifyContent: 'center',
       zIndex: 10000,
-      padding: '1rem'
+      padding: isMobile ? '0' : '1rem',
+      overflow: 'auto'
     }} onClick={handleClose}>
       <div style={{
         backgroundColor: '#fff',
-        borderRadius: '8px',
-        maxWidth: '600px',
+        borderRadius: isMobile ? '0' : '8px',
+        maxWidth: isMobile ? '100%' : '600px',
         width: '100%',
-        maxHeight: '90vh',
-        overflow: 'auto',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+        height: isMobile ? '100vh' : 'auto',
+        maxHeight: isMobile ? '100vh' : '90vh',
+        overflow: 'hidden',
+        boxShadow: isMobile ? 'none' : '0 4px 6px rgba(0, 0, 0, 0.1)',
+        display: 'flex',
+        flexDirection: 'column'
       }} onClick={(e) => e.stopPropagation()}>
         <div style={{
           padding: '2rem',
@@ -82,9 +97,10 @@ export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProp
         </div>
 
         <div style={{
-          padding: '2rem',
-          maxHeight: '50vh',
-          overflow: 'auto',
+          padding: isMobile ? '1.5rem' : '2rem',
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
           fontSize: '0.875rem',
           lineHeight: '1.6',
           color: '#333'
@@ -153,12 +169,18 @@ export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProp
         </div>
 
         <div style={{
-          padding: '1.5rem 2rem',
+          padding: isMobile ? '1rem 1.5rem' : '1.5rem 2rem',
+          paddingBottom: isMobile ? 'max(1rem, env(safe-area-inset-bottom))' : '1.5rem',
           borderTop: '1px solid #ddd',
           display: 'flex',
           alignItems: 'center',
           gap: '1rem',
-          flexWrap: 'wrap'
+          flexWrap: 'wrap',
+          backgroundColor: '#fff',
+          position: isMobile ? 'sticky' : 'relative',
+          bottom: 0,
+          flexShrink: 0,
+          zIndex: 10
         }}>
           <label style={{
             display: 'flex',
