@@ -64,11 +64,12 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
       }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={{
-          padding: '1.5rem',
+          padding: isMobile ? '1rem 1.5rem' : '1.5rem',
           borderBottom: '1px solid #e0e0e0',
           background: 'linear-gradient(135deg, #0070f3 0%, #0051cc 100%)',
           borderRadius: isMobile ? '0' : '12px 12px 0 0',
-          color: '#fff'
+          color: '#fff',
+          flexShrink: 0
         }}>
           <h2 style={{
             margin: 0,
@@ -110,8 +111,6 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
           gap: '1rem',
           backgroundColor: '#f9f9f9',
           borderRadius: isMobile ? '0' : '0 0 12px 12px',
-          position: isMobile ? 'sticky' : 'relative',
-          bottom: 0,
           flexShrink: 0,
           zIndex: 10
         }}>

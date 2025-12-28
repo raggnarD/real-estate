@@ -86,11 +86,12 @@ export default function IntroModal() {
           padding: '1rem 1.5rem',
           borderBottom: '1px solid #e0e0e0',
           background: 'linear-gradient(135deg, #0070f3 0%, #0051cc 100%)',
-          borderRadius: '12px 12px 0 0',
+          borderRadius: isMobile ? '0' : '12px 12px 0 0',
           color: '#fff',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          flexShrink: 0
         }}>
           <img
             src="/rushroost-logo.png"
@@ -147,8 +148,6 @@ export default function IntroModal() {
           justifyContent: 'flex-end',
           backgroundColor: '#f9f9f9',
           borderRadius: isMobile ? '0' : '0 0 12px 12px',
-          position: isMobile ? 'sticky' : 'relative',
-          bottom: 0,
           flexShrink: 0,
           zIndex: 10
         }}>

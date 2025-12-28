@@ -75,8 +75,9 @@ export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProp
         flexDirection: 'column'
       }} onClick={(e) => e.stopPropagation()}>
         <div style={{
-          padding: '2rem',
-          borderBottom: '1px solid #ddd'
+          padding: isMobile ? '1.5rem' : '2rem',
+          borderBottom: '1px solid #ddd',
+          flexShrink: 0
         }}>
           <h2 style={{
             marginTop: 0,
@@ -177,8 +178,6 @@ export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProp
           gap: '1rem',
           flexWrap: 'wrap',
           backgroundColor: '#fff',
-          position: isMobile ? 'sticky' : 'relative',
-          bottom: 0,
           flexShrink: 0,
           zIndex: 10
         }}>
