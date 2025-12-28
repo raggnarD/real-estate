@@ -7,9 +7,11 @@ import NeighborhoodResults from '@/components/NeighborhoodResults'
 import NeighborhoodMap from '@/components/NeighborhoodMap'
 import MapStreetViewToggle from '@/components/MapStreetViewToggle'
 import NeighborhoodFinderIntro from '@/components/NeighborhoodFinderIntro'
+import HomeSelectedModal from '@/components/HomeSelectedModal'
 import { useScrollToResults } from '@/hooks/useScrollToResults'
 import { useApiKey } from '@/contexts/ApiKeyContext'
 import { useWizard } from '@/contexts/WizardContext'
+import { useRouter } from 'next/navigation'
 
 interface CityResult {
   name: string
@@ -28,8 +30,11 @@ const MAX_HISTORY_ITEMS = 3
 export default function NeighborhoodFinder() {
   const { apiKey } = useApiKey()
   const { wizardActive, setWizardStep, setWorkAddress: setWizardWorkAddress } = useWizard()
+  const router = useRouter()
   const [isMobile, setIsMobile] = useState(false)
   const [workAddress, setWorkAddress] = useState('')
+  const [showHomeSelectedModal, setShowHomeSelectedModal] = useState(false)
+  const [selectedZillowUrl, setSelectedZillowUrl] = useState<string>('')
   const [workLocation, setWorkLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [transportMode, setTransportMode] = useState<'driving' | 'bus' | 'train' | 'walking' | 'bicycling'>('driving')
   const [maxCommuteTime, setMaxCommuteTime] = useState<number>(60)
@@ -181,6 +186,10 @@ export default function NeighborhoodFinder() {
     setIsLoading(true)
     setError(null)
     setResults([])
+    // Reset stage gate to step 1 when clearing results
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('neighborhoods-cleared'))
+    }
 
     // Determine the location to use - either from state or by geocoding
     let locationToUse: { lat: number; lng: number } | null = workLocation
@@ -239,11 +248,16 @@ export default function NeighborhoodFinder() {
       const data = await response.json()
 
       if (response.ok) {
-        setResults(data.cities || [])
-        if (data.cities && data.cities.length === 0) {
+        const cities = data.cities || []
+        setResults(cities)
+        if (cities.length === 0) {
           setError('No cities found within the specified commute time. Try increasing the maximum commute time.')
         } else {
           setError(null) // Clear any previous errors
+          // Dispatch event to update stage gate to step 2
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('neighborhoods-found'))
+          }
         }
       } else {
         setError(data.error || 'Failed to find neighborhoods')
@@ -266,6 +280,15 @@ export default function NeighborhoodFinder() {
       <NeighborhoodFinderIntro 
         isOpen={showIntroModal} 
         onClose={() => setShowIntroModal(false)} 
+      />
+      <HomeSelectedModal
+        isOpen={showHomeSelectedModal}
+        onClose={() => setShowHomeSelectedModal(false)}
+        onContinue={() => {
+          setWizardStep('commute-time')
+          router.push('/')
+        }}
+        zillowUrl={selectedZillowUrl}
       />
       <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem', fontSize: isMobile ? '1.5rem' : '2rem' }}>
         Neighborhood Finder
@@ -553,6 +576,10 @@ export default function NeighborhoodFinder() {
             {(viewMode === 'list' || viewMode === 'both') && (
               <div style={{ flex: 1 }}>
                 <NeighborhoodResults
+                  onZillowClick={(zillowUrl, city) => {
+                    setSelectedZillowUrl(zillowUrl)
+                    setShowHomeSelectedModal(true)
+                  }}
                   cities={results}
                   onCityClick={(city) => setSelectedCityId(city.placeId)}
                   selectedCityId={selectedCityId}

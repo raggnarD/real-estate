@@ -91,7 +91,8 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
     } else {
       // User wants to use their own API key
       if (inputValue.trim()) {
-        setApiKey(inputValue.trim())
+        const trimmedKey = inputValue.trim()
+        setApiKey(trimmedKey)
         // Revoke shared key if active
         if (sharedKeyActive) {
           try {
@@ -102,7 +103,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
         }
         setSaveMessage('API key saved successfully!')
         setTimeout(() => setSaveMessage(null), 3000)
-        // Navigate to neighborhood finder
+        // Navigate to neighborhood finder - API key is saved synchronously
         handleApiKeyComplete()
       } else {
         setSaveMessage('Please enter a valid API key')
@@ -139,10 +140,10 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
     localStorage.setItem('hasSeenNeighborhoodFinderIntro', 'true')
     if (wizardActive) {
       setWizardStep('neighborhood-finder')
-      setTimeout(() => {
-        onClose()
-        router.push('/neighborhood-finder')
-      }, 1000)
+      // Close modal and navigate
+      onClose()
+      // Navigate immediately - router.push will handle the navigation
+      router.push('/neighborhood-finder')
     } else {
       onClose()
     }

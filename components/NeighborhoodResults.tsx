@@ -17,12 +17,14 @@ interface NeighborhoodResultsProps {
   cities: CityResult[]
   onCityClick?: (city: CityResult) => void
   selectedCityId?: string
+  onZillowClick?: (zillowUrl: string, city: CityResult) => void
 }
 
 export default function NeighborhoodResults({
   cities,
   onCityClick,
   selectedCityId,
+  onZillowClick,
 }: NeighborhoodResultsProps) {
   if (cities.length === 0) {
     return (
@@ -84,7 +86,17 @@ export default function NeighborhoodResults({
               href={buildZillowUrl(city.address, city.name)}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                e.preventDefault()
+                const zillowUrl = buildZillowUrl(city.address, city.name)
+                // Open Zillow in new tab
+                window.open(zillowUrl, '_blank', 'noopener,noreferrer')
+                // Show modal if callback is provided
+                if (onZillowClick) {
+                  onZillowClick(zillowUrl, city)
+                }
+              }}
               style={{
                 color: '#0070f3',
                 textDecoration: 'none',

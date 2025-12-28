@@ -46,6 +46,8 @@ export default function IntroModal() {
 
   const handleNextModalClose = () => {
     setShowNextModal(false)
+    // If wizard is active and we're closing after API key setup, navigate
+    // This will be handled by NeighborhoodFinderIntro, but we ensure modal closes
   }
 
   return (
@@ -135,7 +137,7 @@ export default function IntroModal() {
           {/* Feature Cards */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: '1.5rem',
             marginBottom: '2rem'
           }}>
@@ -149,9 +151,8 @@ export default function IntroModal() {
               flexDirection: 'column',
               transition: 'all 0.2s',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-              aspectRatio: '1',
-              minHeight: '150px',
-              minWidth: '0' // Prevent overflow
+              height: '100%',
+              minHeight: '120px'
             }}>
               <h3 style={{
                 marginTop: 0,
@@ -187,9 +188,8 @@ export default function IntroModal() {
               flexDirection: 'column',
               transition: 'all 0.2s',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-              aspectRatio: '1',
-              minHeight: '150px',
-              minWidth: '0' // Prevent overflow
+              height: '100%',
+              minHeight: '120px'
             }}>
               <h3 style={{
                 marginTop: 0,

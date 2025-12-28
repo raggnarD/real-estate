@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Navigation from '@/components/Navigation'
+import StageGate from '@/components/StageGate'
 import ApiKeyBanner from '@/components/ApiKeyBanner'
 import IntroModal from '@/components/IntroModal'
 import WizardOnboardingModal from '@/components/WizardOnboardingModal'
@@ -31,6 +32,7 @@ export default function RootLayout({
             <WizardOnboardingModal />
             <ApiKeyBanner />
             <Navigation />
+            <StageGate />
             {children}
           </WizardProvider>
         </ApiKeyProvider>
