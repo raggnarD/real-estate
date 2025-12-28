@@ -40,9 +40,7 @@ export default function IntroModal() {
   return (
     <>
       {isOpen && (
-
-  return (
-    <div style={{
+        <div style={{
       position: 'fixed',
       top: 0,
       left: 0,
