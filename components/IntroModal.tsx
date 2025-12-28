@@ -111,10 +111,15 @@ export default function IntroModal() {
 
         {/* Content */}
         <div style={{
-          padding: '1.5rem',
+          padding: isMobile ? '1rem 1.5rem' : '1.5rem',
           fontSize: '1rem',
           lineHeight: '1.7',
-          color: '#333'
+          color: '#333',
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch'
         }}>
           <h2 style={{
             marginTop: 0,

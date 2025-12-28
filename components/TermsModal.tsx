@@ -98,13 +98,15 @@ export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProp
         </div>
 
         <div style={{
-          padding: isMobile ? '1.5rem' : '2rem',
+          padding: isMobile ? '1rem 1.5rem' : '2rem',
           flex: 1,
+          minHeight: 0,
           overflowY: 'auto',
           overflowX: 'hidden',
           fontSize: '0.875rem',
           lineHeight: '1.6',
-          color: '#333'
+          color: '#333',
+          WebkitOverflowScrolling: 'touch'
         }}>
           <h3 style={{
             marginTop: 0,

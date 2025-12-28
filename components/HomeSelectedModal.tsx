@@ -83,13 +83,15 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
 
         {/* Content */}
         <div style={{
-          padding: isMobile ? '1.5rem' : '2rem',
+          padding: isMobile ? '1rem 1.5rem' : '2rem',
           fontSize: '1rem',
           lineHeight: '1.7',
           color: '#333',
           flex: 1,
+          minHeight: 0,
           overflowY: 'auto',
-          overflowX: 'hidden'
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch'
         }}>
           <p style={{
             margin: 0,

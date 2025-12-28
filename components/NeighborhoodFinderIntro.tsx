@@ -226,13 +226,15 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
         {/* Content */}
         {!showApiKeySetup && (
           <div style={{
-            padding: isMobile ? '1.5rem' : '2rem',
+            padding: isMobile ? '1rem 1.5rem' : '2rem',
             fontSize: '1rem',
             lineHeight: '1.7',
             color: '#333',
             flex: 1,
+            minHeight: 0,
             overflowY: 'auto',
-            overflowX: 'hidden'
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch'
           }}>
             {/* Step 1 */}
             <div style={{
@@ -407,11 +409,13 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
         {/* API Key Setup Section */}
         {showApiKeySetup && (
           <div style={{
-            padding: isMobile ? '1.5rem' : '2rem',
+            padding: isMobile ? '1rem 1.5rem' : '2rem',
             flex: 1,
+            minHeight: 0,
             overflowY: 'auto',
             overflowX: 'hidden',
-            backgroundColor: '#f9f9f9'
+            backgroundColor: '#f9f9f9',
+            WebkitOverflowScrolling: 'touch'
           }}>
             <h3 style={{
               margin: '0 0 1.5rem 0',
