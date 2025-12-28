@@ -23,9 +23,12 @@ export default function IntroModal() {
     // Activate wizard mode - WizardOnboardingModal will detect this and show
     setWizardActive(true)
     // Dispatch custom event to immediately trigger modal
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('wizard-started'))
-    }
+    // Use setTimeout to ensure state updates have propagated
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('wizard-started'))
+      }
+    }, 50)
   }
 
   const handleClose = () => {

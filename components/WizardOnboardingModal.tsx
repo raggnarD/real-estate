@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useWizard } from '@/contexts/WizardContext'
 import NeighborhoodFinderIntro from '@/components/NeighborhoodFinderIntro'
 
@@ -11,45 +11,28 @@ import NeighborhoodFinderIntro from '@/components/NeighborhoodFinderIntro'
 export default function WizardOnboardingModal() {
   const { wizardActive } = useWizard()
   const [showModal, setShowModal] = useState(false)
-  const hasCheckedRef = useRef(false)
 
-  useEffect(() => {
-    // Check if we should show the modal
-    const checkShouldShow = () => {
-      try {
-        const hasSeenIntro = localStorage.getItem('hasSeenIntro')
-        const hasSeenHowItWorks = localStorage.getItem('hasSeenNeighborhoodFinderIntro')
-        const wizardActiveFromStorage = localStorage.getItem('wizard_active') === 'true'
-        
-        // Show if (wizard is active in context OR in storage) AND intro was seen but how-it-works hasn't been seen
-        const shouldShow = (wizardActive || wizardActiveFromStorage) && hasSeenIntro === 'true' && !hasSeenHowItWorks
-        
-        if (shouldShow) {
-          setShowModal(true)
-          hasCheckedRef.current = true
-        } else if (!wizardActive && !wizardActiveFromStorage) {
-          // Only hide if wizard is definitely not active
-          setShowModal(false)
-        }
-      } catch (error) {
-        console.error('Error checking wizard modal state:', error)
-      }
-    }
-
-    // Check immediately when wizardActive changes
-    if (wizardActive) {
-      checkShouldShow()
-    }
-
-    // Also poll for changes to catch localStorage updates
-    const interval = setInterval(checkShouldShow, 100)
-
-    return () => clearInterval(interval)
-  }, [wizardActive])
-
-  // Listen for custom event when wizard starts
+  // Listen for custom event when wizard starts - this is the primary trigger
   useEffect(() => {
     const handleWizardStarted = () => {
+      // Small delay to ensure localStorage is updated
+      setTimeout(() => {
+        const hasSeenIntro = localStorage.getItem('hasSeenIntro')
+        const hasSeenHowItWorks = localStorage.getItem('hasSeenNeighborhoodFinderIntro')
+        
+        if (hasSeenIntro === 'true' && !hasSeenHowItWorks) {
+          setShowModal(true)
+        }
+      }, 10)
+    }
+
+    window.addEventListener('wizard-started', handleWizardStarted as EventListener)
+    return () => window.removeEventListener('wizard-started', handleWizardStarted as EventListener)
+  }, [])
+
+  // Also check when wizardActive changes
+  useEffect(() => {
+    if (wizardActive) {
       const hasSeenIntro = localStorage.getItem('hasSeenIntro')
       const hasSeenHowItWorks = localStorage.getItem('hasSeenNeighborhoodFinderIntro')
       
@@ -57,20 +40,28 @@ export default function WizardOnboardingModal() {
         setShowModal(true)
       }
     }
+  }, [wizardActive])
 
-    window.addEventListener('wizard-started', handleWizardStarted)
-    return () => window.removeEventListener('wizard-started', handleWizardStarted)
-  }, [])
-
-  // Also check on mount
+  // Poll as fallback
   useEffect(() => {
-    const hasSeenIntro = localStorage.getItem('hasSeenIntro')
-    const hasSeenHowItWorks = localStorage.getItem('hasSeenNeighborhoodFinderIntro')
-    const wizardActiveFromStorage = localStorage.getItem('wizard_active') === 'true'
-    
-    if ((wizardActive || wizardActiveFromStorage) && hasSeenIntro === 'true' && !hasSeenHowItWorks) {
-      setShowModal(true)
+    const checkShouldShow = () => {
+      try {
+        const hasSeenIntro = localStorage.getItem('hasSeenIntro')
+        const hasSeenHowItWorks = localStorage.getItem('hasSeenNeighborhoodFinderIntro')
+        const wizardActiveFromStorage = localStorage.getItem('wizard_active') === 'true'
+        
+        const shouldShow = (wizardActive || wizardActiveFromStorage) && hasSeenIntro === 'true' && !hasSeenHowItWorks
+        
+        if (shouldShow) {
+          setShowModal(true)
+        }
+      } catch (error) {
+        console.error('Error checking wizard modal state:', error)
+      }
     }
+
+    const interval = setInterval(checkShouldShow, 200)
+    return () => clearInterval(interval)
   }, [wizardActive])
 
   const handleClose = () => {
