@@ -240,6 +240,7 @@ export default function IntroModal() {
           </button>
         </div>
       </div>
+    </div>
       )}
       {showNextModal && (
         <NeighborhoodFinderIntro 
