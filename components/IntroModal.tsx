@@ -111,7 +111,7 @@ export default function IntroModal() {
 
         {/* Content */}
         <div style={{
-          padding: isMobile ? '1rem 1.5rem' : '1.5rem',
+          padding: isMobile ? '1rem 1.5rem 5rem 1.5rem' : '1.5rem',
           fontSize: '1rem',
           lineHeight: '1.7',
           color: '#333',
@@ -146,14 +146,21 @@ export default function IntroModal() {
 
         {/* Footer */}
         <div style={{
-          padding: isMobile ? '1rem 1.5rem 1rem 1.5rem' : '1rem 1.5rem',
+          padding: isMobile ? '1rem 1.5rem' : '1rem 1.5rem',
           borderTop: '1px solid #e0e0e0',
           display: 'flex',
           justifyContent: 'flex-end',
           backgroundColor: '#f9f9f9',
           borderRadius: isMobile ? '0' : '0 0 12px 12px',
           flexShrink: 0,
-          zIndex: 10
+          zIndex: 10,
+          ...(isMobile ? {
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)'
+          } : {})
         }}>
           <button
             onClick={handleGetStarted}

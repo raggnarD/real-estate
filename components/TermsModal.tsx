@@ -98,7 +98,7 @@ export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProp
         </div>
 
         <div style={{
-          padding: isMobile ? '1rem 1.5rem' : '2rem',
+          padding: isMobile ? '1rem 1.5rem 5rem 1.5rem' : '2rem',
           flex: 1,
           minHeight: 0,
           overflowY: 'auto',
@@ -172,7 +172,7 @@ export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProp
         </div>
 
         <div style={{
-          padding: isMobile ? '1rem 1.5rem 1rem 1.5rem' : '1.5rem 2rem',
+          padding: isMobile ? '1rem 1.5rem' : '1.5rem 2rem',
           borderTop: '1px solid #ddd',
           display: 'flex',
           alignItems: 'center',
@@ -180,7 +180,14 @@ export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProp
           flexWrap: 'wrap',
           backgroundColor: '#fff',
           flexShrink: 0,
-          zIndex: 10
+          zIndex: 10,
+          ...(isMobile ? {
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)'
+          } : {})
         }}>
           <label style={{
             display: 'flex',
