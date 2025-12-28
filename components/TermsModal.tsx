@@ -67,8 +67,8 @@ export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProp
         borderRadius: isMobile ? '0' : '8px',
         maxWidth: isMobile ? '100%' : '600px',
         width: '100%',
-        height: isMobile ? '100vh' : 'auto',
-        maxHeight: isMobile ? '100vh' : '90vh',
+        height: isMobile ? '100dvh' : 'auto',
+        maxHeight: isMobile ? '100dvh' : '90vh',
         overflow: 'hidden',
         boxShadow: isMobile ? 'none' : '0 4px 6px rgba(0, 0, 0, 0.1)',
         display: 'flex',
@@ -172,8 +172,7 @@ export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProp
         </div>
 
         <div style={{
-          padding: isMobile ? '1rem 1.5rem' : '1.5rem 2rem',
-          paddingBottom: isMobile ? 'max(1rem, env(safe-area-inset-bottom))' : '1.5rem',
+          padding: isMobile ? '1rem 1.5rem 1rem 1.5rem' : '1.5rem 2rem',
           borderTop: '1px solid #ddd',
           display: 'flex',
           alignItems: 'center',

@@ -53,12 +53,12 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
         borderRadius: isMobile ? '0' : '12px',
         maxWidth: isMobile ? '100%' : '500px',
         width: '100%',
-        height: isMobile ? '100vh' : 'auto',
-        maxHeight: isMobile ? '100vh' : '90vh',
+        height: isMobile ? '100dvh' : 'auto',
+        maxHeight: isMobile ? '100dvh' : '90vh',
         overflow: 'hidden',
         boxShadow: isMobile ? 'none' : '0 8px 32px rgba(0, 0, 0, 0.2)',
         position: 'relative',
-        margin: '0 auto',
+        margin: isMobile ? '0' : '0 auto',
         display: 'flex',
         flexDirection: 'column'
       }} onClick={(e) => e.stopPropagation()}>
@@ -105,8 +105,7 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
 
         {/* Footer */}
         <div style={{
-          padding: isMobile ? '1rem 1.5rem' : '1rem 1.5rem',
-          paddingBottom: isMobile ? 'max(1rem, env(safe-area-inset-bottom))' : '1rem',
+          padding: isMobile ? '1rem 1.5rem 1rem 1.5rem' : '1rem 1.5rem',
           borderTop: '1px solid #e0e0e0',
           display: 'flex',
           justifyContent: 'flex-end',
