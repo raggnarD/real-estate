@@ -542,6 +542,76 @@ export default function AccountPage() {
           </div>
         )}
 
+        {/* Save button and Google Cloud Console link */}
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!pendingChanges || (keyType === 'own' && !inputValue.trim()) || isActivating}
+            style={{
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
+              backgroundColor: (pendingChanges && (keyType === 'shared' || inputValue.trim())) && !isActivating ? '#0070f3' : '#ccc',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: (pendingChanges && (keyType === 'shared' || inputValue.trim())) && !isActivating ? 'pointer' : 'not-allowed',
+              fontWeight: '500'
+            }}
+          >
+            {isActivating ? 'Activating...' : 'Save Changes'}
+          </button>
+          {keyType === 'own' && (apiKey || inputValue.trim()) && (
+            <a 
+              href="https://console.cloud.google.com/google/maps-apis/credentials" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ 
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#fff',
+                color: '#0070f3',
+                textDecoration: 'none',
+                borderRadius: '4px',
+                fontWeight: '600',
+                fontSize: '0.9375rem',
+                transition: 'all 0.2s',
+                border: '1px solid #0070f3'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#e6f2ff'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#fff'
+              }}
+            >
+              Open Google Cloud Console
+              <svg 
+                width="14" 
+                height="14" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+                style={{ flexShrink: 0 }}
+              >
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+            </a>
+          )}
+          {pendingChanges && (
+            <span style={{ fontSize: '0.875rem', color: '#666' }}>
+              You have unsaved changes
+            </span>
+          )}
+        </div>
+
         {/* Show API Key instructions only when "My Own API Key" is selected */}
         {keyType === 'own' && (
           <div style={{ 
@@ -810,65 +880,8 @@ export default function AccountPage() {
                   </div>
                 </>
               )}
-              
-              {/* Always show the Google Cloud Console button */}
-              <div style={{ 
-                marginTop: showInstructions ? '1.5rem' : '0',
-                textAlign: 'center'
-              }}>
-                <a 
-                  href="https://console.cloud.google.com/google/maps-apis/credentials" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ 
-                    display: 'inline-block',
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: '#0070f3',
-                    color: '#fff',
-                    textDecoration: 'none',
-                    borderRadius: '4px',
-                    fontWeight: '600',
-                    fontSize: '0.9375rem',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#0056b3'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#0070f3'
-                  }}
-                >
-                  Open Google Cloud Console →
-                </a>
-              </div>
             </div>
         )}
-
-        {/* Save button */}
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={!pendingChanges || (keyType === 'own' && !inputValue.trim()) || isActivating}
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              backgroundColor: (pendingChanges && (keyType === 'shared' || inputValue.trim())) && !isActivating ? '#0070f3' : '#ccc',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: (pendingChanges && (keyType === 'shared' || inputValue.trim())) && !isActivating ? 'pointer' : 'not-allowed',
-              fontWeight: '500'
-            }}
-          >
-            {isActivating ? 'Activating...' : 'Save Changes'}
-          </button>
-          {pendingChanges && (
-            <span style={{ fontSize: '0.875rem', color: '#666' }}>
-              You have unsaved changes
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Reset Everything Section */}
