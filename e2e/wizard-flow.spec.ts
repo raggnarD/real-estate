@@ -15,14 +15,17 @@ test.describe('Wizard Flow', () => {
     await expect(getStartedButton).toBeVisible()
     await getStartedButton.click()
 
-    // Step 2: How RushRoost Works Modal - Click Setup API Key
-    await expect(page.getByText(/how rushroost works/i)).toBeVisible()
-    const setupApiKeyButton = page.getByRole('button', { name: /setup api key/i })
+    // Step 2: How RushRoost Works Modal - Click Get Started to show API setup
+    // Wait for the modal to appear
+    await expect(page.getByRole('heading', { name: /how rushroost works/i })).toBeVisible()
+    // Find the Get Started button in the modal (use first() to handle multiple matches)
+    const setupApiKeyButton = page.getByRole('button', { name: /get started/i }).first()
+    await expect(setupApiKeyButton).toBeVisible()
     await setupApiKeyButton.click()
 
     // Step 3: API Key Setup - Use shared key (default)
     await expect(page.getByText(/setup api key/i)).toBeVisible()
-    const saveButton = page.getByRole('button', { name: /save.*continue/i })
+    const saveButton = page.getByRole('button', { name: /continue/i })
     await saveButton.click()
 
     // Step 4: Accept Terms
@@ -31,7 +34,7 @@ test.describe('Wizard Flow', () => {
 
     // Step 5: Should navigate to Neighborhood Finder
     await expect(page).toHaveURL(/.*neighborhood-finder/)
-    await expect(page.getByText(/neighborhood finder/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /neighborhood finder/i })).toBeVisible()
   })
 
   test('should allow entering custom API key', async ({ page }) => {
@@ -39,7 +42,12 @@ test.describe('Wizard Flow', () => {
 
     // Navigate to API setup
     await page.getByRole('button', { name: /get started/i }).click()
-    await page.getByRole('button', { name: /setup api key/i }).click()
+    // After clicking Get Started on intro modal, the "How RushRoost Works" modal appears
+    // Wait for it and click "Get Started" again to show API setup
+    await expect(page.getByRole('heading', { name: /how rushroost works/i })).toBeVisible()
+    const getStartedButton = page.getByRole('button', { name: /get started/i }).first()
+    await expect(getStartedButton).toBeVisible()
+    await getStartedButton.click()
 
     // Select "My Own API Key" option
     const ownKeyRadio = page.getByLabel(/my own api key/i)
@@ -49,8 +57,8 @@ test.describe('Wizard Flow', () => {
     const apiKeyInput = page.getByPlaceholder(/enter your api key/i)
     await apiKeyInput.fill('test-api-key-12345')
 
-    // Save
-    await page.getByRole('button', { name: /save.*continue/i }).click()
+    // Save - button text is "Continue" not "Save and Continue"
+    await page.getByRole('button', { name: /continue/i }).click()
 
     // Should navigate to Neighborhood Finder
     await expect(page).toHaveURL(/.*neighborhood-finder/)

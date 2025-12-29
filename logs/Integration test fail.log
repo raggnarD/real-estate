@@ -1,0 +1,622 @@
+Integration test fail 
+Run npm run test:e2e
+
+> commute-time-calculator@0.1.0 test:e2e
+> playwright test
+
+
+Running 30 tests using 1 worker
+××F·××F××F××F××T××F·××F××F××F××T××F·××F××F××F××T··××F××F××T××T×±·××F××F××F××T
+
+  1) [chromium] › e2e/neighborhood-finder.spec.ts:12:7 › Neighborhood Finder › should display neighborhood finder page 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/neighborhood finder/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/neighborhood finder/i) resolved to 2 elements:
+        1) <a href="/neighborhood-finder">📍 Neighborhood Finder</a> aka getByRole('link', { name: '📍 Neighborhood Finder' })
+        2) <h1>Neighborhood Finder</h1> aka getByRole('heading', { name: 'Neighborhood Finder' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/neighborhood finder/i)
+
+
+      12 |   test('should display neighborhood finder page', async ({ page }) => {
+      13 |     await page.goto('/neighborhood-finder')
+    > 14 |     await expect(page.getByText(/neighborhood finder/i)).toBeVisible()
+         |                                                          ^
+      15 |   })
+      16 |
+      17 |   test('should show work address input', async ({ page }) => {
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:14:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/neighborhood finder/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/neighborhood finder/i) resolved to 2 elements:
+        1) <a href="/neighborhood-finder">📍 Neighborhood Finder</a> aka getByRole('link', { name: '📍 Neighborhood Finder' })
+        2) <h1>Neighborhood Finder</h1> aka getByRole('heading', { name: 'Neighborhood Finder' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/neighborhood finder/i)
+
+
+      12 |   test('should display neighborhood finder page', async ({ page }) => {
+      13 |     await page.goto('/neighborhood-finder')
+    > 14 |     await expect(page.getByText(/neighborhood finder/i)).toBeVisible()
+         |                                                          ^
+      15 |   })
+      16 |
+      17 |   test('should show work address input', async ({ page }) => {
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:14:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-chromium-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/neighborhood finder/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/neighborhood finder/i) resolved to 2 elements:
+        1) <a href="/neighborhood-finder">📍 Neighborhood Finder</a> aka getByRole('link', { name: '📍 Neighborhood Finder' })
+        2) <h1>Neighborhood Finder</h1> aka getByRole('heading', { name: 'Neighborhood Finder' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/neighborhood finder/i)
+
+
+      12 |   test('should display neighborhood finder page', async ({ page }) => {
+      13 |     await page.goto('/neighborhood-finder')
+    > 14 |     await expect(page.getByText(/neighborhood finder/i)).toBeVisible()
+         |                                                          ^
+      15 |   })
+      16 |
+      17 |   test('should show work address input', async ({ page }) => {
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:14:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-chromium-retry2/error-context.md
+
+  2) [chromium] › e2e/neighborhood-finder.spec.ts:23:7 › Neighborhood Finder › should show commute time input 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByPlaceholder(/max commute time/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByPlaceholder(/max commute time/i)
+
+
+      24 |     await page.goto('/neighborhood-finder')
+      25 |     const commuteTimeInput = page.getByPlaceholder(/max commute time/i)
+    > 26 |     await expect(commuteTimeInput).toBeVisible()
+         |                                    ^
+      27 |   })
+      28 |
+      29 |   test('should display stage gate when in wizard mode', async ({ page }) => {
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:26:36
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-0ade2-uld-show-commute-time-input-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-0ade2-uld-show-commute-time-input-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByPlaceholder(/max commute time/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByPlaceholder(/max commute time/i)
+
+
+      24 |     await page.goto('/neighborhood-finder')
+      25 |     const commuteTimeInput = page.getByPlaceholder(/max commute time/i)
+    > 26 |     await expect(commuteTimeInput).toBeVisible()
+         |                                    ^
+      27 |   })
+      28 |
+      29 |   test('should display stage gate when in wizard mode', async ({ page }) => {
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:26:36
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-0ade2-uld-show-commute-time-input-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-0ade2-uld-show-commute-time-input-chromium-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-0ade2-uld-show-commute-time-input-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/neighborhood-finder-Neighb-0ade2-uld-show-commute-time-input-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByPlaceholder(/max commute time/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByPlaceholder(/max commute time/i)
+
+
+      24 |     await page.goto('/neighborhood-finder')
+      25 |     const commuteTimeInput = page.getByPlaceholder(/max commute time/i)
+    > 26 |     await expect(commuteTimeInput).toBeVisible()
+         |                                    ^
+      27 |   })
+      28 |
+      29 |   test('should display stage gate when in wizard mode', async ({ page }) => {
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:26:36
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-0ade2-uld-show-commute-time-input-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-0ade2-uld-show-commute-time-input-chromium-retry2/error-context.md
+
+  3) [chromium] › e2e/neighborhood-finder.spec.ts:29:7 › Neighborhood Finder › should display stage gate when in wizard mode 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/step 1/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/step 1/i)
+
+
+      30 |     await page.goto('/neighborhood-finder')
+      31 |     // Stage gate should show step 1
+    > 32 |     await expect(page.getByText(/step 1/i)).toBeVisible()
+         |                                             ^
+      33 |   })
+      34 | })
+      35 |
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:32:45
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-73542-ge-gate-when-in-wizard-mode-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-73542-ge-gate-when-in-wizard-mode-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/step 1/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/step 1/i)
+
+
+      30 |     await page.goto('/neighborhood-finder')
+      31 |     // Stage gate should show step 1
+    > 32 |     await expect(page.getByText(/step 1/i)).toBeVisible()
+         |                                             ^
+      33 |   })
+      34 | })
+      35 |
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:32:45
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-73542-ge-gate-when-in-wizard-mode-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-73542-ge-gate-when-in-wizard-mode-chromium-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-73542-ge-gate-when-in-wizard-mode-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/neighborhood-finder-Neighb-73542-ge-gate-when-in-wizard-mode-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/step 1/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/step 1/i)
+
+
+      30 |     await page.goto('/neighborhood-finder')
+      31 |     // Stage gate should show step 1
+    > 32 |     await expect(page.getByText(/step 1/i)).toBeVisible()
+         |                                             ^
+      33 |   })
+      34 | })
+      35 |
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:32:45
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-73542-ge-gate-when-in-wizard-mode-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-73542-ge-gate-when-in-wizard-mode-chromium-retry2/error-context.md
+
+  4) [chromium] › e2e/wizard-flow.spec.ts:10:7 › Wizard Flow › should complete full wizard flow ────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/how rushroost works/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/how rushroost works/i) resolved to 2 elements:
+        1) <h2>How RushRoost Works</h2> aka getByRole('heading', { name: 'How RushRoost Works' }).first()
+        2) <h2>How RushRoost Works</h2> aka getByRole('heading', { name: 'How RushRoost Works' }).nth(1)
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/how rushroost works/i)
+
+
+      17 |
+      18 |     // Step 2: How RushRoost Works Modal - Click Setup API Key
+    > 19 |     await expect(page.getByText(/how rushroost works/i)).toBeVisible()
+         |                                                          ^
+      20 |     const setupApiKeyButton = page.getByRole('button', { name: /setup api key/i })
+      21 |     await setupApiKeyButton.click()
+      22 |
+        at /home/runner/work/real-estate/real-estate/e2e/wizard-flow.spec.ts:19:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/wizard-flow-Wizard-Flow-should-complete-full-wizard-flow-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/wizard-flow-Wizard-Flow-should-complete-full-wizard-flow-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/how rushroost works/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/how rushroost works/i) resolved to 2 elements:
+        1) <h2>How RushRoost Works</h2> aka getByRole('heading', { name: 'How RushRoost Works' }).first()
+        2) <h2>How RushRoost Works</h2> aka getByRole('heading', { name: 'How RushRoost Works' }).nth(1)
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/how rushroost works/i)
+
+
+      17 |
+      18 |     // Step 2: How RushRoost Works Modal - Click Setup API Key
+    > 19 |     await expect(page.getByText(/how rushroost works/i)).toBeVisible()
+         |                                                          ^
+      20 |     const setupApiKeyButton = page.getByRole('button', { name: /setup api key/i })
+      21 |     await setupApiKeyButton.click()
+      22 |
+        at /home/runner/work/real-estate/real-estate/e2e/wizard-flow.spec.ts:19:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/wizard-flow-Wizard-Flow-should-complete-full-wizard-flow-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/wizard-flow-Wizard-Flow-should-complete-full-wizard-flow-chromium-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/wizard-flow-Wizard-Flow-should-complete-full-wizard-flow-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/wizard-flow-Wizard-Flow-should-complete-full-wizard-flow-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/how rushroost works/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/how rushroost works/i) resolved to 2 elements:
+        1) <h2>How RushRoost Works</h2> aka getByRole('heading', { name: 'How RushRoost Works' }).first()
+        2) <h2>How RushRoost Works</h2> aka getByRole('heading', { name: 'How RushRoost Works' }).nth(1)
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/how rushroost works/i)
+
+
+      17 |
+      18 |     // Step 2: How RushRoost Works Modal - Click Setup API Key
+    > 19 |     await expect(page.getByText(/how rushroost works/i)).toBeVisible()
+         |                                                          ^
+      20 |     const setupApiKeyButton = page.getByRole('button', { name: /setup api key/i })
+      21 |     await setupApiKeyButton.click()
+      22 |
+        at /home/runner/work/real-estate/real-estate/e2e/wizard-flow.spec.ts:19:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/wizard-flow-Wizard-Flow-should-complete-full-wizard-flow-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/wizard-flow-Wizard-Flow-should-complete-full-wizard-flow-chromium-retry2/error-context.md
+
+  5) [chromium] › e2e/wizard-flow.spec.ts:37:7 › Wizard Flow › should allow entering custom API key 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: /setup api key/i })
+
+
+      40 |     // Navigate to API setup
+      41 |     await page.getByRole('button', { name: /get started/i }).click()
+    > 42 |     await page.getByRole('button', { name: /setup api key/i }).click()
+         |                                                                ^
+      43 |
+      44 |     // Select "My Own API Key" option
+      45 |     const ownKeyRadio = page.getByLabel(/my own api key/i)
+        at /home/runner/work/real-estate/real-estate/e2e/wizard-flow.spec.ts:42:64
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/wizard-flow-Wizard-Flow-should-allow-entering-custom-API-key-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/wizard-flow-Wizard-Flow-should-allow-entering-custom-API-key-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: /setup api key/i })
+
+
+      40 |     // Navigate to API setup
+      41 |     await page.getByRole('button', { name: /get started/i }).click()
+    > 42 |     await page.getByRole('button', { name: /setup api key/i }).click()
+         |                                                                ^
+      43 |
+      44 |     // Select "My Own API Key" option
+      45 |     const ownKeyRadio = page.getByLabel(/my own api key/i)
+        at /home/runner/work/real-estate/real-estate/e2e/wizard-flow.spec.ts:42:64
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/wizard-flow-Wizard-Flow-should-allow-entering-custom-API-key-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/wizard-flow-Wizard-Flow-should-allow-entering-custom-API-key-chromium-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/wizard-flow-Wizard-Flow-should-allow-entering-custom-API-key-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/wizard-flow-Wizard-Flow-should-allow-entering-custom-API-key-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: /setup api key/i })
+
+
+      40 |     // Navigate to API setup
+      41 |     await page.getByRole('button', { name: /get started/i }).click()
+    > 42 |     await page.getByRole('button', { name: /setup api key/i }).click()
+         |                                                                ^
+      43 |
+      44 |     // Select "My Own API Key" option
+      45 |     const ownKeyRadio = page.getByLabel(/my own api key/i)
+        at /home/runner/work/real-estate/real-estate/e2e/wizard-flow.spec.ts:42:64
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/wizard-flow-Wizard-Flow-should-allow-entering-custom-API-key-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/wizard-flow-Wizard-Flow-should-allow-entering-custom-API-key-chromium-retry2/error-context.md
+
+  6) [firefox] › e2e/neighborhood-finder.spec.ts:12:7 › Neighborhood Finder › should display neighborhood finder page 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/neighborhood finder/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/neighborhood finder/i) resolved to 2 elements:
+        1) <a href="/neighborhood-finder">📍 Neighborhood Finder</a> aka getByRole('link', { name: '📍 Neighborhood Finder' })
+        2) <h1>Neighborhood Finder</h1> aka getByRole('heading', { name: 'Neighborhood Finder' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/neighborhood finder/i)
+
+
+      12 |   test('should display neighborhood finder page', async ({ page }) => {
+      13 |     await page.goto('/neighborhood-finder')
+    > 14 |     await expect(page.getByText(/neighborhood finder/i)).toBeVisible()
+         |                                                          ^
+      15 |   })
+      16 |
+      17 |   test('should show work address input', async ({ page }) => {
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:14:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-firefox/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/neighborhood finder/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/neighborhood finder/i) resolved to 2 elements:
+        1) <a href="/neighborhood-finder">📍 Neighborhood Finder</a> aka getByRole('link', { name: '📍 Neighborhood Finder' })
+        2) <h1>Neighborhood Finder</h1> aka getByRole('heading', { name: 'Neighborhood Finder' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/neighborhood finder/i)
+
+
+      12 |   test('should display neighborhood finder page', async ({ page }) => {
+      13 |     await page.goto('/neighborhood-finder')
+    > 14 |     await expect(page.getByText(/neighborhood finder/i)).toBeVisible()
+         |                                                          ^
+      15 |   })
+      16 |
+      17 |   test('should show work address input', async ({ page }) => {
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:14:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-firefox-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-firefox-retry1/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-firefox-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-firefox-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/neighborhood finder/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/neighborhood finder/i) resolved to 2 elements:
+        1) <a href="/neighborhood-finder">📍 Neighborhood Finder</a> aka getByRole('link', { name: '📍 Neighborhood Finder' })
+        2) <h1>Neighborhood Finder</h1> aka getByRole('heading', { name: 'Neighborhood Finder' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/neighborhood finder/i)
+
+
+      12 |   test('should display neighborhood finder page', async ({ page }) => {
+      13 |     await page.goto('/neighborhood-finder')
+    > 14 |     await expect(page.getByText(/neighborhood finder/i)).toBeVisible()
+         |                                                          ^
+      15 |   })
+      16 |
+      17 |   test('should show work address input', async ({ page }) => {
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:14:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-firefox-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/neighborhood-finder-Neighb-396d1-ay-neighborhood-finder-page-firefox-retry2/error-context.md
+
+  7) [firefox] › e2e/neighborhood-finder.spec.ts:23:7 › Neighborhood Finder › should show commute time input 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByPlaceholder(/max commute time/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByPlaceholder(/max commute time/i)
+
+
+      24 |     await page.goto('/neighborhood-finder')
+      25 |     const commuteTimeInput = page.getByPlaceholder(/max commute time/i)
+    > 26 |     await expect(commuteTimeInput).toBeVisible()
+         |                                    ^
+      27 |   })
+      28 |
+      29 |   test('should display stage gate when in wizard mode', async ({ page }) => {
+        at /home/runner/work/real-estate/real-estate/e2e/neighborhood-finder.spec.ts:26:36
+    [chromium] › e2e/neighborhood-finder.spec.ts:23:7 › Neighborhood Finder › should show commute time input 
+    [chromium] › e2e/neighborhood-finder.spec.ts:29:7 › Neighborhood Finder › should display stage gate when in wizard mode 
+    [chromium] › e2e/wizard-flow.spec.ts:10:7 › Wizard Flow › should complete full wizard flow ─────
+    [chromium] › e2e/wizard-flow.spec.ts:37:7 › Wizard Flow › should allow entering custom API key ─
+    [firefox] › e2e/neighborhood-finder.spec.ts:12:7 › Neighborhood Finder › should display neighborhood finder page 
+    [firefox] › e2e/neighborhood-finder.spec.ts:23:7 › Neighborhood Finder › should show commute time input 
+    [firefox] › e2e/neighborhood-finder.spec.ts:29:7 › Neighborhood Finder › should display stage gate when in wizard mode 
+    [firefox] › e2e/wizard-flow.spec.ts:10:7 › Wizard Flow › should complete full wizard flow ──────
+    [firefox] › e2e/wizard-flow.spec.ts:37:7 › Wizard Flow › should allow entering custom API key ──
+    [webkit] › e2e/neighborhood-finder.spec.ts:12:7 › Neighborhood Finder › should display neighborhood finder page 
+    [webkit] › e2e/neighborhood-finder.spec.ts:23:7 › Neighborhood Finder › should show commute time input 
+    [webkit] › e2e/neighborhood-finder.spec.ts:29:7 › Neighborhood Finder › should display stage gate when in wizard mode 
+    [webkit] › e2e/wizard-flow.spec.ts:10:7 › Wizard Flow › should complete full wizard flow ───────
+    [webkit] › e2e/wizard-flow.spec.ts:37:7 › Wizard Flow › should allow entering custom API key ───
+    [Mobile Chrome] › e2e/neighborhood-finder.spec.ts:23:7 › Neighborhood Finder › should show commute time input 
+    [Mobile Chrome] › e2e/neighborhood-finder.spec.ts:29:7 › Neighborhood Finder › should display stage gate when in wizard mode 
+    [Mobile Chrome] › e2e/wizard-flow.spec.ts:10:7 › Wizard Flow › should complete full wizard flow 
+    [Mobile Chrome] › e2e/wizard-flow.spec.ts:37:7 › Wizard Flow › should allow entering custom API key 
+    [Mobile Safari] › e2e/neighborhood-finder.spec.ts:23:7 › Neighborhood Finder › should show commute time input 
+    [Mobile Safari] › e2e/neighborhood-finder.spec.ts:29:7 › Neighborhood Finder › should display stage gate when in wizard mode 
+    [Mobile Safari] › e2e/wizard-flow.spec.ts:10:7 › Wizard Flow › should complete full wizard flow 
+    [Mobile Safari] › e2e/wizard-flow.spec.ts:37:7 › Wizard Flow › should allow entering custom API key 
+  1 flaky
+    [Mobile Safari] › e2e/neighborhood-finder.spec.ts:12:7 › Neighborhood Finder › should display neighborhood finder page 
+  6 passed (14.1m)
+Error: Process completed with exit code 1.

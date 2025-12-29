@@ -11,7 +11,7 @@ test.describe('Neighborhood Finder', () => {
 
   test('should display neighborhood finder page', async ({ page }) => {
     await page.goto('/neighborhood-finder')
-    await expect(page.getByText(/neighborhood finder/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /neighborhood finder/i })).toBeVisible()
   })
 
   test('should show work address input', async ({ page }) => {
@@ -22,14 +22,22 @@ test.describe('Neighborhood Finder', () => {
 
   test('should show commute time input', async ({ page }) => {
     await page.goto('/neighborhood-finder')
-    const commuteTimeInput = page.getByPlaceholder(/max commute time/i)
+    const commuteTimeInput = page.getByLabel(/maximum commute time/i)
     await expect(commuteTimeInput).toBeVisible()
   })
 
   test('should display stage gate when in wizard mode', async ({ page }) => {
+    // Set wizard mode and API key in localStorage before navigating
     await page.goto('/neighborhood-finder')
-    // Stage gate should show step 1
-    await expect(page.getByText(/step 1/i)).toBeVisible()
+    await page.evaluate(() => {
+      localStorage.setItem('wizard_active', 'true')
+      localStorage.setItem('rushroost_api_key', 'test-api-key')
+    })
+    await page.reload()
+    // Wait for page to load
+    await page.waitForLoadState('networkidle')
+    // Stage gate should show step 1 - look for the title "Enter Your Work Address"
+    await expect(page.getByText(/enter your work address/i)).toBeVisible()
   })
 })
 
