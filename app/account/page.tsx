@@ -74,14 +74,6 @@ export default function AccountPage() {
         setPendingChanges(false)
         setSaveMessage('API key saved successfully!')
         setTimeout(() => setSaveMessage(null), 3000)
-        
-        // If wizard is active, navigate to neighborhood finder
-        if (wizardActive) {
-          setWizardStep('neighborhood-finder')
-          setTimeout(() => {
-            router.push('/neighborhood-finder')
-          }, 1000) // Small delay to show success message
-        }
       } else {
         setSaveMessage('Please enter a valid API key')
         setTimeout(() => setSaveMessage(null), 3000)
