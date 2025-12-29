@@ -197,7 +197,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
       }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={{
-          padding: isMobile ? '1rem 1.5rem' : '1.5rem',
+          padding: isMobile ? '0.75rem 1rem' : '1.5rem',
           borderBottom: '1px solid #e0e0e0',
           background: 'linear-gradient(135deg, #0070f3 0%, #0051cc 100%)',
           borderRadius: isMobile ? '0' : (showApiKeySetup ? '12px 12px 0 0' : '12px 12px 0 0'),
@@ -206,7 +206,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
         }}>
           <h2 style={{
             margin: 0,
-            fontSize: '1.75rem',
+            fontSize: isMobile ? '1.25rem' : '1.75rem',
             fontWeight: '700',
             color: '#fff'
           }}>
@@ -214,8 +214,8 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
           </h2>
           {!showApiKeySetup && (
             <p style={{
-              margin: '0.5rem 0 0 0',
-              fontSize: '1rem',
+              margin: isMobile ? '0.25rem 0 0 0' : '0.5rem 0 0 0',
+              fontSize: isMobile ? '0.875rem' : '1rem',
               color: 'rgba(255, 255, 255, 0.9)'
             }}>
               Follow these 4 simple steps to find your perfect home
@@ -226,42 +226,45 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
         {/* Content */}
         {!showApiKeySetup && (
           <div style={{
-            padding: isMobile ? '1rem 1.5rem 5rem 1.5rem' : '2rem',
-            fontSize: '1rem',
-            lineHeight: '1.7',
+            padding: isMobile ? '0.75rem 1rem 5rem 1rem' : '2rem',
+            fontSize: isMobile ? '0.875rem' : '1rem',
+            lineHeight: isMobile ? '1.5' : '1.7',
             color: '#333',
             flex: 1,
             minHeight: 0,
-            overflowY: 'auto',
+            overflowY: isMobile ? 'hidden' : 'auto',
             overflowX: 'hidden',
-            WebkitOverflowScrolling: 'touch'
+            WebkitOverflowScrolling: 'touch',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between'
           }}>
             {/* Step 1 */}
             <div style={{
               display: 'flex',
-              gap: '1.5rem',
-              marginBottom: '2rem',
+              gap: isMobile ? '0.75rem' : '1.5rem',
+              marginBottom: isMobile ? '1rem' : '2rem',
               alignItems: 'flex-start'
             }}>
               <div style={{
                 flexShrink: 0,
-                width: '50px',
-                height: '50px',
+                width: isMobile ? '36px' : '50px',
+                height: isMobile ? '36px' : '50px',
                 borderRadius: '50%',
                 backgroundColor: '#0070f3',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1.5rem',
+                fontSize: isMobile ? '1.125rem' : '1.5rem',
                 fontWeight: '700'
               }}>
                 1
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{
-                  margin: '0 0 0.5rem 0',
-                  fontSize: '1.25rem',
+                  margin: '0 0 0.25rem 0',
+                  fontSize: isMobile ? '1rem' : '1.25rem',
                   fontWeight: '600',
                   color: '#000'
                 }}>
@@ -269,9 +272,9 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
                 </h3>
                 <p style={{
                   margin: 0,
-                  fontSize: '1rem',
+                  fontSize: isMobile ? '0.8125rem' : '1rem',
                   color: '#666',
-                  lineHeight: '1.6'
+                  lineHeight: isMobile ? '1.4' : '1.6'
                 }}>
                   Start by entering your work address. This will be your reference point for calculating commute times to potential homes.
                 </p>
@@ -281,29 +284,29 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
             {/* Step 2 */}
             <div style={{
               display: 'flex',
-              gap: '1.5rem',
-              marginBottom: '2rem',
+              gap: isMobile ? '0.75rem' : '1.5rem',
+              marginBottom: isMobile ? '1rem' : '2rem',
               alignItems: 'flex-start'
             }}>
               <div style={{
                 flexShrink: 0,
-                width: '50px',
-                height: '50px',
+                width: isMobile ? '36px' : '50px',
+                height: isMobile ? '36px' : '50px',
                 borderRadius: '50%',
                 backgroundColor: '#0070f3',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1.5rem',
+                fontSize: isMobile ? '1.125rem' : '1.5rem',
                 fontWeight: '700'
               }}>
                 2
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{
-                  margin: '0 0 0.5rem 0',
-                  fontSize: '1.25rem',
+                  margin: '0 0 0.25rem 0',
+                  fontSize: isMobile ? '1rem' : '1.25rem',
                   fontWeight: '600',
                   color: '#000'
                 }}>
@@ -311,9 +314,9 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
                 </h3>
                 <p style={{
                   margin: 0,
-                  fontSize: '1rem',
+                  fontSize: isMobile ? '0.8125rem' : '1rem',
                   color: '#666',
-                  lineHeight: '1.6'
+                  lineHeight: isMobile ? '1.4' : '1.6'
                 }}>
                   Set your maximum commute time and discover all the cities and towns that are within your desired travel time. Browse through the results to find areas that interest you.
                 </p>
@@ -323,29 +326,29 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
             {/* Step 3 */}
             <div style={{
               display: 'flex',
-              gap: '1.5rem',
-              marginBottom: '2rem',
+              gap: isMobile ? '0.75rem' : '1.5rem',
+              marginBottom: isMobile ? '1rem' : '2rem',
               alignItems: 'flex-start'
             }}>
               <div style={{
                 flexShrink: 0,
-                width: '50px',
-                height: '50px',
+                width: isMobile ? '36px' : '50px',
+                height: isMobile ? '36px' : '50px',
                 borderRadius: '50%',
                 backgroundColor: '#0070f3',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1.5rem',
+                fontSize: isMobile ? '1.125rem' : '1.5rem',
                 fontWeight: '700'
               }}>
                 3
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{
-                  margin: '0 0 0.5rem 0',
-                  fontSize: '1.25rem',
+                  margin: '0 0 0.25rem 0',
+                  fontSize: isMobile ? '1rem' : '1.25rem',
                   fontWeight: '600',
                   color: '#000'
                 }}>
@@ -353,9 +356,9 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
                 </h3>
                 <p style={{
                   margin: 0,
-                  fontSize: '1rem',
+                  fontSize: isMobile ? '0.8125rem' : '1rem',
                   color: '#666',
-                  lineHeight: '1.6'
+                  lineHeight: isMobile ? '1.4' : '1.6'
                 }}>
                   Click "View on Zillow" for any town that catches your interest. Browse available homes on Zillow and find a property you'd like to explore further.
                 </p>
@@ -365,29 +368,29 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
             {/* Step 4 */}
             <div style={{
               display: 'flex',
-              gap: '1.5rem',
+              gap: isMobile ? '0.75rem' : '1.5rem',
               marginBottom: '0',
               alignItems: 'flex-start'
             }}>
               <div style={{
                 flexShrink: 0,
-                width: '50px',
-                height: '50px',
+                width: isMobile ? '36px' : '50px',
+                height: isMobile ? '36px' : '50px',
                 borderRadius: '50%',
                 backgroundColor: '#0070f3',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1.5rem',
+                fontSize: isMobile ? '1.125rem' : '1.5rem',
                 fontWeight: '700'
               }}>
                 4
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{
-                  margin: '0 0 0.5rem 0',
-                  fontSize: '1.25rem',
+                  margin: '0 0 0.25rem 0',
+                  fontSize: isMobile ? '1rem' : '1.25rem',
                   fontWeight: '600',
                   color: '#000'
                 }}>
@@ -395,9 +398,9 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
                 </h3>
                 <p style={{
                   margin: 0,
-                  fontSize: '1rem',
+                  fontSize: isMobile ? '0.8125rem' : '1rem',
                   color: '#666',
-                  lineHeight: '1.6'
+                  lineHeight: isMobile ? '1.4' : '1.6'
                 }}>
                   Copy the Zillow URL for a property you're interested in and paste it into the True Commute Time page. Your work address will be automatically filled in, and you'll get an accurate, real-time commute time calculation.
                 </p>
