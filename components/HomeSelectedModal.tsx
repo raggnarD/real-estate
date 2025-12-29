@@ -24,13 +24,20 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
 
   if (!isOpen) return null
 
-  const handleNo = () => {
+  const handleCancel = () => {
     onClose()
   }
 
-  const handleYes = () => {
+  const handleContinue = () => {
+    // Open Zillow in a new tab
+    if (zillowUrl) {
+      window.open(zillowUrl, '_blank', 'noopener,noreferrer')
+    }
     onClose()
-    onContinue()
+    // Call onContinue after a short delay to allow modal to close
+    setTimeout(() => {
+      onContinue()
+    }, 100)
   }
 
   return (
@@ -77,7 +84,7 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
             fontWeight: '700',
             color: '#fff'
           }}>
-            🏠 Have you selected a home?
+            🏠 Opening Zillow
           </h2>
         </div>
 
@@ -97,9 +104,18 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
             margin: 0,
             fontSize: isMobile ? '0.9375rem' : '1rem',
             color: '#666',
+            lineHeight: '1.6',
+            marginBottom: '1rem'
+          }}>
+            A Zillow page will open in a new tab. Please browse Zillow to find a home you're interested in, then come back to this page once you've found one.
+          </p>
+          <p style={{
+            margin: 0,
+            fontSize: isMobile ? '0.9375rem' : '1rem',
+            color: '#666',
             lineHeight: '1.6'
           }}>
-            If you've found a home you're interested in on Zillow, we can help you calculate the true commute time to your work address.
+            Once you've found a home on Zillow, we can help you calculate the true commute time to your work address.
           </p>
         </div>
 
@@ -123,7 +139,7 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
           } : {})
         }}>
           <button
-            onClick={handleNo}
+            onClick={handleCancel}
             style={{
               padding: '0.75rem 1.5rem',
               fontSize: '1rem',
@@ -142,10 +158,10 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
               e.currentTarget.style.backgroundColor = '#6c757d'
             }}
           >
-            No, not yet
+            Cancel
           </button>
           <button
-            onClick={handleYes}
+            onClick={handleContinue}
             style={{
               padding: '0.75rem 1.5rem',
               fontSize: '1rem',
@@ -165,7 +181,7 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
               e.currentTarget.style.backgroundColor = '#0070f3'
             }}
           >
-            Yes, Continue
+            Continue
           </button>
         </div>
       </div>

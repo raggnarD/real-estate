@@ -90,9 +90,7 @@ export default function NeighborhoodResults({
                 e.stopPropagation()
                 e.preventDefault()
                 const zillowUrl = buildZillowUrl(city.address, city.name)
-                // Open Zillow in new tab
-                window.open(zillowUrl, '_blank', 'noopener,noreferrer')
-                // Show modal if callback is provided
+                // Show modal first if callback is provided
                 if (onZillowClick) {
                   onZillowClick(zillowUrl, city)
                 }

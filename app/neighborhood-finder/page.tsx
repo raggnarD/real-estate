@@ -285,8 +285,9 @@ export default function NeighborhoodFinder() {
         isOpen={showHomeSelectedModal}
         onClose={() => setShowHomeSelectedModal(false)}
         onContinue={() => {
-          setWizardStep('commute-time')
-          router.push('/')
+          // This will be called after Zillow opens
+          // The user can come back and navigate to commute time page later
+          // For now, we just close the modal and let them browse Zillow
         }}
         zillowUrl={selectedZillowUrl}
       />
