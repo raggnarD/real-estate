@@ -316,34 +316,6 @@ export default function AccountPage() {
               gap: '0.5rem',
               cursor: 'pointer',
               padding: '0.75rem 1rem',
-              border: `2px solid ${keyType === 'own' ? '#0070f3' : '#ddd'}`,
-              borderRadius: '4px',
-              backgroundColor: keyType === 'own' ? '#e6f2ff' : '#fff',
-              transition: 'all 0.2s',
-              flex: 1,
-              minWidth: '200px'
-            }}>
-              <input
-                type="radio"
-                name="keyType"
-                value="own"
-                checked={keyType === 'own'}
-                onChange={() => {
-                  setKeyType('own')
-                  setPendingChanges(true)
-                }}
-                style={{ cursor: 'pointer' }}
-              />
-              <span style={{ fontWeight: keyType === 'own' ? '600' : '400' }}>
-                My Own API Key
-              </span>
-            </label>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              cursor: 'pointer',
-              padding: '0.75rem 1rem',
               border: `2px solid ${keyType === 'shared' ? '#28a745' : '#ddd'}`,
               borderRadius: '4px',
               backgroundColor: keyType === 'shared' ? '#d4edda' : '#fff',
@@ -364,6 +336,34 @@ export default function AccountPage() {
               />
               <span style={{ fontWeight: keyType === 'shared' ? '600' : '400' }}>
                 24-Hour Shared Key
+              </span>
+            </label>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              padding: '0.75rem 1rem',
+              border: `2px solid ${keyType === 'own' ? '#0070f3' : '#ddd'}`,
+              borderRadius: '4px',
+              backgroundColor: keyType === 'own' ? '#e6f2ff' : '#fff',
+              transition: 'all 0.2s',
+              flex: 1,
+              minWidth: '200px'
+            }}>
+              <input
+                type="radio"
+                name="keyType"
+                value="own"
+                checked={keyType === 'own'}
+                onChange={() => {
+                  setKeyType('own')
+                  setPendingChanges(true)
+                }}
+                style={{ cursor: 'pointer' }}
+              />
+              <span style={{ fontWeight: keyType === 'own' ? '600' : '400' }}>
+                My Own API Key
               </span>
             </label>
           </div>

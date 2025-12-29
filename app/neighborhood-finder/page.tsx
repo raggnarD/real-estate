@@ -366,8 +366,13 @@ export default function NeighborhoodFinder() {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '1.5rem', 
+            alignItems: 'flex-start',
+            flexDirection: isMobile ? 'column' : 'row'
+          }}>
+            <div style={{ flex: 1, width: isMobile ? '100%' : 'auto' }}>
               <label style={{ 
                 display: 'block', 
                 marginBottom: '0.5rem', 
@@ -400,13 +405,20 @@ export default function NeighborhoodFinder() {
                 <option value="bicycling">🚴 Bicycling</option>
               </select>
             </div>
-            <div style={{ flexShrink: 0, width: '400px' }}>
-              {/* Spacer to match address field width */}
-            </div>
+            {!isMobile && (
+              <div style={{ flexShrink: 0, width: '400px' }}>
+                {/* Spacer to match address field width */}
+              </div>
+            )}
           </div>
 
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '1.5rem', 
+            alignItems: 'flex-start',
+            flexDirection: isMobile ? 'column' : 'row'
+          }}>
+            <div style={{ flex: 1, width: isMobile ? '100%' : 'auto' }}>
               <label style={{ 
                 display: 'block', 
                 marginBottom: '0.5rem', 
@@ -434,9 +446,11 @@ export default function NeighborhoodFinder() {
                 }}
               />
             </div>
-            <div style={{ flexShrink: 0, width: '400px' }}>
-              {/* Spacer to match address field width */}
-            </div>
+            {!isMobile && (
+              <div style={{ flexShrink: 0, width: '400px' }}>
+                {/* Spacer to match address field width */}
+              </div>
+            )}
           </div>
 
           <button
