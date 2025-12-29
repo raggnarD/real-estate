@@ -4,9 +4,22 @@ export async function POST(request: NextRequest) {
   try {
     // Check if environment API key is available (server-side only, not exposed to client)
     const envKey = process.env.GOOGLE_MAPS_API_KEY
+    
+    // Log for debugging (in development only)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('GOOGLE_MAPS_API_KEY exists:', !!envKey)
+      console.log('GOOGLE_MAPS_API_KEY length:', envKey?.length || 0)
+    }
+    
     if (!envKey) {
+      console.error('GOOGLE_MAPS_API_KEY environment variable is not set')
       return NextResponse.json(
-        { error: 'Shared API key not configured on server' },
+        { 
+          error: 'Shared API key not configured on server. Please set GOOGLE_MAPS_API_KEY environment variable in Vercel.',
+          details: process.env.NODE_ENV === 'development' 
+            ? 'This is a development environment. Make sure GOOGLE_MAPS_API_KEY is set in your .env.local file.'
+            : 'Please configure GOOGLE_MAPS_API_KEY in your Vercel project settings under Environment Variables.'
+        },
         { status: 500 }
       )
     }

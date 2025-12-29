@@ -244,7 +244,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
               display: 'flex',
               gap: isMobile ? '0.75rem' : '1.5rem',
               marginBottom: isMobile ? '1rem' : '2rem',
-              alignItems: 'flex-start'
+              alignItems: 'center'
             }}>
               <div style={{
                 flexShrink: 0,
@@ -263,21 +263,13 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{
-                  margin: '0 0 0.25rem 0',
+                  margin: 0,
                   fontSize: isMobile ? '1rem' : '1.25rem',
                   fontWeight: '600',
                   color: '#000'
                 }}>
                   Enter Your Work Address
                 </h3>
-                <p style={{
-                  margin: 0,
-                  fontSize: isMobile ? '0.8125rem' : '1rem',
-                  color: '#666',
-                  lineHeight: isMobile ? '1.4' : '1.6'
-                }}>
-                  Start by entering your work address. This will be your reference point for calculating commute times to potential homes.
-                </p>
               </div>
             </div>
 
@@ -286,7 +278,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
               display: 'flex',
               gap: isMobile ? '0.75rem' : '1.5rem',
               marginBottom: isMobile ? '1rem' : '2rem',
-              alignItems: 'flex-start'
+              alignItems: 'center'
             }}>
               <div style={{
                 flexShrink: 0,
@@ -305,21 +297,13 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{
-                  margin: '0 0 0.25rem 0',
+                  margin: 0,
                   fontSize: isMobile ? '1rem' : '1.25rem',
                   fontWeight: '600',
                   color: '#000'
                 }}>
                   Find Towns Within Your Commute Time
                 </h3>
-                <p style={{
-                  margin: 0,
-                  fontSize: isMobile ? '0.8125rem' : '1rem',
-                  color: '#666',
-                  lineHeight: isMobile ? '1.4' : '1.6'
-                }}>
-                  Set your maximum commute time and discover all the cities and towns that are within your desired travel time. Browse through the results to find areas that interest you.
-                </p>
               </div>
             </div>
 
@@ -328,7 +312,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
               display: 'flex',
               gap: isMobile ? '0.75rem' : '1.5rem',
               marginBottom: isMobile ? '1rem' : '2rem',
-              alignItems: 'flex-start'
+              alignItems: 'center'
             }}>
               <div style={{
                 flexShrink: 0,
@@ -347,21 +331,13 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{
-                  margin: '0 0 0.25rem 0',
+                  margin: 0,
                   fontSize: isMobile ? '1rem' : '1.25rem',
                   fontWeight: '600',
                   color: '#000'
                 }}>
                   Find a Home on Zillow
                 </h3>
-                <p style={{
-                  margin: 0,
-                  fontSize: isMobile ? '0.8125rem' : '1rem',
-                  color: '#666',
-                  lineHeight: isMobile ? '1.4' : '1.6'
-                }}>
-                  Click "View on Zillow" for any town that catches your interest. Browse available homes on Zillow and find a property you'd like to explore further.
-                </p>
               </div>
             </div>
 
@@ -370,7 +346,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
               display: 'flex',
               gap: isMobile ? '0.75rem' : '1.5rem',
               marginBottom: '0',
-              alignItems: 'flex-start'
+              alignItems: 'center'
             }}>
               <div style={{
                 flexShrink: 0,
@@ -389,21 +365,13 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{
-                  margin: '0 0 0.25rem 0',
+                  margin: 0,
                   fontSize: isMobile ? '1rem' : '1.25rem',
                   fontWeight: '600',
                   color: '#000'
                 }}>
                   See the True Commute Time
                 </h3>
-                <p style={{
-                  margin: 0,
-                  fontSize: isMobile ? '0.8125rem' : '1rem',
-                  color: '#666',
-                  lineHeight: isMobile ? '1.4' : '1.6'
-                }}>
-                  Copy the Zillow URL for a property you're interested in and paste it into the True Commute Time page. Your work address will be automatically filled in, and you'll get an accurate, real-time commute time calculation.
-                </p>
               </div>
             </div>
           </div>
@@ -636,7 +604,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
                 e.currentTarget.style.backgroundColor = '#0070f3'
               }}
             >
-              Setup API Key
+              Get Started
             </button>
           ) : (
             <>
