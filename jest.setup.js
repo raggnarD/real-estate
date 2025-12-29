@@ -1,11 +1,11 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
+import React from 'react'
 import { act } from 'react'
 
-// Polyfill for React 19 act
-global.React = require('react')
-if (!global.React.act) {
-  global.React.act = act
+// Polyfill for React 19 act - ensure React.act is available
+if (!React.act) {
+  React.act = act
 }
 
 // Mock Next.js router
