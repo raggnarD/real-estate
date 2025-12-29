@@ -656,7 +656,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
                   }
                 }}
               >
-                {isActivating ? 'Activating...' : 'Save & Continue'}
+                {isActivating ? 'Activating...' : 'Continue'}
               </button>
             </>
           )}
