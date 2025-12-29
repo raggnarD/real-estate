@@ -34,6 +34,7 @@ export default function NeighborhoodFinder() {
   const [isMobile, setIsMobile] = useState(false)
   const [workAddress, setWorkAddress] = useState('')
   const [showHomeSelectedModal, setShowHomeSelectedModal] = useState(false)
+  const [homeSelectedModalMode, setHomeSelectedModalMode] = useState<'before-zillow' | 'after-return'>('before-zillow')
   const [selectedZillowUrl, setSelectedZillowUrl] = useState<string>('')
   const [workLocation, setWorkLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [transportMode, setTransportMode] = useState<'driving' | 'bus' | 'train' | 'walking' | 'bicycling'>('driving')
@@ -72,6 +73,47 @@ export default function NeighborhoodFinder() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // Detect when user returns to page after opening Zillow
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleVisibilityChange = () => {
+      // Check if page becomes visible and Zillow was opened
+      if (document.visibilityState === 'visible') {
+        const zillowOpened = localStorage.getItem('zillow_opened') === 'true'
+        if (zillowOpened && !showHomeSelectedModal) {
+          // Show the "Have you found a home?" modal
+          setHomeSelectedModalMode('after-return')
+          setShowHomeSelectedModal(true)
+        }
+      }
+    }
+
+    // Also check on window focus (for cases where visibility API might not fire)
+    const handleFocus = () => {
+      const zillowOpened = localStorage.getItem('zillow_opened') === 'true'
+      if (zillowOpened && !showHomeSelectedModal) {
+        setHomeSelectedModalMode('after-return')
+        setShowHomeSelectedModal(true)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+
+    // Check immediately on mount if Zillow was opened
+    const zillowOpened = localStorage.getItem('zillow_opened') === 'true'
+    if (zillowOpened && !showHomeSelectedModal) {
+      setHomeSelectedModalMode('after-return')
+      setShowHomeSelectedModal(true)
+    }
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [showHomeSelectedModal])
 
   // Check if wizard is active and show intro modal
   useEffect(() => {
@@ -285,11 +327,16 @@ export default function NeighborhoodFinder() {
         isOpen={showHomeSelectedModal}
         onClose={() => setShowHomeSelectedModal(false)}
         onContinue={() => {
-          // This will be called after Zillow opens
-          // The user can come back and navigate to commute time page later
-          // For now, we just close the modal and let them browse Zillow
+          // If in after-return mode, navigate to commute time page
+          if (homeSelectedModalMode === 'after-return') {
+            // Clear the Zillow opened flag
+            localStorage.removeItem('zillow_opened')
+            setWizardStep('commute-time')
+            router.push('/')
+          }
         }}
         zillowUrl={selectedZillowUrl}
+        mode={homeSelectedModalMode}
       />
       <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem', fontSize: isMobile ? '1.5rem' : '2rem' }}>
         Neighborhood Finder
@@ -593,6 +640,7 @@ export default function NeighborhoodFinder() {
                 <NeighborhoodResults
                   onZillowClick={(zillowUrl, city) => {
                     setSelectedZillowUrl(zillowUrl)
+                    setHomeSelectedModalMode('before-zillow')
                     setShowHomeSelectedModal(true)
                   }}
                   cities={results}

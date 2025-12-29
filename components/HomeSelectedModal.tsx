@@ -7,9 +7,10 @@ interface HomeSelectedModalProps {
   onClose: () => void
   onContinue: () => void
   zillowUrl: string
+  mode?: 'before-zillow' | 'after-return'
 }
 
-export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowUrl }: HomeSelectedModalProps) {
+export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowUrl, mode = 'before-zillow' }: HomeSelectedModalProps) {
   const [isMobile, setIsMobile] = useState(false)
 
   // Detect mobile screen size
@@ -29,15 +30,29 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
   }
 
   const handleContinue = () => {
-    // Open Zillow in a new tab
-    if (zillowUrl) {
-      window.open(zillowUrl, '_blank', 'noopener,noreferrer')
+    if (mode === 'before-zillow') {
+      // Open Zillow in a new tab
+      if (zillowUrl) {
+        window.open(zillowUrl, '_blank', 'noopener,noreferrer')
+        // Mark that Zillow was opened
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('zillow_opened', 'true')
+        }
+      }
+      onClose()
+    } else {
+      // After return mode - user found a home, navigate to commute time
+      onClose()
+      onContinue()
+    }
+  }
+
+  const handleNo = () => {
+    // Clear the flag so modal doesn't show again
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('zillow_opened')
     }
     onClose()
-    // Call onContinue after a short delay to allow modal to close
-    setTimeout(() => {
-      onContinue()
-    }, 100)
   }
 
   return (
@@ -84,7 +99,7 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
             fontWeight: '700',
             color: '#fff'
           }}>
-            🏠 Opening Zillow
+            {mode === 'before-zillow' ? '🏠 Opening Zillow' : '🏠 Have you selected a home?'}
           </h2>
         </div>
 
@@ -100,23 +115,36 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch'
         }}>
-          <p style={{
-            margin: 0,
-            fontSize: isMobile ? '0.9375rem' : '1rem',
-            color: '#666',
-            lineHeight: '1.6',
-            marginBottom: '1rem'
-          }}>
-            A Zillow page will open in a new tab. Please browse Zillow to find a home you're interested in, then come back to this page once you've found one.
-          </p>
-          <p style={{
-            margin: 0,
-            fontSize: isMobile ? '0.9375rem' : '1rem',
-            color: '#666',
-            lineHeight: '1.6'
-          }}>
-            Once you've found a home on Zillow, we can help you calculate the true commute time to your work address.
-          </p>
+          {mode === 'before-zillow' ? (
+            <>
+              <p style={{
+                margin: 0,
+                fontSize: isMobile ? '0.9375rem' : '1rem',
+                color: '#666',
+                lineHeight: '1.6',
+                marginBottom: '1rem'
+              }}>
+                A Zillow page will open in a new tab. Please browse Zillow to find a home you're interested in, then come back to this page once you've found one.
+              </p>
+              <p style={{
+                margin: 0,
+                fontSize: isMobile ? '0.9375rem' : '1rem',
+                color: '#666',
+                lineHeight: '1.6'
+              }}>
+                Once you've found a home on Zillow, we can help you calculate the true commute time to your work address.
+              </p>
+            </>
+          ) : (
+            <p style={{
+              margin: 0,
+              fontSize: isMobile ? '0.9375rem' : '1rem',
+              color: '#666',
+              lineHeight: '1.6'
+            }}>
+              If you've found a home you're interested in on Zillow, we can help you calculate the true commute time to your work address.
+            </p>
+          )}
         </div>
 
         {/* Footer */}
@@ -138,51 +166,103 @@ export default function HomeSelectedModal({ isOpen, onClose, onContinue, zillowU
             boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)'
           } : {})
         }}>
-          <button
-            onClick={handleCancel}
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              backgroundColor: '#6c757d',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#5a6268'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#6c757d'
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleContinue}
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              backgroundColor: '#0070f3',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              transition: 'background-color 0.2s',
-              boxShadow: '0 2px 4px rgba(0, 112, 243, 0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#0056b3'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#0070f3'
-            }}
-          >
-            Continue
-          </button>
+          {mode === 'before-zillow' ? (
+            <>
+              <button
+                onClick={handleCancel}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '1rem',
+                  backgroundColor: '#6c757d',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#5a6268'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#6c757d'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleContinue}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '1rem',
+                  backgroundColor: '#0070f3',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'background-color 0.2s',
+                  boxShadow: '0 2px 4px rgba(0, 112, 243, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0056b3'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0070f3'
+                }}
+              >
+                Continue
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleNo}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '1rem',
+                  backgroundColor: '#6c757d',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#5a6268'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#6c757d'
+                }}
+              >
+                No, not yet
+              </button>
+              <button
+                onClick={handleContinue}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '1rem',
+                  backgroundColor: '#0070f3',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'background-color 0.2s',
+                  boxShadow: '0 2px 4px rgba(0, 112, 243, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0056b3'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0070f3'
+                }}
+              >
+                Yes, Continue
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
