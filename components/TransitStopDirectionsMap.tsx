@@ -42,7 +42,7 @@ export default function TransitStopDirectionsMap({
           const loader = new Loader({
             apiKey,
             version: 'weekly',
-            libraries: ['places', 'directions'],
+            libraries: ['places'],
           })
           await loader.load()
         }
