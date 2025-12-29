@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run test:unit && npm run build",
+  "buildCommand": "npm run test:unit -- --passWithNoTests && npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install"
 }

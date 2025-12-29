@@ -1,5 +1,12 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
+import { act } from 'react'
+
+// Polyfill for React 19 act
+global.React = require('react')
+if (!global.React.act) {
+  global.React.act = act
+}
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({

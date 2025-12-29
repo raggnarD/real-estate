@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import IntroModal from '../IntroModal'
 
@@ -14,6 +14,14 @@ jest.mock('../NeighborhoodFinderIntro', () => {
   }
 })
 
+// Mock WizardContext
+jest.mock('@/contexts/WizardContext', () => ({
+  useWizard: () => ({
+    wizardActive: false,
+    setWizardStep: jest.fn(),
+  }),
+}))
+
 describe('IntroModal', () => {
   const mockOnClose = jest.fn()
 
@@ -21,9 +29,11 @@ describe('IntroModal', () => {
     jest.clearAllMocks()
   })
 
-  it('should render when isOpen is true', () => {
+  it('should render when isOpen is true', async () => {
     render(<IntroModal isOpen={true} onClose={mockOnClose} />)
-    expect(screen.getByText(/welcome to rushroost/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(/welcome to rushroost/i)).toBeInTheDocument()
+    })
   })
 
   it('should not render when isOpen is false', () => {
@@ -31,18 +41,24 @@ describe('IntroModal', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('should call onClose when close button is clicked', () => {
+  it('should call onClose when close button is clicked', async () => {
     render(<IntroModal isOpen={true} onClose={mockOnClose} />)
-    const closeButton = screen.getByRole('button', { name: /close/i })
-    fireEvent.click(closeButton)
+    await waitFor(() => {
+      const closeButton = screen.getByRole('button', { name: /close/i })
+      fireEvent.click(closeButton)
+    })
     expect(mockOnClose).toHaveBeenCalledTimes(1)
   })
 
-  it('should show NeighborhoodFinderIntro when Get Started is clicked', () => {
+  it('should show NeighborhoodFinderIntro when Get Started is clicked', async () => {
     render(<IntroModal isOpen={true} onClose={mockOnClose} />)
-    const getStartedButton = screen.getByRole('button', { name: /get started/i })
-    fireEvent.click(getStartedButton)
-    expect(screen.getByTestId('neighborhood-finder-intro')).toBeInTheDocument()
+    await waitFor(() => {
+      const getStartedButton = screen.getByRole('button', { name: /get started/i })
+      fireEvent.click(getStartedButton)
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('neighborhood-finder-intro')).toBeInTheDocument()
+    })
   })
 })
 
