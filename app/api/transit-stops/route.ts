@@ -37,8 +37,15 @@ export async function GET(request: NextRequest) {
     let query = ''
     let placeType = ''
     
+    // Check if subway stops should be included (only for train mode)
+    const includeSubway = searchParams.get('includeSubway') === 'true'
+    
     if (type === 'train') {
-      query = 'train station OR subway station OR metro station OR railway station'
+      if (includeSubway) {
+        query = 'train station OR subway station OR metro station OR railway station'
+      } else {
+        query = 'train station OR railway station'
+      }
       placeType = 'train_station'
     } else {
       query = 'bus stop OR bus station'
@@ -61,16 +68,22 @@ export async function GET(request: NextRequest) {
         
         if (type === 'train') {
           // For train: must have train-related types AND NOT have bus_station
-          const hasTrainType = types.includes('train_station') || 
-                              types.includes('subway_station')
+          const hasTrainType = types.includes('train_station')
+          const hasSubwayType = types.includes('subway_station')
           const hasBusType = types.includes('bus_station')
-          const hasTrainInName = name.includes('train') ||
-                                 name.includes('subway') ||
-                                 name.includes('metro') ||
-                                 name.includes('rail')
+          const hasTrainInName = name.includes('train') || name.includes('rail')
+          const hasSubwayInName = name.includes('subway') || name.includes('metro')
           
-          // Exclude if it's a bus station, but allow if it has train types or train in name
-          return !hasBusType && (hasTrainType || hasTrainInName)
+          // Exclude bus stations
+          if (hasBusType) return false
+          
+          // If includeSubway is false, exclude subway stations
+          if (!includeSubway && (hasSubwayType || hasSubwayInName)) {
+            return false
+          }
+          
+          // Allow train stations (and subway if includeSubway is true)
+          return hasTrainType || hasSubwayType || hasTrainInName || (includeSubway && hasSubwayInName)
         } else {
           // For bus: must have bus_station type AND NOT have train-related types
           const hasBusType = types.includes('bus_station')
@@ -102,16 +115,22 @@ export async function GET(request: NextRequest) {
           
           // Additional filtering for train vs bus - more strict
           if (type === 'train') {
-            const hasTrainType = types.includes('train_station') || 
-                                types.includes('subway_station')
+            const hasTrainType = types.includes('train_station')
+            const hasSubwayType = types.includes('subway_station')
             const hasBusType = types.includes('bus_station')
-            const hasTrainInName = name.includes('train') ||
-                                   name.includes('subway') ||
-                                   name.includes('metro') ||
-                                   name.includes('rail')
+            const hasTrainInName = name.includes('train') || name.includes('rail')
+            const hasSubwayInName = name.includes('subway') || name.includes('metro')
             
-            // Exclude bus stations, only include train stations
-            return !hasBusType && (hasTrainType || hasTrainInName)
+            // Exclude bus stations
+            if (hasBusType) return false
+            
+            // If includeSubway is false, exclude subway stations
+            if (!includeSubway && (hasSubwayType || hasSubwayInName)) {
+              return false
+            }
+            
+            // Allow train stations (and subway if includeSubway is true)
+            return hasTrainType || hasSubwayType || hasTrainInName || (includeSubway && hasSubwayInName)
           } else {
             const hasBusType = types.includes('bus_station')
             const hasTrainType = types.includes('train_station') || 
@@ -162,6 +181,19 @@ export async function GET(request: NextRequest) {
       const lng = typeof place.geometry.location.lng === 'function'
         ? place.geometry.location.lng()
         : place.geometry.location.lng
+      
+      // Determine the specific type label based on place types
+      const types = place.types || []
+      const name = (place.name || '').toLowerCase()
+      let stopType = 'Bus' // default
+      if (types.includes('subway_station') || (name.includes('subway') || name.includes('metro'))) {
+        stopType = 'Subway'
+      } else if (types.includes('train_station') || (name.includes('train') || name.includes('rail'))) {
+        stopType = 'Train'
+      } else if (types.includes('bus_station')) {
+        stopType = 'Bus'
+      }
+      
       return {
         name: place.name,
         address: place.vicinity || place.formatted_address || 'Address not available',
@@ -172,15 +204,25 @@ export async function GET(request: NextRequest) {
         distance: element?.distance?.text || 'Unknown',
         distanceValue: element?.distance?.value || 0,
         placeId: place.place_id,
+        type: stopType,
       }
     }).filter((stop: any) => stop.distanceValue > 0) // Filter out invalid distances
 
-    // Sort by distance and take top 3
+    // Sort by distance
     const sortedStops = stopsWithDistance
       .sort((a: any, b: any) => a.distanceValue - b.distanceValue)
-      .slice(0, 3)
 
-    return NextResponse.json({ stops: sortedStops })
+    // Get offset parameter for pagination
+    const offset = parseInt(searchParams.get('offset') || '0', 10)
+    const limit = parseInt(searchParams.get('limit') || '3', 10) // Default to 3 for initial load, 10 for modal
+    const paginatedStops = sortedStops.slice(offset, offset + limit)
+    const hasMore = sortedStops.length > offset + limit
+
+    return NextResponse.json({ 
+      stops: paginatedStops,
+      hasMore,
+      total: sortedStops.length
+    })
   } catch (error) {
     console.error('Transit stops search error:', error)
     return NextResponse.json(

@@ -5,6 +5,8 @@ import AddressAutocomplete from '@/components/AddressAutocomplete'
 import AddressHistory from '@/components/AddressHistory'
 import MapStreetViewToggle from '@/components/MapStreetViewToggle'
 import CommuteMap from '@/components/CommuteMap'
+import TransitStopDirectionsMap from '@/components/TransitStopDirectionsMap'
+import TransitStopsModal from '@/components/TransitStopsModal'
 import { useScrollToResults } from '@/hooks/useScrollToResults'
 import { useApiKey } from '@/contexts/ApiKeyContext'
 import { useWizard } from '@/contexts/WizardContext'
@@ -23,6 +25,7 @@ interface TransitStop {
   distance: string
   distanceValue: number
   placeId: string
+  type?: string // 'Bus', 'Train', or 'Subway'
 }
 
 interface CommuteResults {
@@ -49,8 +52,12 @@ export default function Home() {
   const [zillowUrl, setZillowUrl] = useState('')
   const [transportMode, setTransportMode] = useState<'driving' | 'bus' | 'train' | 'walking' | 'bicycling'>('driving')
   const [transitType, setTransitType] = useState<'bus' | 'train' | null>(null)
+  const [includeSubway, setIncludeSubway] = useState(false)
   const [transitStops, setTransitStops] = useState<TransitStop[]>([])
   const [selectedStop, setSelectedStop] = useState<TransitStop | null>(null)
+  const [hasMoreStops, setHasMoreStops] = useState(false)
+  const [transitStopsOffset, setTransitStopsOffset] = useState(0)
+  const [showTransitStopsModal, setShowTransitStopsModal] = useState(false)
   const [leg1Mode, setLeg1Mode] = useState<'walking' | 'driving' | null>(null)
   const [isLoadingStops, setIsLoadingStops] = useState(false)
   const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null)
@@ -228,7 +235,7 @@ export default function Home() {
         }))
         // Fetch transit stops if bus/train is selected
         if ((transportMode === 'bus' || transportMode === 'train') && geocodeData.location) {
-          fetchTransitStops(geocodeData.location.lat, geocodeData.location.lng, transportMode)
+          fetchTransitStops(geocodeData.location.lat, geocodeData.location.lng, transportMode, 0, 3, includeSubway)
         }
       }
     } catch (error) {
@@ -284,7 +291,7 @@ export default function Home() {
         
         // Fetch transit stops if bus/train is selected
         if ((transportMode === 'bus' || transportMode === 'train')) {
-          fetchTransitStops(location.lat, location.lng, transportMode)
+          fetchTransitStops(location.lat, location.lng, transportMode, 0, 3, includeSubway)
         }
       }
     }
@@ -292,32 +299,98 @@ export default function Home() {
     setTransitStops([])
     setSelectedStop(null)
     setLeg1Mode(null)
+    setHasMoreStops(false)
+    setTransitStopsOffset(0)
   }
 
   // Fetch transit stops when address is geocoded and bus/train is selected
-  const fetchTransitStops = async (lat: number, lng: number, type: 'bus' | 'train') => {
+  const fetchTransitStops = async (lat: number, lng: number, type: 'bus' | 'train', offset: number = 0, limit: number = 3, includeSubwayStops: boolean = false) => {
     setIsLoadingStops(true)
     try {
+      const params: Record<string, string> = {
+        lat: lat.toString(), 
+        lng: lng.toString(), 
+        type,
+        offset: offset.toString(),
+        limit: limit.toString()
+      }
+      // Only add includeSubway parameter for train mode
+      if (type === 'train') {
+        params.includeSubway = includeSubwayStops.toString()
+      }
+      
       const response = await fetch(
-        buildApiUrl('/api/transit-stops', { lat: lat.toString(), lng: lng.toString(), type })
+        buildApiUrl('/api/transit-stops', params)
       )
       const data = await response.json()
       
       if (response.ok && data.stops) {
         setTransitStops(data.stops)
-        // Auto-select first stop if available
-        if (data.stops.length > 0) {
+        // Auto-select first stop only if no stop is currently selected
+        if (data.stops.length > 0 && offset === 0 && !selectedStop) {
           setSelectedStop(data.stops[0])
           setLeg1Mode('driving') // Default to driving
         }
+        setHasMoreStops(data.hasMore || false)
+        setTransitStopsOffset(offset)
+        return { stops: data.stops, hasMore: data.hasMore || false }
       } else {
         setTransitStops([])
-        setSelectedStop(null)
+        if (offset === 0) {
+          setSelectedStop(null)
+        }
+        setHasMoreStops(false)
+        return { stops: [], hasMore: false }
       }
     } catch (error) {
       console.error('Error fetching transit stops:', error)
       setTransitStops([])
-      setSelectedStop(null)
+      if (offset === 0) {
+        setSelectedStop(null)
+      }
+      setHasMoreStops(false)
+      return { stops: [], hasMore: false }
+    } finally {
+      setIsLoadingStops(false)
+    }
+  }
+
+  // Fetch stops for modal (10 at a time) - without auto-selecting
+  const fetchStopsForModal = async (offset: number) => {
+    if (!results?.location || (transportMode !== 'bus' && transportMode !== 'train')) {
+      return { stops: [], hasMore: false }
+    }
+    setIsLoadingStops(true)
+    try {
+      const params: Record<string, string> = {
+        lat: results.location.lat.toString(), 
+        lng: results.location.lng.toString(), 
+        type: transportMode,
+        offset: offset.toString(),
+        limit: '10'
+      }
+      // Only add includeSubway parameter for train mode
+      if (transportMode === 'train') {
+        params.includeSubway = includeSubway.toString()
+      }
+      
+      const response = await fetch(
+        buildApiUrl('/api/transit-stops', params)
+      )
+      const data = await response.json()
+      
+      if (response.ok && data.stops) {
+        // Don't auto-select or update transitStops state - just return the data
+        setHasMoreStops(data.hasMore || false)
+        return { stops: data.stops, hasMore: data.hasMore || false }
+      } else {
+        setHasMoreStops(false)
+        return { stops: [], hasMore: false }
+      }
+    } catch (error) {
+      console.error('Error fetching transit stops for modal:', error)
+      setHasMoreStops(false)
+      return { stops: [], hasMore: false }
     } finally {
       setIsLoadingStops(false)
     }
@@ -375,7 +448,7 @@ export default function Home() {
           
           // Fetch transit stops if bus/train is selected
           if ((transportMode === 'bus' || transportMode === 'train') && geocodeData.location) {
-            fetchTransitStops(geocodeData.location.lat, geocodeData.location.lng, transportMode)
+            fetchTransitStops(geocodeData.location.lat, geocodeData.location.lng, transportMode, 0, 3, includeSubway)
           }
         } else {
           console.error('Failed to geocode Zillow address:', geocodeData.error)
@@ -478,7 +551,7 @@ export default function Home() {
             
             // Fetch transit stops if bus/train is selected
             if ((transportMode === 'bus' || transportMode === 'train') && searchResults.location) {
-              fetchTransitStops(searchResults.location.lat, searchResults.location.lng, transportMode)
+              fetchTransitStops(searchResults.location.lat, searchResults.location.lng, transportMode, 0, 3, includeSubway)
             }
           } else {
             // Clear location if geocoding fails
@@ -494,7 +567,7 @@ export default function Home() {
       } else if (addressToUse && !originAddressChanged && results?.location) {
         // Address hasn't changed, but we still need to fetch transit stops if mode changed
         if ((transportMode === 'bus' || transportMode === 'train') && results.location) {
-          fetchTransitStops(results.location.lat, results.location.lng, transportMode)
+          fetchTransitStops(results.location.lat, results.location.lng, transportMode, 0, 3, includeSubway)
         }
       }
 
@@ -583,8 +656,12 @@ export default function Home() {
               destinationAddressGeocoded, 
               transportMode,
               transitStop: selectedStop.placeId,
+              selectedStopName: selectedStop.name,
+              selectedStopAddress: selectedStop.address,
+              selectedStopLocation: selectedStop.location,
               leg1Mode,
-              transitType: transportMode
+              transitType: transportMode,
+              allTransitStops: transitStops.map(s => ({ name: s.name, placeId: s.placeId }))
             })
             const commuteResponse = await fetch(
               buildApiUrl('/api/commute', {
@@ -887,13 +964,15 @@ export default function Home() {
                     setTransitType(newMode)
                     // Fetch stops if we have location
                     if (results?.location) {
-                      fetchTransitStops(results.location.lat, results.location.lng, newMode)
+                      fetchTransitStops(results.location.lat, results.location.lng, newMode, 0, 3, includeSubway)
                     }
                   } else {
                     setTransitType(null)
                     setTransitStops([])
                     setSelectedStop(null)
                     setLeg1Mode(null)
+                    setHasMoreStops(false)
+                    setTransitStopsOffset(0)
                   }
                 }}
                 style={{
@@ -913,6 +992,45 @@ export default function Home() {
                 <option value="walking">🚶 Walking</option>
                 <option value="bicycling">🚴 Bicycling</option>
               </select>
+              
+              {/* Include Subway checkbox - only shown when Train is selected */}
+              {transportMode === 'train' && (
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem',
+                  marginTop: '0.75rem'
+                }}>
+                  <input
+                    type="checkbox"
+                    id="includeSubway"
+                    checked={includeSubway}
+                    onChange={(e) => {
+                      setIncludeSubway(e.target.checked)
+                      // Refetch stops with new setting if we have location
+                      if (results?.location) {
+                        fetchTransitStops(results.location.lat, results.location.lng, transportMode, 0, 3, e.target.checked)
+                      }
+                    }}
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <label
+                    htmlFor="includeSubway"
+                    style={{
+                      cursor: 'pointer',
+                      fontSize: '0.9375rem',
+                      color: '#000',
+                      userSelect: 'none'
+                    }}
+                  >
+                    Include Subway stops
+                  </label>
+                </div>
+              )}
             </div>
             <div style={{ flexShrink: 0, width: '400px' }}>
               {/* Spacer to match address field width */}
@@ -958,14 +1076,34 @@ export default function Home() {
                             value={stop.placeId}
                             checked={selectedStop?.placeId === stop.placeId}
                             onChange={() => {
+                              // Clear commute results when a different station is selected
+                              const isDifferentStop = selectedStop?.placeId !== stop.placeId
+                              if (isDifferentStop) {
+                                setCommuteResults(null)
+                              }
                               setSelectedStop(stop)
                               setLeg1Mode('driving') // Default to driving when stop is selected
                             }}
                             style={{ marginRight: '0.75rem' }}
                           />
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>
-                              {stop.name}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                              <div style={{ fontWeight: '500' }}>
+                                {stop.name}
+                              </div>
+                              {stop.type && (
+                                <span style={{
+                                  fontSize: '0.75rem',
+                                  padding: '0.125rem 0.5rem',
+                                  backgroundColor: stop.type === 'Subway' ? '#0070f3' : stop.type === 'Train' ? '#00a86b' : '#6c757d',
+                                  color: '#fff',
+                                  borderRadius: '12px',
+                                  fontWeight: '600',
+                                  textTransform: 'uppercase'
+                                }}>
+                                  {stop.type}
+                                </span>
+                              )}
                             </div>
                             <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
                               {stop.address}
@@ -976,6 +1114,31 @@ export default function Home() {
                           </div>
                         </label>
                       ))}
+                      {transitStops.length > 0 && (
+                        <button
+                          onClick={() => setShowTransitStopsModal(true)}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            fontSize: '0.875rem',
+                            backgroundColor: '#0070f3',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontWeight: '500',
+                            marginTop: '0.5rem',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#0056b3'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#0070f3'
+                          }}
+                        >
+                          Show More
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <div style={{ padding: '1rem', color: '#666', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
@@ -984,14 +1147,67 @@ export default function Home() {
                   )}
                 </div>
                 <div style={{ flexShrink: 0 }}>
-                  <MapStreetViewToggle 
-                    key="transit-stop-view" 
-                    location={selectedStop ? selectedStop.location : null} 
-                    width={400} 
-                    height={300} 
-                  />
+                  {selectedStop && results?.location ? (
+                    <TransitStopDirectionsMap
+                      origin={results.location}
+                      destination={{
+                        lat: selectedStop.location.lat,
+                        lng: selectedStop.location.lng,
+                        name: selectedStop.name
+                      }}
+                      mode={leg1Mode || 'driving'}
+                      width={400}
+                      height={300}
+                    />
+                  ) : (
+                    <MapStreetViewToggle 
+                      key="transit-stop-view" 
+                      location={selectedStop ? selectedStop.location : null} 
+                      width={400} 
+                      height={300} 
+                    />
+                  )}
                 </div>
               </div>
+
+              {/* Transit Stops Modal */}
+              {results?.location && (
+                <TransitStopsModal
+                  isOpen={showTransitStopsModal}
+                  onClose={() => setShowTransitStopsModal(false)}
+                  onSelectStop={(stop: TransitStop) => {
+                    console.log('Page: Stop selected from modal', { 
+                      name: stop.name, 
+                      placeId: stop.placeId, 
+                      address: stop.address,
+                      location: stop.location
+                    })
+                    // Clear commute results when a different station is selected
+                    const isDifferentStop = selectedStop?.placeId !== stop.placeId
+                    if (isDifferentStop) {
+                      setCommuteResults(null)
+                    }
+                    // Update both selectedStop and transitStops to ensure consistency
+                    setSelectedStop(stop)
+                    // Also update transitStops if this stop is not in the current list
+                    setTransitStops(prev => {
+                      const exists = prev.some(s => s.placeId === stop.placeId)
+                      if (exists) {
+                        return prev
+                      }
+                      // Add the selected stop to the list if it's not there
+                      return [stop, ...prev]
+                    })
+                    setLeg1Mode('driving')
+                    setShowTransitStopsModal(false)
+                  }}
+                  selectedStop={selectedStop}
+                  initialStops={transitStops}
+                  fetchStops={fetchStopsForModal}
+                  transportMode={transportMode}
+                  originLocation={results.location}
+                />
+              )}
 
               {/* Leg 1 Mode Selector - shown when a stop is selected */}
               {selectedStop && (
@@ -1047,7 +1263,7 @@ export default function Home() {
               alignSelf: 'flex-start'
             }}
           >
-            {isLoading ? 'Searching...' : 'Search Properties'}
+            {isLoading ? 'Searching...' : 'Get True Commute Time'}
           </button>
         </form>
       </div>
