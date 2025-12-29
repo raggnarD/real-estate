@@ -1,10 +1,11 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
-import React from 'react'
-import { act } from 'react'
 
-// Polyfill for React 19 act - ensure React.act is available
-if (!React.act) {
+// Fix React.act for React 19 compatibility
+// React Testing Library needs React.act to be available
+const React = require('react')
+if (React && !React.act) {
+  const { act } = require('react')
   React.act = act
 }
 
