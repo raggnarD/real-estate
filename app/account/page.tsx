@@ -561,7 +561,7 @@ export default function AccountPage() {
           >
             {isActivating ? 'Activating...' : 'Save Changes'}
           </button>
-          {keyType === 'own' && (apiKey || inputValue.trim()) && (
+          {keyType === 'own' && apiKey && (
             <a 
               href="https://console.cloud.google.com/google/maps-apis/credentials" 
               target="_blank" 
