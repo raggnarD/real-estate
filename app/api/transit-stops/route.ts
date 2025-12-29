@@ -57,19 +57,29 @@ export async function GET(request: NextRequest) {
       // Filter results based on place types to ensure accuracy
       places = textSearchData.results.filter((place: any) => {
         const types = place.types || []
+        const name = (place.name || '').toLowerCase()
+        
         if (type === 'train') {
-          // For train: accept train_station, subway_station, or places with "train", "subway", "metro", "rail" in name
-          const name = (place.name || '').toLowerCase()
-          return types.includes('train_station') || 
-                 types.includes('subway_station') ||
-                 name.includes('train') ||
-                 name.includes('subway') ||
-                 name.includes('metro') ||
-                 name.includes('rail')
+          // For train: must have train-related types AND NOT have bus_station
+          const hasTrainType = types.includes('train_station') || 
+                              types.includes('subway_station')
+          const hasBusType = types.includes('bus_station')
+          const hasTrainInName = name.includes('train') ||
+                                 name.includes('subway') ||
+                                 name.includes('metro') ||
+                                 name.includes('rail')
+          
+          // Exclude if it's a bus station, but allow if it has train types or train in name
+          return !hasBusType && (hasTrainType || hasTrainInName)
         } else {
-          // For bus: accept bus_station or places with "bus" in name
-          const name = (place.name || '').toLowerCase()
-          return types.includes('bus_station') || name.includes('bus')
+          // For bus: must have bus_station type AND NOT have train-related types
+          const hasBusType = types.includes('bus_station')
+          const hasTrainType = types.includes('train_station') || 
+                              types.includes('subway_station')
+          const hasBusInName = name.includes('bus')
+          
+          // Exclude if it's a train station, but allow if it has bus type or bus in name
+          return !hasTrainType && (hasBusType || hasBusInName)
         }
       })
     }
@@ -87,20 +97,29 @@ export async function GET(request: NextRequest) {
         const additionalPlaces = nearbyData.results.filter((p: any) => {
           if (existingPlaceIds.has(p.place_id)) return false
           
-          // Additional filtering for train vs bus
+          const types = p.types || []
+          const name = (p.name || '').toLowerCase()
+          
+          // Additional filtering for train vs bus - more strict
           if (type === 'train') {
-            const types = p.types || []
-            const name = (p.name || '').toLowerCase()
-            return types.includes('train_station') || 
-                   types.includes('subway_station') ||
-                   name.includes('train') ||
-                   name.includes('subway') ||
-                   name.includes('metro') ||
-                   name.includes('rail')
+            const hasTrainType = types.includes('train_station') || 
+                                types.includes('subway_station')
+            const hasBusType = types.includes('bus_station')
+            const hasTrainInName = name.includes('train') ||
+                                   name.includes('subway') ||
+                                   name.includes('metro') ||
+                                   name.includes('rail')
+            
+            // Exclude bus stations, only include train stations
+            return !hasBusType && (hasTrainType || hasTrainInName)
           } else {
-            const types = p.types || []
-            const name = (p.name || '').toLowerCase()
-            return types.includes('bus_station') || name.includes('bus')
+            const hasBusType = types.includes('bus_station')
+            const hasTrainType = types.includes('train_station') || 
+                                types.includes('subway_station')
+            const hasBusInName = name.includes('bus')
+            
+            // Exclude train stations, only include bus stations
+            return !hasTrainType && (hasBusType || hasBusInName)
           }
         })
         places.push(...additionalPlaces)
