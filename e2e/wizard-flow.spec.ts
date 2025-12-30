@@ -17,8 +17,8 @@ test.describe('Wizard Flow', () => {
     await getStartedButton.click()
 
     // Step 2: How RushRoost Works Modal - Click Get Started to show API setup
-    // Wait for the modal to appear
-    await expect(page.getByRole('heading', { name: /how rushroost works/i })).toBeVisible({ timeout: 10000 })
+    // Wait for the modal to appear (use first() to handle multiple matches)
+    await expect(page.getByRole('heading', { name: /how rushroost works/i }).first()).toBeVisible({ timeout: 10000 })
     // Find the Get Started button in the modal (use first() to handle multiple matches)
     const setupApiKeyButton = page.getByRole('button', { name: /get started/i }).first()
     await expect(setupApiKeyButton).toBeVisible({ timeout: 10000 })
@@ -57,8 +57,8 @@ test.describe('Wizard Flow', () => {
     await getStartedButton1.click()
 
     // After clicking Get Started on intro modal, the "How RushRoost Works" modal appears
-    // Wait for it and click "Get Started" again to show API setup
-    await expect(page.getByRole('heading', { name: /how rushroost works/i })).toBeVisible({ timeout: 10000 })
+    // Wait for it and click "Get Started" again to show API setup (use first() to handle multiple matches)
+    await expect(page.getByRole('heading', { name: /how rushroost works/i }).first()).toBeVisible({ timeout: 10000 })
     const getStartedButton2 = page.getByRole('button', { name: /get started/i }).first()
     await expect(getStartedButton2).toBeVisible({ timeout: 10000 })
     await getStartedButton2.click()
