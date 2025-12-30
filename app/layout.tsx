@@ -4,6 +4,7 @@ import StageGate from '@/components/StageGate'
 import ApiKeyBanner from '@/components/ApiKeyBanner'
 import IntroModal from '@/components/IntroModal'
 import WizardOnboardingModal from '@/components/WizardOnboardingModal'
+import Footer from '@/components/Footer'
 import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
 import { WizardProvider } from '@/contexts/WizardContext'
 
@@ -26,6 +27,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <Navigation />
       <StageGate />
       {children}
+      <Footer />
     </>
   )
 }
@@ -42,7 +44,10 @@ export default function RootLayout({
         padding: 0, 
         fontFamily: 'system-ui, -apple-system, sans-serif',
         backgroundColor: '#fff',
-        color: '#000'
+        color: '#000',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh'
       }}>
         <ApiKeyProvider>
           <WizardProvider>
