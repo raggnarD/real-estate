@@ -1,17 +1,21 @@
-// Create mock function at module level - will be accessible in factory due to closure
-const mockCookiesDeleteFn = jest.fn()
-
 // Mock next/server before importing route
 // Use factory function to avoid hoisting issues
+// Store mock function reference that both factory and tests can access
+let mockCookiesDeleteRef: jest.Mock
+
 jest.mock('next/server', () => {
   // Define MockNextRequest inside the factory
   class MockNextRequest {
     constructor() {}
   }
 
-  // Reference the mock function from outer scope (closure)
+  // Create mock function inside factory
+  const mockCookiesDelete = jest.fn()
+  // Store reference for tests to access
+  mockCookiesDeleteRef = mockCookiesDelete
+
   const mockCookies = {
-    delete: mockCookiesDeleteFn,
+    delete: mockCookiesDelete,
   }
 
   const mockNextResponse = {
@@ -30,8 +34,11 @@ jest.mock('next/server', () => {
 })
 
 // Create mockCookies object for tests to use
+// Initialize with a fallback in case factory hasn't run yet
 const mockCookies = {
-  delete: mockCookiesDeleteFn,
+  get delete() {
+    return mockCookiesDeleteRef || jest.fn()
+  },
 }
 
 // Export MockNextRequest for use in tests
