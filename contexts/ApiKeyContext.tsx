@@ -1,6 +1,28 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { safeTrackedFetch } from '@/utils/safeTrackedFetch'
+
+// Create a separate context for tracker injection
+const ApiCallTrackerInjectContext = createContext<{
+  trackCall: (url: string, method: string) => string
+  updateCall: (id: string, status: 'success' | 'error', duration?: number, error?: string) => void
+} | null>(null)
+
+export function useApiCallTrackerInject() {
+  return useContext(ApiCallTrackerInjectContext)
+}
+
+// Helper to safely get tracker context
+function getTrackerContextSafe() {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { useApiCallTrackerContext } = require('./ApiCallTrackerContext')
+    return useApiCallTrackerContext()
+  } catch {
+    return null
+  }
+}
 
 interface ApiKeyContextType {
   apiKey: string | null
@@ -26,12 +48,16 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
   const [sharedKeyTimeRemaining, setSharedKeyTimeRemaining] = useState<number | null>(null)
   const [hasExpiredCookie, setHasExpiredCookie] = useState<boolean>(false)
   const [sharedKeyValue, setSharedKeyValue] = useState<string | null>(null)
+  
+  // Get tracker from inject context
+  const tracker = useApiCallTrackerInject()
 
   const fetchSharedKey = useCallback(async () => {
     try {
-      const response = await fetch('/api/shared-key/get', {
+      const response = await safeTrackedFetch('/api/shared-key/get', {
         method: 'GET',
-        credentials: 'include'
+        credentials: 'include',
+        tracker: tracker
       })
       
       if (response.ok) {
@@ -47,13 +73,14 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
       setSharedKeyValue(null)
       return null
     }
-  }, [])
+  }, [tracker])
 
   const checkSharedKeyStatusInternal = async () => {
     try {
-      const response = await fetch('/api/shared-key/status', {
+      const response = await safeTrackedFetch('/api/shared-key/status', {
         method: 'GET',
-        credentials: 'include'
+        credentials: 'include',
+        tracker: tracker
       })
       
       if (response.ok) {
@@ -102,6 +129,7 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
     
     // Check shared key status on mount
     checkSharedKeyStatusInternal()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Poll shared key status every minute to check expiration
@@ -114,13 +142,15 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
 
       return () => clearInterval(interval)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiKey])
 
   const activateSharedKey = async () => {
     try {
-      const response = await fetch('/api/shared-key/activate', {
+      const response = await safeTrackedFetch('/api/shared-key/activate', {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        tracker: tracker
       })
       
       if (response.ok) {
@@ -143,9 +173,10 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
 
   const revokeSharedKey = async () => {
     try {
-      const response = await fetch('/api/shared-key/revoke', {
+      const response = await safeTrackedFetch('/api/shared-key/revoke', {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        tracker: tracker
       })
       
       if (response.ok) {
@@ -211,6 +242,25 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
     }}>
       {children}
     </ApiKeyContext.Provider>
+  )
+}
+
+/**
+ * Wrapper that injects tracker into ApiKeyProvider
+ * This component must be used inside ApiCallTrackerProvider
+ */
+export function ApiKeyProviderWithTracker({ children }: { children: ReactNode }) {
+  const trackerContext = getTrackerContextSafe()
+  
+  const tracker = trackerContext ? {
+    trackCall: trackerContext.trackCall,
+    updateCall: trackerContext.updateCall
+  } : null
+
+  return (
+    <ApiCallTrackerInjectContext.Provider value={tracker}>
+      <ApiKeyProvider>{children}</ApiKeyProvider>
+    </ApiCallTrackerInjectContext.Provider>
   )
 }
 
