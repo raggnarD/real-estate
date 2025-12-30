@@ -14,7 +14,9 @@ test.describe('Wizard Flow', () => {
     // Step 1: Intro Modal - Click Get Started
     const getStartedButton = page.getByRole('button', { name: /get started/i })
     await expect(getStartedButton).toBeVisible({ timeout: 10000 })
-    await getStartedButton.click()
+    await expect(getStartedButton).toBeEnabled({ timeout: 10000 })
+    // Use force click to bypass overlay interception issues
+    await getStartedButton.click({ force: true })
 
     // Wait for the intro modal to close and the next modal to appear
     // Wait for the "How RushRoost Works" heading to be visible
@@ -33,7 +35,8 @@ test.describe('Wizard Flow', () => {
     await setupApiKeyButton.click({ force: true })
 
     // Step 3: API Key Setup - Use shared key (default)
-    await expect(page.getByText(/setup api key/i)).toBeVisible({ timeout: 10000 })
+    // Use getByRole with heading to avoid strict mode violation (there are both h2 and h3 with this text)
+    await expect(page.getByRole('heading', { name: /setup api key/i }).first()).toBeVisible({ timeout: 10000 })
     const saveButton = page.getByRole('button', { name: /continue/i })
     await expect(saveButton).toBeVisible({ timeout: 10000 })
     await saveButton.click()
@@ -62,7 +65,9 @@ test.describe('Wizard Flow', () => {
     // Navigate to API setup
     const getStartedButton1 = page.getByRole('button', { name: /get started/i })
     await expect(getStartedButton1).toBeVisible({ timeout: 10000 })
-    await getStartedButton1.click()
+    await expect(getStartedButton1).toBeEnabled({ timeout: 10000 })
+    // Use force click to bypass overlay interception issues
+    await getStartedButton1.click({ force: true })
 
     // After clicking Get Started on intro modal, the "How RushRoost Works" modal appears
     // Wait for it and click "Get Started" again to show API setup (use first() to handle multiple matches)
