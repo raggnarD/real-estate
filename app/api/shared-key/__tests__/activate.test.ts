@@ -1,8 +1,9 @@
+// Create a module-level object to store mock references
+// This avoids hoisting issues with let/const
+const mockStore: { cookiesSet?: jest.Mock } = {}
+
 // Mock next/server before importing route
 // Use factory function to avoid hoisting issues
-// Store mock function reference that both factory and tests can access
-let mockCookiesSetRef: jest.Mock
-
 jest.mock('next/server', () => {
   // Define MockNextRequest inside the factory
   class MockNextRequest {
@@ -11,8 +12,8 @@ jest.mock('next/server', () => {
 
   // Create mock function inside factory
   const mockCookiesSet = jest.fn()
-  // Store reference for tests to access
-  mockCookiesSetRef = mockCookiesSet
+  // Store reference in module-level object for tests to access
+  mockStore.cookiesSet = mockCookiesSet
 
   const mockCookies = {
     set: mockCookiesSet,
@@ -34,10 +35,10 @@ jest.mock('next/server', () => {
 })
 
 // Create mockCookies object for tests to use
-// Initialize with a fallback in case factory hasn't run yet
+// Access the mock function from module-level store
 const mockCookies = {
   get set() {
-    return mockCookiesSetRef || jest.fn()
+    return mockStore.cookiesSet || jest.fn()
   },
 }
 
