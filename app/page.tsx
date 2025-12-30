@@ -10,6 +10,8 @@ import TransitStopsModal from '@/components/TransitStopsModal'
 import { useScrollToResults } from '@/hooks/useScrollToResults'
 import { useApiKey } from '@/contexts/ApiKeyContext'
 import { useWizard } from '@/contexts/WizardContext'
+import { useApiCallTrackerContext } from '@/contexts/ApiCallTrackerContext'
+import { safeTrackedFetch } from '@/utils/safeTrackedFetch'
 
 interface SearchResults {
   address?: string
@@ -46,6 +48,7 @@ const MAX_HISTORY_ITEMS = 3
 export default function Home() {
   const { apiKey } = useApiKey()
   const { wizardActive, workAddress: wizardWorkAddress, setWizardStep } = useWizard()
+  const tracker = useApiCallTrackerContext()
   const [isMobile, setIsMobile] = useState(false)
   const [address, setAddress] = useState('')
   const [destinationAddress, setDestinationAddress] = useState('')
@@ -191,8 +194,9 @@ export default function Home() {
       // Geocode the destination address to load the map
       const geocodeDestination = async () => {
         try {
-          const geocodeResponse = await fetch(
-            buildApiUrl('/api/geocode', { address: wizardWorkAddress })
+          const geocodeResponse = await safeTrackedFetch(
+            buildApiUrl('/api/geocode', { address: wizardWorkAddress }),
+            { tracker }
           )
           const geocodeData = await geocodeResponse.json()
           
@@ -222,8 +226,9 @@ export default function Home() {
     setAddress(addr)
     // Geocode immediately to show Street View
     try {
-      const geocodeResponse = await fetch(
-        buildApiUrl('/api/geocode', { address: addr })
+      const geocodeResponse = await safeTrackedFetch(
+        buildApiUrl('/api/geocode', { address: addr }),
+        { tracker }
       )
       const geocodeData = await geocodeResponse.json()
       
@@ -248,8 +253,9 @@ export default function Home() {
     setDestinationAddress(addr)
     // Geocode immediately to show Street View
     try {
-      const geocodeResponse = await fetch(
-        buildApiUrl('/api/geocode', { address: addr })
+      const geocodeResponse = await safeTrackedFetch(
+        buildApiUrl('/api/geocode', { address: addr }),
+        { tracker }
       )
       const geocodeData = await geocodeResponse.json()
       
@@ -319,7 +325,7 @@ export default function Home() {
         params.includeSubway = includeSubwayStops.toString()
       }
       
-      const response = await fetch(
+      const response = await safeTrackedFetch(
         buildApiUrl('/api/transit-stops', params)
       )
       const data = await response.json()
@@ -374,7 +380,7 @@ export default function Home() {
         params.includeSubway = includeSubway.toString()
       }
       
-      const response = await fetch(
+      const response = await safeTrackedFetch(
         buildApiUrl('/api/transit-stops', params)
       )
       const data = await response.json()
@@ -415,8 +421,9 @@ export default function Home() {
         setAddress(zillowData.address)
         
         // Geocode the extracted address
-        const geocodeResponse = await fetch(
-          buildApiUrl('/api/geocode', { address: zillowData.address })
+        const geocodeResponse = await safeTrackedFetch(
+          buildApiUrl('/api/geocode', { address: zillowData.address }),
+          { tracker }
         )
         const geocodeData = await geocodeResponse.json()
         
@@ -477,8 +484,9 @@ export default function Home() {
       // Process Zillow URL first if provided - this can populate the address
       if (zillowUrl) {
         try {
-          const zillowResponse = await fetch(
-            `/api/zillow?url=${encodeURIComponent(zillowUrl)}`
+          const zillowResponse = await safeTrackedFetch(
+            `/api/zillow?url=${encodeURIComponent(zillowUrl)}`,
+            { tracker }
           )
           const zillowData = await zillowResponse.json()
           
@@ -521,7 +529,7 @@ export default function Home() {
       // Geocode origin address if provided and it changed
       if (addressToUse && originAddressChanged) {
         try {
-          const geocodeResponse = await fetch(
+          const geocodeResponse = await safeTrackedFetch(
             buildApiUrl('/api/geocode', { address: addressToUse })
           )
           const geocodeData = await geocodeResponse.json()
@@ -574,8 +582,9 @@ export default function Home() {
       // Geocode destination address if provided
       if (destinationAddress) {
         try {
-          const destGeocodeResponse = await fetch(
-            buildApiUrl('/api/geocode', { address: destinationAddress })
+          const destGeocodeResponse = await safeTrackedFetch(
+            buildApiUrl('/api/geocode', { address: destinationAddress }),
+            { tracker }
           )
           const destGeocodeData = await destGeocodeResponse.json()
           
@@ -663,7 +672,7 @@ export default function Home() {
               transitType: transportMode,
               allTransitStops: transitStops.map(s => ({ name: s.name, placeId: s.placeId }))
             })
-            const commuteResponse = await fetch(
+            const commuteResponse = await safeTrackedFetch(
               buildApiUrl('/api/commute', {
                 origin: originAddress,
                 destination: destinationAddressGeocoded,
@@ -671,7 +680,8 @@ export default function Home() {
                 transitStop: selectedStop.placeId,
                 leg1Mode: leg1Mode,
                 transitType: transportMode
-              })
+              }),
+              { tracker }
             )
             const commuteData = await commuteResponse.json()
             console.log('Multi-leg commute response:', commuteData)
@@ -691,12 +701,13 @@ export default function Home() {
           } else {
             // Standard single-leg journey
             console.log('Calculating commute:', { originAddress, destinationAddressGeocoded, transportMode })
-            const commuteResponse = await fetch(
+            const commuteResponse = await safeTrackedFetch(
               buildApiUrl('/api/commute', {
                 origin: originAddress,
                 destination: destinationAddressGeocoded,
                 mode: transportMode
-              })
+              }),
+              { tracker }
             )
             const commuteData = await commuteResponse.json()
             console.log('Commute response:', commuteData)

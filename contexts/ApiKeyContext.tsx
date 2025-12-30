@@ -132,13 +132,13 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Poll shared key status every minute to check expiration
+  // Poll shared key status every 2 minutes to check expiration (reduced frequency to avoid rate limits)
   useEffect(() => {
     // Only poll if no user API key is set, as shared key is only relevant then
     if (!apiKey) {
       const interval = setInterval(() => {
         checkSharedKeyStatusInternal()
-      }, 60000) // Check every 60 seconds
+      }, 120000) // Check every 2 minutes (120 seconds) to avoid rate limits
 
       return () => clearInterval(interval)
     }

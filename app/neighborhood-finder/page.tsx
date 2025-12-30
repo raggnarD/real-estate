@@ -12,6 +12,8 @@ import { useScrollToResults } from '@/hooks/useScrollToResults'
 import { useApiKey } from '@/contexts/ApiKeyContext'
 import { useWizard } from '@/contexts/WizardContext'
 import { useRouter } from 'next/navigation'
+import { useApiCallTrackerContext } from '@/contexts/ApiCallTrackerContext'
+import { safeTrackedFetch } from '@/utils/safeTrackedFetch'
 
 interface CityResult {
   name: string
@@ -31,6 +33,7 @@ export default function NeighborhoodFinder() {
   const { apiKey } = useApiKey()
   const { wizardActive, setWizardStep, setWorkAddress: setWizardWorkAddress } = useWizard()
   const router = useRouter()
+  const tracker = useApiCallTrackerContext()
   const [isMobile, setIsMobile] = useState(false)
   const [workAddress, setWorkAddress] = useState('')
   const [showHomeSelectedModal, setShowHomeSelectedModal] = useState(false)
@@ -186,8 +189,9 @@ export default function NeighborhoodFinder() {
       setWizardWorkAddress(addr)
     }
     try {
-      const geocodeResponse = await fetch(
-        buildApiUrl('/api/geocode', { address: addr })
+      const geocodeResponse = await safeTrackedFetch(
+        buildApiUrl('/api/geocode', { address: addr }),
+        { tracker }
       )
       const geocodeData = await geocodeResponse.json()
       
@@ -245,8 +249,9 @@ export default function NeighborhoodFinder() {
       }
 
       try {
-        const geocodeResponse = await fetch(
-          buildApiUrl('/api/geocode', { address: workAddress })
+        const geocodeResponse = await safeTrackedFetch(
+          buildApiUrl('/api/geocode', { address: workAddress }),
+          { tracker }
         )
         const geocodeData = await geocodeResponse.json()
         
@@ -279,13 +284,14 @@ export default function NeighborhoodFinder() {
     }
 
     try {
-      const response = await fetch(
+      const response = await safeTrackedFetch(
         buildApiUrl('/api/neighborhood-finder', {
           lat: locationToUse.lat.toString(),
           lng: locationToUse.lng.toString(),
           mode: transportMode,
           maxTime: maxCommuteTime.toString()
-        })
+        }),
+        { tracker }
       )
       const data = await response.json()
 

@@ -13,8 +13,14 @@ class ApiCallProtection {
   private callHistory: Map<string, CallRecord> = new Map()
   private readonly MAX_CALLS_PER_WINDOW = 10 // Max calls per window
   private readonly WINDOW_MS = 60000 // 1 minute window
-  private readonly MIN_INTERVAL_MS = 1000 // Minimum 1 second between identical calls
+  private readonly MIN_INTERVAL_MS = 500 // Minimum 500ms between identical calls (reduced for polling)
   private readonly MAX_RETRIES = 3 // Maximum retries for failed calls
+  
+  // Endpoints that are allowed more frequent calls (polling endpoints)
+  private readonly POLLING_ENDPOINTS = [
+    '/api/shared-key/status',
+    '/api/shared-key/get'
+  ]
 
   /**
    * Check if an API call should be allowed
@@ -27,11 +33,17 @@ class ApiCallProtection {
     const key = `${options?.method || 'GET'}:${url}`
     const record = this.callHistory.get(key)
 
+    // Check if this is a polling endpoint - allow more frequent calls
+    const isPollingEndpoint = this.POLLING_ENDPOINTS.some(endpoint => url.includes(endpoint))
+    const minInterval = isPollingEndpoint ? 5000 : this.MIN_INTERVAL_MS // 5 seconds for polling endpoints, 1 second for others
+
     // Check minimum interval between identical calls
-    if (record && (now - record.timestamp) < this.MIN_INTERVAL_MS) {
+    if (record && (now - record.timestamp) < minInterval) {
+      const waitTimeMs = minInterval - (now - record.timestamp)
+      const waitTime = waitTimeMs < 1000 ? (waitTimeMs / 1000).toFixed(1) : Math.ceil(waitTimeMs / 1000)
       return {
         allowed: false,
-        reason: `Rate limit: Please wait ${Math.ceil((this.MIN_INTERVAL_MS - (now - record.timestamp)) / 1000)}s before calling this endpoint again`
+        reason: `Rate limit: Please wait ${waitTime}s before calling this endpoint again`
       }
     }
 

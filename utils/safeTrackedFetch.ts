@@ -25,7 +25,7 @@ export async function safeTrackedFetch(
   let callId: string | undefined
   const startTime = Date.now()
 
-  // Track the call if tracker is provided
+  // Track the call if tracker is provided (track BEFORE checking rate limit)
   if (tracker) {
     callId = tracker.trackCall(url, method)
   }
@@ -48,7 +48,7 @@ export async function safeTrackedFetch(
     const duration = Date.now() - startTime
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
-    // Update tracker on error
+    // Update tracker on error (including rate limit errors)
     if (tracker && callId) {
       tracker.updateCall(callId, 'error', duration, errorMessage)
     }
