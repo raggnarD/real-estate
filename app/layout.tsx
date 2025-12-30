@@ -38,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
       <body style={{ 
         margin: 0, 
         padding: 0, 
@@ -47,7 +47,11 @@ export default function RootLayout({
         color: '#000',
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh'
+        minHeight: '100vh',
+        width: '100%',
+        maxWidth: '100vw',
+        overflowX: 'hidden',
+        boxSizing: 'border-box'
       }}>
         <ApiKeyProvider>
           <WizardProvider>

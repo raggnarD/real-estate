@@ -16,6 +16,7 @@ export default function Footer() {
     <footer
       style={{
         width: '100%',
+        maxWidth: '100%',
         padding: isMobile ? '1rem' : '1.5rem 2rem',
         backgroundColor: '#f8f9fa',
         borderTop: '1px solid #e0e0e0',
@@ -28,6 +29,7 @@ export default function Footer() {
         fontFamily: 'system-ui, -apple-system, sans-serif',
         fontSize: '0.875rem',
         color: '#666',
+        boxSizing: 'border-box',
       }}
     >
       <div style={{ textAlign: isMobile ? 'center' : 'left' }}>
