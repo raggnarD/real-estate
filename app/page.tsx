@@ -10,7 +10,6 @@ import TransitStopsModal from '@/components/TransitStopsModal'
 import { useScrollToResults } from '@/hooks/useScrollToResults'
 import { useApiKey } from '@/contexts/ApiKeyContext'
 import { useWizard } from '@/contexts/WizardContext'
-import { useApiCallTrackerContext } from '@/contexts/ApiCallTrackerContext'
 import { safeTrackedFetch } from '@/utils/safeTrackedFetch'
 
 interface SearchResults {
@@ -48,7 +47,6 @@ const MAX_HISTORY_ITEMS = 3
 export default function Home() {
   const { apiKey } = useApiKey()
   const { wizardActive, workAddress: wizardWorkAddress, setWizardStep } = useWizard()
-  const tracker = useApiCallTrackerContext()
   const [isMobile, setIsMobile] = useState(false)
   const [address, setAddress] = useState('')
   const [destinationAddress, setDestinationAddress] = useState('')
@@ -196,7 +194,6 @@ export default function Home() {
         try {
           const geocodeResponse = await safeTrackedFetch(
             buildApiUrl('/api/geocode', { address: wizardWorkAddress }),
-            { tracker }
           )
           const geocodeData = await geocodeResponse.json()
           
@@ -227,8 +224,7 @@ export default function Home() {
     // Geocode immediately to show Street View
     try {
       const geocodeResponse = await safeTrackedFetch(
-        buildApiUrl('/api/geocode', { address: addr }),
-        { tracker }
+        buildApiUrl('/api/geocode', { address: addr })
       )
       const geocodeData = await geocodeResponse.json()
       
@@ -254,8 +250,7 @@ export default function Home() {
     // Geocode immediately to show Street View
     try {
       const geocodeResponse = await safeTrackedFetch(
-        buildApiUrl('/api/geocode', { address: addr }),
-        { tracker }
+        buildApiUrl('/api/geocode', { address: addr })
       )
       const geocodeData = await geocodeResponse.json()
       
@@ -423,7 +418,6 @@ export default function Home() {
         // Geocode the extracted address
         const geocodeResponse = await safeTrackedFetch(
           buildApiUrl('/api/geocode', { address: zillowData.address }),
-          { tracker }
         )
         const geocodeData = await geocodeResponse.json()
         
@@ -486,7 +480,6 @@ export default function Home() {
         try {
           const zillowResponse = await safeTrackedFetch(
             `/api/zillow?url=${encodeURIComponent(zillowUrl)}`,
-            { tracker }
           )
           const zillowData = await zillowResponse.json()
           
@@ -584,7 +577,6 @@ export default function Home() {
         try {
           const destGeocodeResponse = await safeTrackedFetch(
             buildApiUrl('/api/geocode', { address: destinationAddress }),
-            { tracker }
           )
           const destGeocodeData = await destGeocodeResponse.json()
           
@@ -681,7 +673,6 @@ export default function Home() {
                 leg1Mode: leg1Mode,
                 transitType: transportMode
               }),
-              { tracker }
             )
             const commuteData = await commuteResponse.json()
             console.log('Multi-leg commute response:', commuteData)
@@ -707,7 +698,6 @@ export default function Home() {
                 destination: destinationAddressGeocoded,
                 mode: transportMode
               }),
-              { tracker }
             )
             const commuteData = await commuteResponse.json()
             console.log('Commute response:', commuteData)

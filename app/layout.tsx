@@ -4,10 +4,8 @@ import StageGate from '@/components/StageGate'
 import ApiKeyBanner from '@/components/ApiKeyBanner'
 import IntroModal from '@/components/IntroModal'
 import WizardOnboardingModal from '@/components/WizardOnboardingModal'
-import ApiCallStatusWrapper from '@/components/ApiCallStatusWrapper'
-import { ApiKeyProviderWithTracker } from '@/contexts/ApiKeyContext'
+import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
 import { WizardProvider } from '@/contexts/WizardContext'
-import { ApiCallTrackerProvider } from '@/contexts/ApiCallTrackerContext'
 
 export const metadata: Metadata = {
   title: 'Real Estate App',
@@ -23,7 +21,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <Navigation />
       <StageGate />
       {children}
-      <ApiCallStatusWrapper />
     </>
   )
 }
@@ -42,13 +39,11 @@ export default function RootLayout({
         backgroundColor: '#fff',
         color: '#000'
       }}>
-        <ApiCallTrackerProvider>
-          <ApiKeyProviderWithTracker>
-            <WizardProvider>
-              <LayoutContent>{children}</LayoutContent>
-            </WizardProvider>
-          </ApiKeyProviderWithTracker>
-        </ApiCallTrackerProvider>
+        <ApiKeyProvider>
+          <WizardProvider>
+            <LayoutContent>{children}</LayoutContent>
+          </WizardProvider>
+        </ApiKeyProvider>
       </body>
     </html>
   )
