@@ -42,7 +42,8 @@ test.describe('Wizard Flow', () => {
     await saveButton.click()
 
     // Step 4: Accept Terms - wait for terms modal
-    await expect(page.getByText(/terms.*conditions/i)).toBeVisible({ timeout: 10000 })
+    // Use getByRole with heading to avoid strict mode violation (there are multiple elements with "terms" text)
+    await expect(page.getByRole('heading', { name: /terms.*conditions/i })).toBeVisible({ timeout: 10000 })
     // Check the checkbox first
     const checkbox = page.getByLabel(/i accept/i).or(page.locator('input[type="checkbox"]'))
     await expect(checkbox).toBeVisible({ timeout: 10000 })
@@ -84,7 +85,8 @@ test.describe('Wizard Flow', () => {
     await getStartedButton2.click({ force: true })
 
     // Wait for API setup form
-    await expect(page.getByText(/setup api key/i)).toBeVisible({ timeout: 10000 })
+    // Use getByRole with heading to avoid strict mode violation (there are both h2 and h3 with this text)
+    await expect(page.getByRole('heading', { name: /setup api key/i }).first()).toBeVisible({ timeout: 10000 })
 
     // Select "My Own API Key" option
     const ownKeyRadio = page.getByLabel(/my own api key/i)
