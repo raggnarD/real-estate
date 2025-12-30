@@ -30,9 +30,12 @@ export async function safeTrackedFetch(
     callId = tracker.trackCall(url, method)
   }
 
+  // Destructure tracker out of options to pass clean RequestInit to protectedFetch
+  const { tracker: _, ...fetchOptions } = options || {}
+
   try {
     // Use protected fetch which applies rate limiting
-    const response = await protectedFetch(url, { ...options, tracker: undefined })
+    const response = await protectedFetch(url, fetchOptions)
     const duration = Date.now() - startTime
 
     // Update tracker on success
