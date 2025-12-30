@@ -2,8 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   eslint: {
-    // This ensures Next.js doesn't look for a lint directory
-    dirs: ['.'],
+    // Disable ESLint during builds - we run it separately via npm run lint
+    ignoreDuringBuilds: true,
   },
 }
 
