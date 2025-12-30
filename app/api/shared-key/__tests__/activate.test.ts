@@ -158,7 +158,7 @@ describe('/api/shared-key/activate', () => {
       await POST(request as any)
 
       expect(console.log).toHaveBeenCalledWith('GOOGLE_MAPS_API_KEY exists:', true)
-      expect(console.log).toHaveBeenCalledWith('GOOGLE_MAPS_API_KEY length:', 15)
+      expect(console.log).toHaveBeenCalledWith('GOOGLE_MAPS_API_KEY length:', 16)
     })
 
     it('should handle errors gracefully', async () => {
