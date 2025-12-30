@@ -8,8 +8,13 @@ import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
 import { WizardProvider } from '@/contexts/WizardContext'
 
 export const metadata: Metadata = {
-  title: 'Real Estate App',
+  title: 'RushRoost',
   description: 'Real estate application',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/rushroost-logo.png',
+  },
 }
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
