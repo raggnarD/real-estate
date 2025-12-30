@@ -7,7 +7,7 @@
     "dev:3001": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --config eslint.config.mjs .",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "test": "jest",
     "test:unit": "jest",
     "test:watch": "jest --watch",
