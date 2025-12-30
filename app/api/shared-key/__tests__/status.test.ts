@@ -1,4 +1,44 @@
-// Define MockNextRequest before any imports that might use it
+// Mock next/server before importing route
+// Use factory function to avoid hoisting issues
+jest.mock('next/server', () => {
+  // Define MockNextRequest inside the factory
+  class MockNextRequest {
+    private cookieMap: Map<string, { value: string }> = new Map()
+
+    constructor(cookies?: Record<string, string>) {
+      if (cookies) {
+        Object.entries(cookies).forEach(([name, value]) => {
+          this.cookieMap.set(name, { value })
+        })
+      }
+    }
+
+    get cookies() {
+      return {
+        get: (name: string) => {
+          return this.cookieMap.get(name) || undefined
+        },
+      }
+    }
+  }
+
+  // Mock NextResponse
+  const mockNextResponse = {
+    json: jest.fn((data: any, init?: { status?: number }) => {
+      return {
+        json: async () => data,
+        status: init?.status || 200,
+      }
+    }),
+  }
+
+  return {
+    NextRequest: MockNextRequest,
+    NextResponse: mockNextResponse,
+  }
+})
+
+// Export MockNextRequest for use in tests
 class MockNextRequest {
   private cookieMap: Map<string, { value: string }> = new Map()
 
@@ -18,22 +58,6 @@ class MockNextRequest {
     }
   }
 }
-
-// Mock NextResponse
-const mockNextResponse = {
-  json: jest.fn((data: any, init?: { status?: number }) => {
-    return {
-      json: async () => data,
-      status: init?.status || 200,
-    }
-  }),
-}
-
-// Mock next/server before importing route
-jest.mock('next/server', () => ({
-  NextRequest: MockNextRequest,
-  NextResponse: mockNextResponse,
-}))
 
 import { GET } from '../status/route'
 

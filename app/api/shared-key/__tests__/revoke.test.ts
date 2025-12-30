@@ -1,27 +1,43 @@
-// Define MockNextRequest before any imports that might use it
+// Create mock function at module level - will be accessible in factory due to closure
+const mockCookiesDeleteFn = jest.fn()
+
+// Mock next/server before importing route
+// Use factory function to avoid hoisting issues
+jest.mock('next/server', () => {
+  // Define MockNextRequest inside the factory
+  class MockNextRequest {
+    constructor() {}
+  }
+
+  // Reference the mock function from outer scope (closure)
+  const mockCookies = {
+    delete: mockCookiesDeleteFn,
+  }
+
+  const mockNextResponse = {
+    json: jest.fn((data: any) => {
+      return {
+        json: async () => data,
+        cookies: mockCookies,
+      }
+    }),
+  }
+
+  return {
+    NextRequest: MockNextRequest,
+    NextResponse: mockNextResponse,
+  }
+})
+
+// Create mockCookies object for tests to use
+const mockCookies = {
+  delete: mockCookiesDeleteFn,
+}
+
+// Export MockNextRequest for use in tests
 class MockNextRequest {
   constructor() {}
 }
-
-// Mock NextResponse
-const mockCookies = {
-  delete: jest.fn(),
-}
-
-const mockNextResponse = {
-  json: jest.fn((data: any) => {
-    return {
-      json: async () => data,
-      cookies: mockCookies,
-    }
-  }),
-}
-
-// Mock next/server before importing route
-jest.mock('next/server', () => ({
-  NextRequest: MockNextRequest,
-  NextResponse: mockNextResponse,
-}))
 
 import { POST } from '../revoke/route'
 

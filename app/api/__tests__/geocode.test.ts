@@ -1,4 +1,69 @@
-// Define MockNextRequest before any imports that might use it
+// Mock next/server before importing route
+// Use factory function to avoid hoisting issues
+jest.mock('next/server', () => {
+  // Define MockNextRequest inside the factory
+  class MockNextRequest {
+    private url: URL
+    private cookieMap: Map<string, { value: string }> = new Map()
+
+    constructor(url: string, init?: { headers?: { cookie?: string } }) {
+      this.url = new URL(url)
+      if (init?.headers?.cookie) {
+        const cookies = init.headers.cookie.split(';').map(c => c.trim())
+        cookies.forEach(cookie => {
+          const [name, value] = cookie.split('=')
+          if (name && value) {
+            this.cookieMap.set(name, { value })
+          }
+        })
+      }
+    }
+
+    get nextUrl() {
+      return {
+        searchParams: this.url.searchParams,
+      }
+    }
+
+    get cookies() {
+      return {
+        get: (name: string) => {
+          return this.cookieMap.get(name) || undefined
+        },
+      }
+    }
+  }
+
+  // Mock NextResponse
+  const mockNextResponse = {
+    json: jest.fn((data: any, init?: { status?: number }) => {
+      return {
+        json: async () => data,
+        status: init?.status || 200,
+      }
+    }),
+  }
+
+  return {
+    NextRequest: MockNextRequest,
+    NextResponse: {
+      json: mockNextResponse.json,
+    },
+  }
+})
+
+// Mock the apiKeyResolver
+jest.mock('@/utils/apiKeyResolver', () => ({
+  resolveApiKey: jest.fn(),
+}))
+
+import { GET } from '../geocode/route'
+import { resolveApiKey } from '@/utils/apiKeyResolver'
+
+// Mock fetch
+global.fetch = jest.fn()
+
+// Export MockNextRequest for use in tests
 class MockNextRequest {
   private url: URL
   private cookieMap: Map<string, { value: string }> = new Map()
@@ -30,35 +95,6 @@ class MockNextRequest {
     }
   }
 }
-
-// Mock NextResponse
-const mockNextResponse = {
-  json: jest.fn((data: any, init?: { status?: number }) => {
-    return {
-      json: async () => data,
-      status: init?.status || 200,
-    }
-  }),
-}
-
-// Mock next/server before importing route
-jest.mock('next/server', () => ({
-  NextRequest: MockNextRequest,
-  NextResponse: {
-    json: mockNextResponse.json,
-  },
-}))
-
-import { GET } from '../geocode/route'
-import { resolveApiKey } from '@/utils/apiKeyResolver'
-
-// Mock the apiKeyResolver
-jest.mock('@/utils/apiKeyResolver', () => ({
-  resolveApiKey: jest.fn(),
-}))
-
-// Mock fetch
-global.fetch = jest.fn()
 
 describe('/api/geocode', () => {
   beforeEach(() => {

@@ -1,31 +1,39 @@
-// Define MockNextRequest before any imports that might use it
-class MockNextRequest {
-  constructor() {}
-}
-
-// Mock NextResponse
-const mockNextResponse = {
-  json: jest.fn((data: any, init?: { status?: number }) => {
-    return {
-      json: async () => data,
-      status: init?.status || 200,
-    }
-  }),
-}
-
 // Mock next/server before importing route
-jest.mock('next/server', () => ({
-  NextRequest: MockNextRequest,
-  NextResponse: mockNextResponse,
-}))
+// Use factory function to avoid hoisting issues
+jest.mock('next/server', () => {
+  // Define MockNextRequest inside the factory
+  class MockNextRequest {
+    constructor() {}
+  }
 
-import { GET } from '../get/route'
-import { checkSharedKeyStatus } from '@/utils/apiKeyResolver'
+  // Mock NextResponse
+  const mockNextResponse = {
+    json: jest.fn((data: any, init?: { status?: number }) => {
+      return {
+        json: async () => data,
+        status: init?.status || 200,
+      }
+    }),
+  }
+
+  return {
+    NextRequest: MockNextRequest,
+    NextResponse: mockNextResponse,
+  }
+})
 
 // Mock the apiKeyResolver
 jest.mock('@/utils/apiKeyResolver', () => ({
   checkSharedKeyStatus: jest.fn(),
 }))
+
+import { GET } from '../get/route'
+import { checkSharedKeyStatus } from '@/utils/apiKeyResolver'
+
+// Export MockNextRequest for use in tests
+class MockNextRequest {
+  constructor() {}
+}
 
 describe('/api/shared-key/get', () => {
   const originalEnv = process.env
