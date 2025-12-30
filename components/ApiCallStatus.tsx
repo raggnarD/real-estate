@@ -73,7 +73,21 @@ export default function ApiCallStatus({ tracker }: ApiCallStatusProps) {
     >
       {/* Header */}
       <div
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.stopPropagation()
+          setIsOpen(!isOpen)
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            e.stopPropagation()
+            setIsOpen(!isOpen)
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isOpen}
+        aria-label={isOpen ? 'Collapse API calls' : 'Expand API calls'}
         style={{
           padding: '0.75rem 1rem',
           cursor: 'pointer',
@@ -84,7 +98,8 @@ export default function ApiCallStatus({ tracker }: ApiCallStatusProps) {
           backgroundColor: hasActiveCalls ? '#fff3cd' : errorCount > 0 ? '#f8d7da' : '#f8f9fa',
           borderTopLeftRadius: '8px',
           borderTopRightRadius: '8px',
-          userSelect: 'none'
+          userSelect: 'none',
+          transition: 'background-color 0.2s'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

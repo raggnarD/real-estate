@@ -16,6 +16,7 @@ export function useApiCallTracker() {
   const [calls, setCalls] = useState<ApiCall[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [activeCalls, setActiveCalls] = useState(0)
+  const [userClosed, setUserClosed] = useState(false) // Track if user manually closed
 
   // Track a new API call
   const trackCall = useCallback((url: string, method: string = 'GET') => {
@@ -54,18 +55,29 @@ export function useApiCallTracker() {
     return () => clearInterval(interval)
   }, [])
 
-  // Auto-open if there are errors
+  // Auto-open if there are errors (but respect user's manual close)
   useEffect(() => {
     const hasErrors = calls.some(call => call.status === 'error')
-    if (hasErrors && !isOpen) {
+    if (hasErrors && !isOpen && !userClosed) {
       setIsOpen(true)
+      setUserClosed(false) // Reset when auto-opening
     }
-  }, [calls, isOpen])
+  }, [calls, isOpen, userClosed])
+
+  // Wrapper for setIsOpen that tracks user action
+  const handleSetIsOpen = useCallback((open: boolean) => {
+    setIsOpen(open)
+    if (!open) {
+      setUserClosed(true) // User manually closed
+    } else {
+      setUserClosed(false) // User manually opened
+    }
+  }, [])
 
   return {
     calls,
     isOpen,
-    setIsOpen,
+    setIsOpen: handleSetIsOpen,
     activeCalls,
     trackCall,
     updateCall,
