@@ -467,16 +467,20 @@ export default function NeighborhoodFinder() {
             flexDirection: isMobile ? 'column' : 'row'
           }}>
             <div style={{ flex: 1, width: isMobile ? '100%' : 'auto' }}>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '0.5rem', 
-                color: '#000', 
-                fontWeight: '500',
-                fontSize: '1rem'
-              }}>
+              <label 
+                htmlFor="max-commute-time"
+                style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  color: '#000', 
+                  fontWeight: '500',
+                  fontSize: '1rem'
+                }}
+              >
                 Maximum Commute Time (minutes):
               </label>
               <input
+                id="max-commute-time"
                 type="number"
                 min="1"
                 max="180"

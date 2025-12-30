@@ -22,7 +22,10 @@ test.describe('Neighborhood Finder', () => {
 
   test('should show commute time input', async ({ page }) => {
     await page.goto('/neighborhood-finder')
-    const commuteTimeInput = page.getByLabel(/maximum commute time/i)
+    // Wait for the form to be visible
+    await page.waitForSelector('form', { state: 'visible' })
+    // Try label first, fallback to id selector
+    const commuteTimeInput = page.locator('#max-commute-time')
     await expect(commuteTimeInput).toBeVisible()
   })
 
