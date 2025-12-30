@@ -4,10 +4,10 @@ import StageGate from '@/components/StageGate'
 import ApiKeyBanner from '@/components/ApiKeyBanner'
 import IntroModal from '@/components/IntroModal'
 import WizardOnboardingModal from '@/components/WizardOnboardingModal'
-import ApiCallStatus from '@/components/ApiCallStatus'
+import ApiCallStatusWrapper from '@/components/ApiCallStatusWrapper'
 import { ApiKeyProviderWithTracker } from '@/contexts/ApiKeyContext'
 import { WizardProvider } from '@/contexts/WizardContext'
-import { ApiCallTrackerProvider, useApiCallTrackerContext } from '@/contexts/ApiCallTrackerContext'
+import { ApiCallTrackerProvider } from '@/contexts/ApiCallTrackerContext'
 
 export const metadata: Metadata = {
   title: 'Real Estate App',
@@ -15,8 +15,6 @@ export const metadata: Metadata = {
 }
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-  const tracker = useApiCallTrackerContext()
-  
   return (
     <>
       <IntroModal />
@@ -25,7 +23,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <Navigation />
       <StageGate />
       {children}
-      <ApiCallStatus tracker={tracker} />
+      <ApiCallStatusWrapper />
     </>
   )
 }
