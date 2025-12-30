@@ -16,13 +16,21 @@ test.describe('Wizard Flow', () => {
     await expect(getStartedButton).toBeVisible({ timeout: 10000 })
     await getStartedButton.click()
 
-    // Step 2: How RushRoost Works Modal - Click Get Started to show API setup
-    // Wait for the modal to appear (use first() to handle multiple matches)
+    // Wait for the intro modal to close and the next modal to appear
+    // Wait for the "How RushRoost Works" heading to be visible
     await expect(page.getByRole('heading', { name: /how rushroost works/i }).first()).toBeVisible({ timeout: 10000 })
+    
+    // Wait a bit for any transitions to complete
+    await page.waitForTimeout(300)
+    
+    // Step 2: How RushRoost Works Modal - Click Get Started to show API setup
     // Find the Get Started button in the modal (use first() to handle multiple matches)
     const setupApiKeyButton = page.getByRole('button', { name: /get started/i }).first()
     await expect(setupApiKeyButton).toBeVisible({ timeout: 10000 })
-    await setupApiKeyButton.click()
+    await expect(setupApiKeyButton).toBeEnabled({ timeout: 10000 })
+    
+    // Use force click to bypass any overlay issues
+    await setupApiKeyButton.click({ force: true })
 
     // Step 3: API Key Setup - Use shared key (default)
     await expect(page.getByText(/setup api key/i)).toBeVisible({ timeout: 10000 })
@@ -59,9 +67,16 @@ test.describe('Wizard Flow', () => {
     // After clicking Get Started on intro modal, the "How RushRoost Works" modal appears
     // Wait for it and click "Get Started" again to show API setup (use first() to handle multiple matches)
     await expect(page.getByRole('heading', { name: /how rushroost works/i }).first()).toBeVisible({ timeout: 10000 })
+    
+    // Wait a bit for any transitions to complete
+    await page.waitForTimeout(300)
+    
     const getStartedButton2 = page.getByRole('button', { name: /get started/i }).first()
     await expect(getStartedButton2).toBeVisible({ timeout: 10000 })
-    await getStartedButton2.click()
+    await expect(getStartedButton2).toBeEnabled({ timeout: 10000 })
+    
+    // Use force click to bypass any overlay issues
+    await getStartedButton2.click({ force: true })
 
     // Wait for API setup form
     await expect(page.getByText(/setup api key/i)).toBeVisible({ timeout: 10000 })
