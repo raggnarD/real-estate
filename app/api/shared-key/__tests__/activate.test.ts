@@ -1,7 +1,3 @@
-// Create a module-level object to store mock references
-// This avoids hoisting issues with let/const
-const mockStore: { cookiesSet?: jest.Mock } = {}
-
 // Mock next/server before importing route
 // Use factory function to avoid hoisting issues
 jest.mock('next/server', () => {
@@ -12,8 +8,10 @@ jest.mock('next/server', () => {
 
   // Create mock function inside factory
   const mockCookiesSet = jest.fn()
-  // Store reference in module-level object for tests to access
-  mockStore.cookiesSet = mockCookiesSet
+  // Store reference on global which is always available
+  if (typeof global !== 'undefined') {
+    ;(global as any).__activateMockCookiesSet = mockCookiesSet
+  }
 
   const mockCookies = {
     set: mockCookiesSet,
@@ -35,10 +33,10 @@ jest.mock('next/server', () => {
 })
 
 // Create mockCookies object for tests to use
-// Access the mock function from module-level store
+// Access the mock function from global
 const mockCookies = {
   get set() {
-    return mockStore.cookiesSet || jest.fn()
+    return (typeof global !== 'undefined' && (global as any).__activateMockCookiesSet) || jest.fn()
   },
 }
 
