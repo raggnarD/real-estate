@@ -1,12 +1,4 @@
-import { GET } from '../geocode/route'
-import { resolveApiKey } from '@/utils/apiKeyResolver'
-
-// Mock the apiKeyResolver
-jest.mock('@/utils/apiKeyResolver', () => ({
-  resolveApiKey: jest.fn(),
-}))
-
-// Mock NextRequest
+// Define MockNextRequest before any imports that might use it
 class MockNextRequest {
   private url: URL
   private cookieMap: Map<string, { value: string }> = new Map()
@@ -49,11 +41,20 @@ const mockNextResponse = {
   }),
 }
 
+// Mock next/server before importing route
 jest.mock('next/server', () => ({
   NextRequest: MockNextRequest,
   NextResponse: {
     json: mockNextResponse.json,
   },
+}))
+
+import { GET } from '../geocode/route'
+import { resolveApiKey } from '@/utils/apiKeyResolver'
+
+// Mock the apiKeyResolver
+jest.mock('@/utils/apiKeyResolver', () => ({
+  resolveApiKey: jest.fn(),
 }))
 
 // Mock fetch

@@ -1,12 +1,4 @@
-import { GET } from '../get/route'
-import { checkSharedKeyStatus } from '@/utils/apiKeyResolver'
-
-// Mock the apiKeyResolver
-jest.mock('@/utils/apiKeyResolver', () => ({
-  checkSharedKeyStatus: jest.fn(),
-}))
-
-// Mock NextRequest
+// Define MockNextRequest before any imports that might use it
 class MockNextRequest {
   constructor() {}
 }
@@ -21,9 +13,18 @@ const mockNextResponse = {
   }),
 }
 
+// Mock next/server before importing route
 jest.mock('next/server', () => ({
   NextRequest: MockNextRequest,
   NextResponse: mockNextResponse,
+}))
+
+import { GET } from '../get/route'
+import { checkSharedKeyStatus } from '@/utils/apiKeyResolver'
+
+// Mock the apiKeyResolver
+jest.mock('@/utils/apiKeyResolver', () => ({
+  checkSharedKeyStatus: jest.fn(),
 }))
 
 describe('/api/shared-key/get', () => {

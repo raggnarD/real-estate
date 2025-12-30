@@ -3,10 +3,35 @@ import '@testing-library/jest-dom'
 
 // Fix React.act for React 19 compatibility
 // React Testing Library needs React.act to be available
+// In React 19, act is exported directly from 'react' and should work with @testing-library/react 16+
+// The testing library should handle this automatically, but we ensure it's available
 const React = require('react')
-if (React && !React.act) {
-  const { act } = require('react')
-  React.act = act
+
+// React 19 exports act directly from 'react'
+// @testing-library/react 16+ should handle this automatically
+// If React.act is not available, try to get it from react
+if (React && typeof React.act === 'undefined') {
+  try {
+    const { act } = require('react')
+    if (act && typeof act === 'function') {
+      React.act = act
+    }
+  } catch (e) {
+    // If that fails, try react-dom/test-utils (older React versions)
+    try {
+      const { act } = require('react-dom/test-utils')
+      if (act && typeof act === 'function') {
+        React.act = act
+      }
+    } catch (e2) {
+      // Last resort: create a wrapper
+      React.act = (callback) => {
+        if (typeof callback === 'function') {
+          return callback()
+        }
+      }
+    }
+  }
 }
 
 // Mock Next.js router

@@ -1,6 +1,4 @@
-import { GET } from '../status/route'
-
-// Mock NextRequest
+// Define MockNextRequest before any imports that might use it
 class MockNextRequest {
   private cookieMap: Map<string, { value: string }> = new Map()
 
@@ -31,10 +29,13 @@ const mockNextResponse = {
   }),
 }
 
+// Mock next/server before importing route
 jest.mock('next/server', () => ({
   NextRequest: MockNextRequest,
   NextResponse: mockNextResponse,
 }))
+
+import { GET } from '../status/route'
 
 describe('/api/shared-key/status', () => {
   const originalConsoleError = console.error

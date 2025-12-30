@@ -1,6 +1,4 @@
-import { POST } from '../revoke/route'
-
-// Mock NextRequest
+// Define MockNextRequest before any imports that might use it
 class MockNextRequest {
   constructor() {}
 }
@@ -19,10 +17,13 @@ const mockNextResponse = {
   }),
 }
 
+// Mock next/server before importing route
 jest.mock('next/server', () => ({
   NextRequest: MockNextRequest,
   NextResponse: mockNextResponse,
 }))
+
+import { POST } from '../revoke/route'
 
 describe('/api/shared-key/revoke', () => {
   const originalConsoleError = console.error
