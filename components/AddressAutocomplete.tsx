@@ -79,7 +79,7 @@ export default function AddressAutocomplete({
   const isEmpty = !value || value.trim() === ''
 
   return (
-    <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ position: 'relative', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       <input
         ref={inputRef}
         type="text"
@@ -102,6 +102,8 @@ export default function AddressAutocomplete({
         }}
         style={{
           width: '100%',
+          maxWidth: '100%',
+          minWidth: 0,
           padding: '0.5rem',
           paddingRight: isEmpty ? '2.5rem' : '0.5rem',
           fontSize: '0.875rem',

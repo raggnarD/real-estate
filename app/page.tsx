@@ -727,11 +727,13 @@ export default function Home() {
   return (
     <div style={{ 
       padding: isMobile ? '1rem' : '2rem', 
-      maxWidth: '1200px', 
+      maxWidth: '1200px',
+      width: '100%',
       margin: '0 auto',
       color: '#000',
       backgroundColor: '#fff',
-      minHeight: '100vh'
+      minHeight: '100vh',
+      boxSizing: 'border-box'
     }}>
       <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem', fontSize: isMobile ? '1.5rem' : '2rem' }}>
         True Commute Time
@@ -745,12 +747,22 @@ export default function Home() {
         borderRadius: '8px', 
         padding: isMobile ? '1rem' : '2rem',
         backgroundColor: '#f9f9f9',
-        marginBottom: isMobile ? '1rem' : '2rem'
+        marginBottom: isMobile ? '1rem' : '2rem',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box'
       }}>
         <h2 style={{ marginTop: 0, color: '#000', marginBottom: '1.5rem' }}>
           True Commute Time
         </h2>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <form onSubmit={handleSubmit} style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '1.5rem',
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box'
+        }}>
           <div style={{ 
             display: 'flex', 
             gap: '1.5rem', 
@@ -771,7 +783,10 @@ export default function Home() {
                 display: 'flex', 
                 gap: '0.5rem', 
                 alignItems: 'stretch',
-                flexDirection: isMobile ? 'column' : 'row'
+                flexDirection: isMobile ? 'column' : 'row',
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box'
               }}>
                 <input 
                   type="url" 
@@ -786,6 +801,9 @@ export default function Home() {
                   }}
                   style={{
                     flex: 1,
+                    width: '100%',
+                    maxWidth: '100%',
+                    minWidth: 0,
                     padding: '0.75rem',
                     fontSize: '1rem',
                     border: '1px solid #ccc',
@@ -844,7 +862,7 @@ export default function Home() {
             alignItems: 'flex-start',
             flexDirection: isMobile ? 'column' : 'row'
           }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
               <label style={{ 
                 display: 'block', 
                 marginBottom: '0.5rem', 
@@ -856,6 +874,7 @@ export default function Home() {
               </label>
               <div style={{ 
                 width: '100%', 
+                maxWidth: '100%',
                 boxSizing: 'border-box',
                 margin: 0,
                 padding: 0
@@ -901,7 +920,7 @@ export default function Home() {
             alignItems: 'flex-start',
             flexDirection: isMobile ? 'column' : 'row'
           }}>
-            <div style={{ flex: 1, width: '100%' }}>
+            <div style={{ flex: 1, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
               <label style={{ 
                 display: 'block', 
                 marginBottom: '0.5rem', 
@@ -911,32 +930,40 @@ export default function Home() {
               }}>
                 Destination Address:
               </label>
-              <AddressAutocomplete
-                placeholder="Enter destination address..."
-                value={destinationAddress}
-                onChange={setDestinationAddress}
-                onPlaceSelected={(place) => {
-                  if (place.formatted_address) {
-                    setDestinationAddress(place.formatted_address)
-                  }
-                  // Set location immediately if available from place selection
-                  if (place.geometry?.location) {
-                    const locationObj = place.geometry.location
-                    const lat = typeof locationObj.lat === 'function' ? locationObj.lat() : locationObj.lat
-                    const lng = typeof locationObj.lng === 'function' ? locationObj.lng() : locationObj.lng
-                    
-                    const location: { lat: number; lng: number } = {
-                      lat: Number(lat),
-                      lng: Number(lng)
-                    }
-                    setDestinationLocation(location)
-                    // Save to history
+              <div style={{ 
+                width: '100%', 
+                maxWidth: '100%',
+                boxSizing: 'border-box',
+                margin: 0,
+                padding: 0
+              }}>
+                <AddressAutocomplete
+                  placeholder="Enter destination address..."
+                  value={destinationAddress}
+                  onChange={setDestinationAddress}
+                  onPlaceSelected={(place) => {
                     if (place.formatted_address) {
-                      saveDestinationToHistory(place.formatted_address)
+                      setDestinationAddress(place.formatted_address)
                     }
-                  }
-                }}
-              />
+                    // Set location immediately if available from place selection
+                    if (place.geometry?.location) {
+                      const locationObj = place.geometry.location
+                      const lat = typeof locationObj.lat === 'function' ? locationObj.lat() : locationObj.lat
+                      const lng = typeof locationObj.lng === 'function' ? locationObj.lng() : locationObj.lng
+                      
+                      const location: { lat: number; lng: number } = {
+                        lat: Number(lat),
+                        lng: Number(lng)
+                      }
+                      setDestinationLocation(location)
+                      // Save to history
+                      if (place.formatted_address) {
+                        saveDestinationToHistory(place.formatted_address)
+                      }
+                    }
+                  }}
+                />
+              </div>
               <AddressHistory
                 addresses={destinationHistory}
                 onSelectAddress={handleSelectDestinationFromHistory}
