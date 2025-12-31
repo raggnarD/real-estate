@@ -317,8 +317,10 @@ export default function NeighborhoodFinder() {
   return (
     <div style={{ 
       maxWidth: '1200px', 
+      width: '100%',
       margin: '0 auto', 
-      padding: isMobile ? '1rem' : '2rem'
+      padding: isMobile ? '1rem' : '2rem',
+      boxSizing: 'border-box'
     }}>
       <NeighborhoodFinderIntro 
         isOpen={showIntroModal} 

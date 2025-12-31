@@ -751,8 +751,13 @@ export default function Home() {
           True Commute Time
         </h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '1.5rem', 
+            alignItems: 'flex-start',
+            flexDirection: isMobile ? 'column' : 'row'
+          }}>
+            <div style={{ flex: 1, width: '100%' }}>
               <label style={{ 
                 display: 'block', 
                 marginBottom: '0.5rem', 
@@ -762,7 +767,12 @@ export default function Home() {
               }}>
                 Zillow URL:
               </label>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+              <div style={{ 
+                display: 'flex', 
+                gap: '0.5rem', 
+                alignItems: 'stretch',
+                flexDirection: isMobile ? 'column' : 'row'
+              }}>
                 <input 
                   type="url" 
                   placeholder="https://www.zillow.com/homedetails/..."
@@ -799,16 +809,19 @@ export default function Home() {
                     color: (!zillowUrl || !zillowUrl.trim() || isLoading) ? '#999' : '#fff',
                     cursor: (!zillowUrl || !zillowUrl.trim() || isLoading) ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s',
-                    whiteSpace: 'nowrap'
+                    whiteSpace: isMobile ? 'normal' : 'nowrap',
+                    width: isMobile ? '100%' : 'auto'
                   }}
                 >
                   Get Address
                 </button>
               </div>
             </div>
-            <div style={{ flexShrink: 0, width: '400px' }}>
-              {/* Spacer to match address field width */}
-            </div>
+            {!isMobile && (
+              <div style={{ flexShrink: 0, width: '400px' }}>
+                {/* Spacer to match address field width */}
+              </div>
+            )}
           </div>
 
           {showWizardMessage && wizardWorkAddress && (
@@ -1033,16 +1046,23 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <div style={{ flexShrink: 0, width: '400px' }}>
-              {/* Spacer to match address field width */}
-            </div>
+            {!isMobile && (
+              <div style={{ flexShrink: 0, width: '400px' }}>
+                {/* Spacer to match address field width */}
+              </div>
+            )}
           </div>
 
           {/* Transit Stop Selection - shown when bus/train is selected */}
           {(transportMode === 'bus' || transportMode === 'train') && results?.location && (
             <>
-              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                gap: '1.5rem', 
+                alignItems: 'flex-start',
+                flexDirection: isMobile ? 'column' : 'row'
+              }}>
+                <div style={{ flex: 1, width: '100%' }}>
                   <label style={{ 
                     display: 'block', 
                     marginBottom: '0.5rem', 
@@ -1241,9 +1261,11 @@ export default function Home() {
                       <option value="driving">🚗 Drive</option>
                     </select>
                   </div>
-                  <div style={{ flexShrink: 0, width: '400px' }}>
-                    {/* Spacer to match address field width */}
-                  </div>
+                  {!isMobile && (
+                    <div style={{ flexShrink: 0, width: '400px', maxWidth: '100%' }}>
+                      {/* Spacer to match address field width */}
+                    </div>
+                  )}
                 </div>
               )}
             </>

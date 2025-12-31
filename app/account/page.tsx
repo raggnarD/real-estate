@@ -272,8 +272,10 @@ export default function AccountPage() {
   return (
     <div style={{ 
       maxWidth: '800px', 
+      width: '100%',
       margin: '0 auto', 
-      padding: isMobile ? '1rem' : '2rem'
+      padding: isMobile ? '1rem' : '2rem',
+      boxSizing: 'border-box'
     }}>
       <h1 style={{ marginTop: 0, color: '#000', marginBottom: '1rem', fontSize: isMobile ? '1.5rem' : '2rem' }}>
         Account Settings
@@ -316,7 +318,8 @@ export default function AccountPage() {
               backgroundColor: keyType === 'shared' ? '#d4edda' : '#fff',
               transition: 'all 0.2s',
               flex: 1,
-              minWidth: '200px'
+              minWidth: isMobile ? '100%' : '200px',
+              width: isMobile ? '100%' : 'auto'
             }}>
               <input
                 type="radio"
@@ -344,7 +347,8 @@ export default function AccountPage() {
               backgroundColor: keyType === 'own' ? '#e6f2ff' : '#fff',
               transition: 'all 0.2s',
               flex: 1,
-              minWidth: '200px'
+              minWidth: isMobile ? '100%' : '200px',
+              width: isMobile ? '100%' : 'auto'
             }}>
               <input
                 type="radio"

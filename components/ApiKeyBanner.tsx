@@ -7,6 +7,15 @@ import { useApiKey } from '@/contexts/ApiKeyContext'
 export default function ApiKeyBanner() {
   const { apiKey, isLoading, sharedKeyActive, sharedKeyTimeRemaining } = useApiKey()
   const [countdown, setCountdown] = useState<number | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Live countdown timer for shared key
   useEffect(() => {
@@ -48,12 +57,15 @@ export default function ApiKeyBanner() {
         zIndex: 1001,
         backgroundColor: '#d4edda',
         borderBottom: '2px solid #28a745',
-        padding: '1rem 2rem',
+        padding: isMobile ? '0.75rem 1rem' : '1rem 2rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '1rem',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box'
       }}>
         <div style={{ 
           display: 'flex', 
@@ -126,12 +138,15 @@ export default function ApiKeyBanner() {
       zIndex: 1001,
       backgroundColor: '#fff3cd',
       borderBottom: '2px solid #ffc107',
-      padding: '1rem 2rem',
+      padding: isMobile ? '0.75rem 1rem' : '1rem 2rem',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: '1rem',
-      flexWrap: 'wrap'
+      flexWrap: 'wrap',
+      width: '100%',
+      maxWidth: '100%',
+      boxSizing: 'border-box'
     }}>
       <div style={{ 
         display: 'flex', 

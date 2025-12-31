@@ -141,6 +141,8 @@ export default function StageGate() {
     }}>
       <div style={{
         maxWidth: '1200px',
+        width: '100%',
+        boxSizing: 'border-box',
         margin: '0 auto',
         display: 'flex',
         alignItems: 'center',
