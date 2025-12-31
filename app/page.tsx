@@ -758,142 +758,142 @@ export default function Home() {
         <form onSubmit={handleSubmit} style={{ 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: '1.5rem',
+          gap: isMobile ? '1.25rem' : '1.5rem',
           width: '100%',
           maxWidth: '100%',
           boxSizing: 'border-box'
         }}>
+          {/* Zillow URL Section */}
           <div style={{ 
-            display: 'flex', 
-            gap: '1.5rem', 
-            alignItems: 'flex-start',
-            flexDirection: isMobile ? 'column' : 'row'
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
           }}>
-            <div style={{ flex: 1, width: '100%' }}>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '0.5rem', 
-                color: '#000', 
-                fontWeight: '500',
-                fontSize: '1rem'
-              }}>
-                Zillow URL:
-              </label>
-              <div style={{ 
-                display: 'flex', 
-                gap: '0.5rem', 
-                alignItems: 'stretch',
-                flexDirection: isMobile ? 'column' : 'row',
-                width: '100%',
-                maxWidth: '100%',
-                boxSizing: 'border-box'
-              }}>
-                <input 
-                  type="url" 
-                  placeholder="https://www.zillow.com/homedetails/..."
-                  value={zillowUrl}
-                  onChange={(e) => setZillowUrl(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && zillowUrl && zillowUrl.trim()) {
-                      e.preventDefault()
-                      handleGetAddressFromZillow()
-                    }
-                  }}
-                  style={{
-                    flex: 1,
-                    width: '100%',
-                    maxWidth: '100%',
-                    minWidth: 0,
-                    padding: '0.75rem',
-                    fontSize: '1rem',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    color: '#000',
-                    backgroundColor: '#fff',
-                    boxSizing: 'border-box'
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleGetAddressFromZillow}
-                  disabled={!zillowUrl || !zillowUrl.trim() || isLoading}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    fontSize: '1rem',
-                    fontWeight: '500',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    backgroundColor: (!zillowUrl || !zillowUrl.trim() || isLoading) ? '#e0e0e0' : '#0070f3',
-                    color: (!zillowUrl || !zillowUrl.trim() || isLoading) ? '#999' : '#fff',
-                    cursor: (!zillowUrl || !zillowUrl.trim() || isLoading) ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s',
-                    whiteSpace: isMobile ? 'normal' : 'nowrap',
-                    width: isMobile ? '100%' : 'auto'
-                  }}
-                >
-                  Get Address
-                </button>
-              </div>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '0.5rem', 
+              color: '#000', 
+              fontWeight: '500',
+              fontSize: isMobile ? '0.875rem' : '1rem'
+            }}>
+              Zillow URL:
+            </label>
+            <div style={{ 
+              display: 'flex', 
+              gap: isMobile ? '0.75rem' : '0.5rem', 
+              alignItems: 'stretch',
+              flexDirection: isMobile ? 'column' : 'row',
+              width: '100%',
+              maxWidth: '100%',
+              boxSizing: 'border-box'
+            }}>
+              <input 
+                type="url" 
+                placeholder="https://www.zillow.com/homedetails/..."
+                value={zillowUrl}
+                onChange={(e) => setZillowUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && zillowUrl && zillowUrl.trim()) {
+                    e.preventDefault()
+                    handleGetAddressFromZillow()
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  width: '100%',
+                  maxWidth: '100%',
+                  minWidth: 0,
+                  padding: isMobile ? '0.875rem' : '0.75rem',
+                  fontSize: isMobile ? '0.9375rem' : '1rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  color: '#000',
+                  backgroundColor: '#fff',
+                  boxSizing: 'border-box'
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleGetAddressFromZillow}
+                disabled={!zillowUrl || !zillowUrl.trim() || isLoading}
+                style={{
+                  padding: isMobile ? '0.875rem 1.25rem' : '0.75rem 1.5rem',
+                  fontSize: isMobile ? '0.9375rem' : '1rem',
+                  fontWeight: '500',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  backgroundColor: (!zillowUrl || !zillowUrl.trim() || isLoading) ? '#e0e0e0' : '#0070f3',
+                  color: (!zillowUrl || !zillowUrl.trim() || isLoading) ? '#999' : '#fff',
+                  cursor: (!zillowUrl || !zillowUrl.trim() || isLoading) ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                  width: isMobile ? '100%' : 'auto',
+                  flexShrink: isMobile ? 0 : 1
+                }}
+              >
+                Get Address
+              </button>
             </div>
-            {!isMobile && (
-              <div style={{ flexShrink: 0, width: '400px' }}>
-                {/* Spacer to match address field width */}
-              </div>
-            )}
           </div>
 
           {showWizardMessage && wizardWorkAddress && (
             <div style={{
-              padding: '1rem',
+              padding: isMobile ? '0.875rem' : '1rem',
               backgroundColor: '#e6f2ff',
               border: '1px solid #0070f3',
               borderRadius: '4px',
-              marginBottom: '1.5rem',
-              fontSize: '0.875rem',
-              color: '#004085'
+              fontSize: isMobile ? '0.8125rem' : '0.875rem',
+              color: '#004085',
+              lineHeight: '1.5',
+              width: '100%',
+              maxWidth: '100%',
+              boxSizing: 'border-box'
             }}>
               <strong>✨ Work address prepopulated:</strong> Your work address from the Neighborhood Finder has been automatically filled in as the destination. Enter the home address above to see the true commute time!
             </div>
           )}
 
+          {/* Starting Address Section */}
           <div style={{ 
-            display: 'flex', 
-            gap: '1.5rem', 
-            alignItems: 'flex-start',
-            flexDirection: isMobile ? 'column' : 'row'
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
           }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '0.5rem', 
-                color: '#000', 
-                fontWeight: '500',
-                fontSize: isMobile ? '0.875rem' : '1rem'
-              }}>
-                Starting Address:
-              </label>
-              <div style={{ 
-                width: '100%', 
-                maxWidth: '100%',
-                boxSizing: 'border-box',
-                margin: 0,
-                padding: 0
-              }}>
-                <AddressAutocomplete
-                  placeholder="Start typing an address..."
-                  value={address}
-                  onChange={setAddress}
-                  onPlaceSelected={handlePlaceSelected}
-                />
-              </div>
-              <AddressHistory
-                addresses={addressHistory}
-                onSelectAddress={handleSelectFromHistory}
-                onClearHistory={clearHistory}
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '0.5rem', 
+              color: '#000', 
+              fontWeight: '500',
+              fontSize: isMobile ? '0.875rem' : '1rem'
+            }}>
+              Starting Address:
+            </label>
+            <div style={{ 
+              width: '100%', 
+              maxWidth: '100%',
+              boxSizing: 'border-box',
+              margin: 0,
+              padding: 0,
+              marginBottom: '0.75rem'
+            }}>
+              <AddressAutocomplete
+                placeholder="Start typing an address..."
+                value={address}
+                onChange={setAddress}
+                onPlaceSelected={handlePlaceSelected}
               />
             </div>
-            {!isMobile && (
-              <div style={{ flexShrink: 0 }}>
+            <AddressHistory
+              addresses={addressHistory}
+              onSelectAddress={handleSelectFromHistory}
+              onClearHistory={clearHistory}
+            />
+            {!isMobile && originLocation && (
+              <div style={{ 
+                marginTop: '1rem',
+                width: '100%',
+                maxWidth: '400px'
+              }}>
                 <MapStreetViewToggle 
                   key="origin-view" 
                   location={originLocation} 
@@ -903,97 +903,122 @@ export default function Home() {
               </div>
             )}
             {isMobile && originLocation && (
-              <div style={{ width: '100%' }}>
+              <div style={{ 
+                marginTop: '1rem',
+                width: '100%',
+                maxWidth: '100%'
+              }}>
                 <MapStreetViewToggle 
-                  key="origin-view" 
+                  key="origin-view-mobile" 
                   location={originLocation} 
-                  width={isMobile ? undefined : 400} 
-                  height={isMobile ? 250 : 300} 
+                  width={undefined} 
+                  height={250} 
                 />
               </div>
             )}
           </div>
 
+          {/* Destination Address Section */}
           <div style={{ 
-            display: 'flex', 
-            gap: '1.5rem', 
-            alignItems: 'flex-start',
-            flexDirection: isMobile ? 'column' : 'row'
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
           }}>
-            <div style={{ flex: 1, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '0.5rem', 
-                color: '#000', 
-                fontWeight: '500',
-                fontSize: isMobile ? '0.875rem' : '1rem'
-              }}>
-                Destination Address:
-              </label>
-              <div style={{ 
-                width: '100%', 
-                maxWidth: '100%',
-                boxSizing: 'border-box',
-                margin: 0,
-                padding: 0
-              }}>
-                <AddressAutocomplete
-                  placeholder="Enter destination address..."
-                  value={destinationAddress}
-                  onChange={setDestinationAddress}
-                  onPlaceSelected={(place) => {
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '0.5rem', 
+              color: '#000', 
+              fontWeight: '500',
+              fontSize: isMobile ? '0.875rem' : '1rem'
+            }}>
+              Destination Address:
+            </label>
+            <div style={{ 
+              width: '100%', 
+              maxWidth: '100%',
+              boxSizing: 'border-box',
+              margin: 0,
+              padding: 0,
+              marginBottom: '0.75rem'
+            }}>
+              <AddressAutocomplete
+                placeholder="Enter destination address..."
+                value={destinationAddress}
+                onChange={setDestinationAddress}
+                onPlaceSelected={(place) => {
+                  if (place.formatted_address) {
+                    setDestinationAddress(place.formatted_address)
+                  }
+                  // Set location immediately if available from place selection
+                  if (place.geometry?.location) {
+                    const locationObj = place.geometry.location
+                    const lat = typeof locationObj.lat === 'function' ? locationObj.lat() : locationObj.lat
+                    const lng = typeof locationObj.lng === 'function' ? locationObj.lng() : locationObj.lng
+                    
+                    const location: { lat: number; lng: number } = {
+                      lat: Number(lat),
+                      lng: Number(lng)
+                    }
+                    setDestinationLocation(location)
+                    // Save to history
                     if (place.formatted_address) {
-                      setDestinationAddress(place.formatted_address)
+                      saveDestinationToHistory(place.formatted_address)
                     }
-                    // Set location immediately if available from place selection
-                    if (place.geometry?.location) {
-                      const locationObj = place.geometry.location
-                      const lat = typeof locationObj.lat === 'function' ? locationObj.lat() : locationObj.lat
-                      const lng = typeof locationObj.lng === 'function' ? locationObj.lng() : locationObj.lng
-                      
-                      const location: { lat: number; lng: number } = {
-                        lat: Number(lat),
-                        lng: Number(lng)
-                      }
-                      setDestinationLocation(location)
-                      // Save to history
-                      if (place.formatted_address) {
-                        saveDestinationToHistory(place.formatted_address)
-                      }
-                    }
-                  }}
-                />
-              </div>
-              <AddressHistory
-                addresses={destinationHistory}
-                onSelectAddress={handleSelectDestinationFromHistory}
-                onClearHistory={clearDestinationHistory}
+                  }
+                }}
               />
             </div>
-            {!isMobile && (
-              <div style={{ flexShrink: 0 }}>
-                <MapStreetViewToggle key="destination-view" location={destinationLocation} width={400} height={300} />
+            <AddressHistory
+              addresses={destinationHistory}
+              onSelectAddress={handleSelectDestinationFromHistory}
+              onClearHistory={clearDestinationHistory}
+            />
+            {!isMobile && destinationLocation && (
+              <div style={{ 
+                marginTop: '1rem',
+                width: '100%',
+                maxWidth: '400px'
+              }}>
+                <MapStreetViewToggle 
+                  key="destination-view" 
+                  location={destinationLocation} 
+                  width={400} 
+                  height={300} 
+                />
               </div>
             )}
             {isMobile && destinationLocation && (
-              <div style={{ width: '100%' }}>
-                <MapStreetViewToggle key="destination-view" location={destinationLocation} width={isMobile ? undefined : 400} height={isMobile ? 250 : 300} />
+              <div style={{ 
+                marginTop: '1rem',
+                width: '100%',
+                maxWidth: '100%'
+              }}>
+                <MapStreetViewToggle 
+                  key="destination-view-mobile" 
+                  location={destinationLocation} 
+                  width={undefined} 
+                  height={250} 
+                />
               </div>
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '0.5rem', 
-                color: '#000', 
-                fontWeight: '500',
-                fontSize: '1rem'
-              }}>
-                Transportation Mode:
-              </label>
-              <select
+          {/* Transportation Mode Section */}
+          <div style={{ 
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
+          }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '0.5rem', 
+              color: '#000', 
+              fontWeight: '500',
+              fontSize: isMobile ? '0.875rem' : '1rem'
+            }}>
+              Transportation Mode:
+            </label>
+            <select
                 value={transportMode}
                 onChange={(e) => {
                   const newMode = e.target.value as 'driving' | 'bus' | 'train' | 'walking' | 'bicycling'
@@ -1072,12 +1097,6 @@ export default function Home() {
                   </label>
                 </div>
               )}
-            </div>
-            {!isMobile && (
-              <div style={{ flexShrink: 0, width: '400px' }}>
-                {/* Spacer to match address field width */}
-              </div>
-            )}
           </div>
 
           {/* Transit Stop Selection - shown when bus/train is selected */}
