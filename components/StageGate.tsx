@@ -152,22 +152,13 @@ export default function StageGate() {
         position: 'relative',
         paddingTop: isMobile ? '18px' : '22px'
       }}>
-        {/* Horizontal connector line */}
-        <div style={{
-          position: 'absolute',
-          top: isMobile ? '18px' : '22px',
-          left: isMobile ? 'calc(18px + 18px)' : 'calc(22px + 22px)',
-          right: isMobile ? 'calc(18px + 18px)' : 'calc(22px + 22px)',
-          height: '2px',
-          backgroundColor: '#e0e0e0',
-          zIndex: 0
-        }} />
-        
         {stages.map((stage, index) => {
           const isActive = currentStep === stage.number
           const isCompleted = currentStep > stage.number
           const isUpcoming = currentStep < stage.number
           const prevStageCompleted = index > 0 && currentStep > stages[index - 1].number
+          const circleRadius = isMobile ? 18 : 22
+          const linePadding = isMobile ? 8 : 10
 
           return (
             <div
@@ -184,6 +175,20 @@ export default function StageGate() {
                 zIndex: 1
               }}
             >
+              {/* Connector line segment before this circle (except for first) */}
+              {index > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: isMobile ? '18px' : '22px',
+                  right: `calc(50% + ${circleRadius + linePadding}px)`,
+                  width: `calc(${100 / (stages.length - 1)}% - ${(circleRadius + linePadding) * 2}px)`,
+                  height: '2px',
+                  backgroundColor: prevStageCompleted ? '#28a745' : '#e0e0e0',
+                  transition: 'background-color 0.3s',
+                  zIndex: 0
+                }} />
+              )}
+
               {/* Step Number Circle */}
               <div style={{
                 width: isMobile ? '36px' : '44px',
@@ -248,20 +253,6 @@ export default function StageGate() {
             </div>
           )
         })}
-        
-        {/* Colored progress line overlay */}
-        <div style={{
-          position: 'absolute',
-          top: isMobile ? '18px' : '22px',
-          left: isMobile ? 'calc(18px + 18px)' : 'calc(22px + 22px)',
-          height: '2px',
-          width: currentStep > 1 
-            ? `calc(${((currentStep - 1) / (stages.length - 1)) * 100}% - ${isMobile ? '36px' : '44px'})`
-            : '0',
-          backgroundColor: '#28a745',
-          transition: 'width 0.3s',
-          zIndex: 1
-        }} />
       </div>
     </div>
   )
