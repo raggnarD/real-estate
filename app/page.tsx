@@ -44,6 +44,22 @@ const ADDRESS_HISTORY_KEY = 'real-estate-address-history'
 const DESTINATION_HISTORY_KEY = 'real-estate-destination-history'
 const MAX_HISTORY_ITEMS = 3
 
+// Helper function to get tomorrow at 9:00am in datetime-local format
+const getDefaultArrivalTime = (): string => {
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(9, 0, 0, 0)
+  
+  // Format as YYYY-MM-DDTHH:mm for datetime-local input
+  const year = tomorrow.getFullYear()
+  const month = String(tomorrow.getMonth() + 1).padStart(2, '0')
+  const day = String(tomorrow.getDate()).padStart(2, '0')
+  const hours = String(tomorrow.getHours()).padStart(2, '0')
+  const minutes = String(tomorrow.getMinutes()).padStart(2, '0')
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
 export default function Home() {
   const { apiKey } = useApiKey()
   const { wizardActive, workAddress: wizardWorkAddress, setWizardStep } = useWizard()
@@ -69,7 +85,7 @@ export default function Home() {
   const [commuteResults, setCommuteResults] = useState<CommuteResults | null>(null)
   const [destinationLocation, setDestinationLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [showWizardMessage, setShowWizardMessage] = useState(false)
-  const [arrivalTime, setArrivalTime] = useState<string>('')
+  const [arrivalTime, setArrivalTime] = useState<string>(getDefaultArrivalTime())
 
   // Memoize origin location to prevent unnecessary re-renders
   const originLocation = useMemo(() => results?.location || null, [
@@ -1035,16 +1051,17 @@ export default function Home() {
               fontWeight: '500',
               fontSize: isMobile ? '0.875rem' : '1rem'
             }}>
-              Desired Arrival Time (optional):
+              Desired Arrival Time:
             </label>
             <input
               type="datetime-local"
               value={arrivalTime}
               onChange={(e) => setArrivalTime(e.target.value)}
+              required
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                fontSize: '1rem',
+                fontSize: isMobile ? '0.9375rem' : '1rem',
                 border: '1px solid #ccc',
                 borderRadius: '4px',
                 color: '#000',
@@ -1378,7 +1395,7 @@ export default function Home() {
 
           <button 
             type="submit"
-            disabled={isLoading || !address || !destinationAddress}
+            disabled={isLoading || !address || !destinationAddress || !arrivalTime}
             style={{
               padding: '0.75rem 1.5rem',
               fontSize: '1rem',
