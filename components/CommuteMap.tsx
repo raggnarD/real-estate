@@ -424,7 +424,13 @@ export default function CommuteMap({
   }
 
   return (
-    <div style={{ position: 'relative', width: `${width}px`, height: `${height}px` }}>
+    <div style={{ 
+      position: 'relative', 
+      width: width ? `${width}px` : '100%',
+      maxWidth: '100%',
+      height: `${height}px`,
+      boxSizing: 'border-box'
+    }}>
       <div
         ref={mapRef}
         style={{

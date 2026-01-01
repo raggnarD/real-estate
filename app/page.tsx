@@ -1475,9 +1475,9 @@ export default function Home() {
 
               {/* Two separate maps for each leg */}
               {results?.location && destinationLocation && selectedStop && leg1Mode && transitType && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
                   {/* Leg 1: Origin to Transit Stop */}
-                  <div>
+                  <div style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
                     <div style={{ marginBottom: '0.75rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
                       <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
                         Leg 1: {leg1Mode === 'walking' ? '🚶 Walking' : '🚗 Driving'} to {transitType === 'bus' ? 'Bus' : 'Train'} Stop
@@ -1499,7 +1499,7 @@ export default function Home() {
                   </div>
 
                   {/* Leg 2: Transit Stop to Destination */}
-                  <div>
+                  <div style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
                     <div style={{ marginBottom: '0.75rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
                       <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
                         Leg 2: {transitType === 'bus' ? '🚌 Bus' : '🚂 Train'} to Destination
