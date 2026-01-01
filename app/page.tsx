@@ -1062,6 +1062,7 @@ export default function Home() {
                 width: '100%',
                 padding: '0.75rem',
                 fontSize: isMobile ? '0.9375rem' : '1rem',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
                 border: '1px solid #ccc',
                 borderRadius: '4px',
                 color: '#000',
