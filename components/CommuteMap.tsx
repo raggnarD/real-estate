@@ -363,7 +363,7 @@ export default function CommuteMap({
             if (status === google.maps.DirectionsStatus.OK && result) {
               directionsRenderer.setDirections(result)
               // If origin was a placeId, fit bounds to the route
-              if (originIsPlaceId && result.routes && result.routes.length > 0) {
+              if (originIsPlaceId && result.routes && result.routes.length > 0 && mapInstanceRef.current) {
                 const bounds = new google.maps.LatLngBounds()
                 result.routes[0].legs.forEach(leg => {
                   bounds.extend(leg.start_location)
