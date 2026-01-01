@@ -1292,9 +1292,9 @@ export default function Home() {
               {/* Map below the stops list */}
               {selectedStop && results?.location && (
                 <div style={{ 
+                  marginTop: '1rem',
                   width: '100%',
-                  maxWidth: '100%',
-                  marginTop: '1.5rem',
+                  maxWidth: isMobile ? '100%' : '400px',
                   boxSizing: 'border-box'
                 }}>
                   {selectedStop && results?.location ? (
