@@ -140,15 +140,22 @@ export default function CommuteMap({
           leg2RendererRef.current = leg2Renderer
 
           // Calculate bounds to fit all points
+          // Handle case where origin might be a placeId
+          const originIsPlaceId = origin && typeof origin === 'object' && 'placeId' in origin
+          const originCoords = originIsPlaceId ? null : origin as { lat: number; lng: number } | null
+          
           const bounds = new google.maps.LatLngBounds()
-          bounds.extend(origin)
+          if (originCoords) {
+            bounds.extend(originCoords)
+          }
           if (transitStop) bounds.extend(transitStop)
           bounds.extend(destination)
           mapInstanceRef.current.fitBounds(bounds)
 
           // Add custom markers
-          const originMarker = new google.maps.Marker({
-            position: origin,
+          // Only add origin marker if we have coordinates (not placeId)
+          const originMarker = originCoords ? new google.maps.Marker({
+            position: originCoords,
             map: mapInstanceRef.current,
             title: 'Origin',
             icon: {
@@ -160,7 +167,7 @@ export default function CommuteMap({
               strokeWeight: 3,
             },
             zIndex: 1000,
-          })
+          }) : null
 
           const transitMarker = new google.maps.Marker({
             position: transitStop!,
@@ -192,11 +199,13 @@ export default function CommuteMap({
             zIndex: 1000,
           })
 
-          markersRef.current = [originMarker, transitMarker, destinationMarker]
+          markersRef.current = originMarker 
+            ? [originMarker, transitMarker, destinationMarker]
+            : [transitMarker, destinationMarker]
 
           // Request Leg 1: Origin to Transit Stop
           const leg1Request: google.maps.DirectionsRequest = {
-            origin: origin,
+            origin: origin as any,
             destination: transitStop!,
             travelMode: leg1Mode === 'walking' ? google.maps.TravelMode.WALKING : google.maps.TravelMode.DRIVING,
           }
