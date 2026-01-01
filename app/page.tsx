@@ -1456,48 +1456,32 @@ export default function Home() {
           {/* Multi-leg transit results */}
           {commuteResults?.leg1 && commuteResults?.leg2 && commuteResults?.total && (
             <>
-              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', marginBottom: '2rem' }}>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
-                    <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
-                      Leg 1: {leg1Mode === 'walking' ? '🚶 Walking' : '🚗 Driving'} to {transitType === 'bus' ? 'Bus' : 'Train'} Stop
-                    </div>
-                    <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
-                      {commuteResults.leg1.duration} ({commuteResults.leg1.distance})
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
-                    <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
-                      Leg 2: {transitType === 'bus' ? '🚌 Bus' : '🚂 Train'} to Destination
-                    </div>
-                    <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
-                      {commuteResults.leg2.duration} ({commuteResults.leg2.distance})
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#e6f2ff', borderRadius: '4px', border: '2px solid #0070f3' }}>
-                    <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
-                      Total Journey
-                    </div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem', color: '#0070f3' }}>
-                      {commuteResults.total.duration}
-                    </div>
-                    <div style={{ fontSize: '1rem', color: '#666' }}>
-                      {commuteResults.total.distance}
-                    </div>
-                  </div>
+              {/* Total Journey Summary */}
+              <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#e6f2ff', borderRadius: '4px', border: '2px solid #0070f3' }}>
+                <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Total Journey
+                </div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem', color: '#0070f3' }}>
+                  {commuteResults.total.duration}
+                </div>
+                <div style={{ fontSize: '1rem', color: '#666' }}>
+                  {commuteResults.total.distance}
                 </div>
               </div>
 
               {/* Two separate maps for each leg */}
               {results?.location && destinationLocation && selectedStop && leg1Mode && transitType && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  {/* Leg 1 Map: Origin to Transit Stop */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  {/* Leg 1: Origin to Transit Stop */}
                   <div>
-                    <h3 style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '1rem', fontWeight: '600', color: '#000' }}>
-                      Leg 1: {leg1Mode === 'walking' ? '🚶 Walking' : '🚗 Driving'} to {transitType === 'bus' ? 'Bus' : 'Train'} Stop
-                    </h3>
+                    <div style={{ marginBottom: '0.75rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
+                      <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
+                        Leg 1: {leg1Mode === 'walking' ? '🚶 Walking' : '🚗 Driving'} to {transitType === 'bus' ? 'Bus' : 'Train'} Stop
+                      </div>
+                      <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                        {commuteResults.leg1.duration} ({commuteResults.leg1.distance})
+                      </div>
+                    </div>
                     <CommuteMap
                       origin={results.location}
                       destination={{
@@ -1510,11 +1494,16 @@ export default function Home() {
                     />
                   </div>
 
-                  {/* Leg 2 Map: Transit Stop to Destination */}
+                  {/* Leg 2: Transit Stop to Destination */}
                   <div>
-                    <h3 style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '1rem', fontWeight: '600', color: '#000' }}>
-                      Leg 2: {transitType === 'bus' ? '🚌 Bus' : '🚂 Train'} to Destination
-                    </h3>
+                    <div style={{ marginBottom: '0.75rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
+                      <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
+                        Leg 2: {transitType === 'bus' ? '🚌 Bus' : '🚂 Train'} to Destination
+                      </div>
+                      <div style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                        {commuteResults.leg2.duration} ({commuteResults.leg2.distance})
+                      </div>
+                    </div>
                     <CommuteMap
                       origin={selectedStop.placeId ? { placeId: selectedStop.placeId } as any : {
                         lat: selectedStop.location.lat,
