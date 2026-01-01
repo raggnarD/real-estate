@@ -225,20 +225,24 @@ export default function StageGate() {
                 width: '100%',
                 paddingTop: '0.25rem'
               }}>
+                {/* Emoji on its own line */}
+                <div style={{
+                  fontSize: isMobile ? '0.875rem' : '1rem',
+                  lineHeight: '1.2'
+                }}>
+                  {stage.icon}
+                </div>
+                {/* Title on its own line */}
                 <div style={{
                   fontSize: isMobile ? '0.75rem' : '0.875rem',
                   fontWeight: isActive ? '600' : '400',
                   color: isActive ? '#0070f3' : isCompleted ? '#28a745' : '#666',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  flexWrap: 'wrap',
-                  justifyContent: 'center',
-                  lineHeight: '1.2'
+                  lineHeight: '1.2',
+                  textAlign: 'center'
                 }}>
-                  <span style={{ fontSize: isMobile ? '0.875rem' : '1rem' }}>{stage.icon}</span>
-                  <span>{stage.title}</span>
+                  {stage.title}
                 </div>
+                {/* Description on its own line */}
                 {!isMobile && (
                   <div style={{
                     fontSize: '0.75rem',
