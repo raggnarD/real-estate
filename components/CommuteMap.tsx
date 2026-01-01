@@ -6,7 +6,7 @@ import { useApiKey } from '@/contexts/ApiKeyContext'
 interface CommuteMapProps {
   origin: { lat: number; lng: number } | null
   destination: { lat: number; lng: number } | null
-  transitStop?: { lat: number; lng: number; name: string } | null
+  transitStop?: { lat: number; lng: number; name: string; placeId?: string } | null
   leg1Mode?: 'walking' | 'driving' | null
   transitType?: 'bus' | 'train' | null
   mode?: 'driving' | 'walking' | 'bicycling' | 'transit'
@@ -205,8 +205,13 @@ export default function CommuteMap({
           })
 
           // Request Leg 2: Transit Stop to Destination
+          // Use place_id if available for better transit routing, otherwise use coordinates
+          const leg2Origin = transitStop!.placeId 
+            ? { placeId: transitStop!.placeId } as any
+            : transitStop!
+            
           const leg2Request: google.maps.DirectionsRequest = {
-            origin: transitStop!,
+            origin: leg2Origin,
             destination: destination,
             travelMode: google.maps.TravelMode.TRANSIT,
             transitOptions: {
@@ -226,7 +231,13 @@ export default function CommuteMap({
               leg2Renderer.setDirections(result)
               setIsLoading(false)
             } else {
-              console.error('Leg 2 directions error:', status)
+              console.error('Leg 2 directions error:', status, result)
+              console.error('Leg 2 request details:', {
+                origin: leg2Origin,
+                destination: destination,
+                transitType: transitType,
+                arrivalTime: arrivalTime
+              })
               setError(`Failed to calculate transit route: ${status}`)
               setIsLoading(false)
             }

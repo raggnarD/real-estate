@@ -1497,6 +1497,7 @@ export default function Home() {
                       lat: selectedStop.location.lat,
                       lng: selectedStop.location.lng,
                       name: selectedStop.name,
+                      placeId: selectedStop.placeId,
                     }}
                     destination={destinationLocation}
                     leg1Mode={leg1Mode}
