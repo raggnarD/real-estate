@@ -1514,7 +1514,6 @@ export default function Home() {
                       transitType={transitType}
                       width={800}
                       height={400}
-                      arrivalTime={arrivalTime ? Math.floor(new Date(arrivalTime).getTime() / 1000) : undefined}
                     />
                   </div>
                 </div>
