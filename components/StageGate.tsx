@@ -263,7 +263,6 @@ export default function StageGate() {
           zIndex: 1
         }} />
       </div>
-      </div>
     </div>
   )
 }
