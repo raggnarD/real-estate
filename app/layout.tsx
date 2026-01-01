@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Analytics } from '@vercel/analytics/next'
 import Navigation from '@/components/Navigation'
 import StageGate from '@/components/StageGate'
 import ApiKeyBanner from '@/components/ApiKeyBanner'
@@ -58,6 +59,7 @@ export default function RootLayout({
             <LayoutContent>{children}</LayoutContent>
           </WizardProvider>
         </ApiKeyProvider>
+        <Analytics />
       </body>
     </html>
   )
