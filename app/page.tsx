@@ -1290,7 +1290,11 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-                <div style={{ flexShrink: 0 }}>
+                <div style={{ 
+                  flexShrink: 0,
+                  width: isMobile ? '100%' : '400px',
+                  maxWidth: '100%'
+                }}>
                   {selectedStop && results?.location ? (
                     <TransitStopDirectionsMap
                       origin={results.location}
@@ -1300,14 +1304,14 @@ export default function Home() {
                         name: selectedStop.name
                       }}
                       mode={leg1Mode || 'driving'}
-                      width={400}
+                      width={isMobile ? undefined : 400}
                       height={300}
                     />
                   ) : (
                     <MapStreetViewToggle 
                       key="transit-stop-view" 
                       location={selectedStop ? selectedStop.location : null} 
-                      width={400} 
+                      width={isMobile ? undefined : 400} 
                       height={300} 
                     />
                   )}
@@ -1355,40 +1359,37 @@ export default function Home() {
 
               {/* Leg 1 Mode Selector - shown when a stop is selected */}
               {selectedStop && (
-                <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ 
-                      display: 'block', 
-                      marginBottom: '0.5rem', 
-                      color: '#000', 
-                      fontWeight: '500',
-                      fontSize: '1rem'
-                    }}>
-                      How to get to stop?
-                    </label>
-                    <select
-                      value={leg1Mode || 'driving'}
-                      onChange={(e) => setLeg1Mode(e.target.value as 'walking' | 'driving')}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        fontSize: '1rem',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        color: '#000',
-                        backgroundColor: '#fff',
-                        boxSizing: 'border-box'
-                      }}
-                    >
-                      <option value="walking">🚶 Walk</option>
-                      <option value="driving">🚗 Drive</option>
-                    </select>
-                  </div>
-                  {!isMobile && (
-                    <div style={{ flexShrink: 0, width: '400px', maxWidth: '100%' }}>
-                      {/* Spacer to match address field width */}
-                    </div>
-                  )}
+                <div style={{ 
+                  width: '100%',
+                  maxWidth: '100%',
+                  boxSizing: 'border-box'
+                }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    color: '#000', 
+                    fontWeight: '500',
+                    fontSize: isMobile ? '0.875rem' : '1rem'
+                  }}>
+                    How to get to stop?
+                  </label>
+                  <select
+                    value={leg1Mode || 'driving'}
+                    onChange={(e) => setLeg1Mode(e.target.value as 'walking' | 'driving')}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      fontSize: isMobile ? '0.9375rem' : '1rem',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      color: '#000',
+                      backgroundColor: '#fff',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="walking">🚶 Walk</option>
+                    <option value="driving">🚗 Drive</option>
+                  </select>
                 </div>
               )}
             </>
@@ -1489,7 +1490,7 @@ export default function Home() {
                         lng: selectedStop.location.lng,
                       }}
                       mode={leg1Mode === 'walking' ? 'walking' : 'driving'}
-                      width={800}
+                      width={isMobile ? undefined : 800}
                       height={400}
                     />
                   </div>
@@ -1512,7 +1513,7 @@ export default function Home() {
                       destination={destinationLocation}
                       mode="transit"
                       transitType={transitType}
-                      width={800}
+                      width={isMobile ? undefined : 800}
                       height={400}
                     />
                   </div>
@@ -1523,7 +1524,12 @@ export default function Home() {
 
           {/* Single-leg results (non-transit or old format) */}
           {commuteResults?.duration && !commuteResults?.leg1 && (
-            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: '1.5rem', 
+              alignItems: 'flex-start',
+              flexDirection: isMobile ? 'column' : 'row'
+            }}>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd' }}>
                   <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem', fontWeight: '500' }}>
@@ -1554,14 +1560,18 @@ export default function Home() {
 
               {/* Commute Route Map for single-leg journeys */}
               {results?.location && destinationLocation && (
-                <div style={{ flexShrink: 0 }}>
+                <div style={{ 
+                  flexShrink: 0,
+                  width: isMobile ? '100%' : '400px',
+                  maxWidth: '100%'
+                }}>
                   <CommuteMap
                     origin={results.location}
                     destination={destinationLocation}
                     mode={commuteResults.mode === 'transit' ? 'transit' : 
                           commuteResults.mode === 'walking' ? 'walking' :
                           commuteResults.mode === 'bicycling' ? 'bicycling' : 'driving'}
-                    width={400}
+                    width={isMobile ? undefined : 400}
                     height={300}
                     arrivalTime={arrivalTime ? Math.floor(new Date(arrivalTime).getTime() / 1000) : undefined}
                   />
