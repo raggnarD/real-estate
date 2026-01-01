@@ -145,25 +145,43 @@ export default function StageGate() {
         boxSizing: 'border-box',
         margin: '0 auto',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
         gap: isMobile ? '0.5rem' : '1rem',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        position: 'relative',
+        paddingTop: isMobile ? '18px' : '22px'
       }}>
+        {/* Horizontal connector line */}
+        <div style={{
+          position: 'absolute',
+          top: isMobile ? '18px' : '22px',
+          left: isMobile ? '18px' : '22px',
+          right: isMobile ? '18px' : '22px',
+          height: '2px',
+          backgroundColor: '#e0e0e0',
+          zIndex: 0
+        }} />
+        
         {stages.map((stage, index) => {
           const isActive = currentStep === stage.number
           const isCompleted = currentStep > stage.number
           const isUpcoming = currentStep < stage.number
+          const prevStageCompleted = index > 0 && currentStep > stages[index - 1].number
 
           return (
             <div
               key={stage.number}
               style={{
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                gap: isMobile ? '0.5rem' : '1rem',
-                flex: index === 0 || index === stages.length - 1 ? '0 0 auto' : 1,
-                position: 'relative'
+                gap: '0.5rem',
+                flex: 1,
+                position: 'relative',
+                minWidth: isMobile ? '60px' : '100px',
+                maxWidth: isMobile ? '120px' : '200px',
+                zIndex: 1
               }}
             >
               {/* Step Number Circle */}
@@ -185,57 +203,66 @@ export default function StageGate() {
                 flexShrink: 0,
                 transition: 'all 0.3s',
                 border: isActive ? '3px solid #0056b3' : 'none',
-                boxShadow: isActive ? '0 2px 8px rgba(0, 112, 243, 0.3)' : 'none'
+                boxShadow: isActive ? '0 2px 8px rgba(0, 112, 243, 0.3)' : 'none',
+                position: 'relative',
+                zIndex: 2
               }}>
                 {isCompleted ? '✓' : stage.number}
               </div>
 
-              {/* Current Stage Text - only show next to active circle */}
-              {isActive && (
+              {/* Stage Text - shown below circle for all stages */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.25rem',
+                alignItems: 'center',
+                textAlign: 'center',
+                width: '100%',
+                paddingTop: '0.25rem'
+              }}>
                 <div style={{
+                  fontSize: isMobile ? '0.75rem' : '0.875rem',
+                  fontWeight: isActive ? '600' : '400',
+                  color: isActive ? '#0070f3' : isCompleted ? '#28a745' : '#666',
                   display: 'flex',
-                  flexDirection: 'column',
+                  alignItems: 'center',
                   gap: '0.25rem',
-                  marginLeft: isMobile ? '0.25rem' : '0.5rem'
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  lineHeight: '1.2'
                 }}>
-                  <div style={{
-                    fontSize: isMobile ? '0.875rem' : '1rem',
-                    fontWeight: '600',
-                    color: '#0070f3',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    <span style={{ fontSize: isMobile ? '1rem' : '1.125rem' }}>{stage.icon}</span>
-                    <span>{stage.title}</span>
-                  </div>
-                  {!isMobile && (
-                    <div style={{
-                      fontSize: '0.875rem',
-                      color: '#666',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {stage.description}
-                    </div>
-                  )}
+                  <span style={{ fontSize: isMobile ? '0.875rem' : '1rem' }}>{stage.icon}</span>
+                  <span>{stage.title}</span>
                 </div>
-              )}
-
-              {/* Connector Line (except for last item) */}
-              {index < stages.length - 1 && (
-                <div style={{
-                  flex: 1,
-                  height: '2px',
-                  backgroundColor: isCompleted ? '#28a745' : '#e0e0e0',
-                  minWidth: isMobile ? '20px' : '40px',
-                  maxWidth: isMobile ? '60px' : '120px',
-                  transition: 'background-color 0.3s'
-                }} />
-              )}
+                {!isMobile && (
+                  <div style={{
+                    fontSize: '0.75rem',
+                    color: isActive ? '#666' : '#999',
+                    lineHeight: '1.2',
+                    textAlign: 'center'
+                  }}>
+                    {stage.description}
+                  </div>
+                )}
+              </div>
             </div>
           )
         })}
+        
+        {/* Colored progress line overlay */}
+        <div style={{
+          position: 'absolute',
+          top: isMobile ? '18px' : '22px',
+          left: isMobile ? '18px' : '22px',
+          height: '2px',
+          width: currentStep > 1 
+            ? `calc(${((currentStep - 1) / (stages.length - 1)) * 100}% - ${isMobile ? '18px' : '22px'})`
+            : '0',
+          backgroundColor: '#28a745',
+          transition: 'width 0.3s',
+          zIndex: 1
+        }} />
+      </div>
       </div>
     </div>
   )
