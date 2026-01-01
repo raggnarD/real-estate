@@ -1180,120 +1180,122 @@ export default function Home() {
           {(transportMode === 'bus' || transportMode === 'train') && results?.location && (
             <>
               <div style={{ 
-                display: 'flex', 
-                gap: '1.5rem', 
-                alignItems: 'flex-start',
-                flexDirection: isMobile ? 'column' : 'row'
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box'
               }}>
-                <div style={{ flex: 1, width: '100%' }}>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem', 
-                    color: '#000', 
-                    fontWeight: '500',
-                    fontSize: '1rem'
-                  }}>
-                    Nearest {transportMode === 'bus' ? 'Bus' : 'Train'} Stops:
-                  </label>
-                  {isLoadingStops ? (
-                    <div style={{ padding: '1rem', color: '#666' }}>Loading stops...</div>
-                  ) : transitStops.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {transitStops.map((stop, index) => (
-                        <label
-                          key={stop.placeId}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '0.75rem',
-                            border: selectedStop?.placeId === stop.placeId ? '2px solid #0070f3' : '1px solid #ccc',
-                            borderRadius: '4px',
-                            backgroundColor: selectedStop?.placeId === stop.placeId ? '#e6f2ff' : '#fff',
-                            cursor: 'pointer',
-                            width: '100%',
-                            boxSizing: 'border-box'
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  color: '#000', 
+                  fontWeight: '500',
+                  fontSize: isMobile ? '0.875rem' : '1rem'
+                }}>
+                  Nearest {transportMode === 'bus' ? 'Bus' : 'Train'} Stops:
+                </label>
+                {isLoadingStops ? (
+                  <div style={{ padding: '1rem', color: '#666' }}>Loading stops...</div>
+                ) : transitStops.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {transitStops.map((stop, index) => (
+                      <label
+                        key={stop.placeId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '0.75rem',
+                          border: selectedStop?.placeId === stop.placeId ? '2px solid #0070f3' : '1px solid #ccc',
+                          borderRadius: '4px',
+                          backgroundColor: selectedStop?.placeId === stop.placeId ? '#e6f2ff' : '#fff',
+                          cursor: 'pointer',
+                          width: '100%',
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="transitStop"
+                          value={stop.placeId}
+                          checked={selectedStop?.placeId === stop.placeId}
+                          onChange={() => {
+                            // Clear commute results when a different station is selected
+                            const isDifferentStop = selectedStop?.placeId !== stop.placeId
+                            if (isDifferentStop) {
+                              setCommuteResults(null)
+                            }
+                            setSelectedStop(stop)
+                            setLeg1Mode('driving') // Default to driving when stop is selected
                           }}
-                        >
-                          <input
-                            type="radio"
-                            name="transitStop"
-                            value={stop.placeId}
-                            checked={selectedStop?.placeId === stop.placeId}
-                            onChange={() => {
-                              // Clear commute results when a different station is selected
-                              const isDifferentStop = selectedStop?.placeId !== stop.placeId
-                              if (isDifferentStop) {
-                                setCommuteResults(null)
-                              }
-                              setSelectedStop(stop)
-                              setLeg1Mode('driving') // Default to driving when stop is selected
-                            }}
-                            style={{ marginRight: '0.75rem' }}
-                          />
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                              <div style={{ fontWeight: '500' }}>
-                                {stop.name}
-                              </div>
-                              {stop.type && (
-                                <span style={{
-                                  fontSize: '0.75rem',
-                                  padding: '0.125rem 0.5rem',
-                                  backgroundColor: stop.type === 'Subway' ? '#0070f3' : stop.type === 'Train' ? '#00a86b' : '#6c757d',
-                                  color: '#fff',
-                                  borderRadius: '12px',
-                                  fontWeight: '600',
-                                  textTransform: 'uppercase'
-                                }}>
-                                  {stop.type}
-                                </span>
-                              )}
+                          style={{ marginRight: '0.75rem' }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                            <div style={{ fontWeight: '500' }}>
+                              {stop.name}
                             </div>
-                            <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
-                              {stop.address}
-                            </div>
-                            <div style={{ fontSize: '0.875rem', color: '#0070f3' }}>
-                              {stop.distance} away
-                            </div>
+                            {stop.type && (
+                              <span style={{
+                                fontSize: '0.75rem',
+                                padding: '0.125rem 0.5rem',
+                                backgroundColor: stop.type === 'Subway' ? '#0070f3' : stop.type === 'Train' ? '#00a86b' : '#6c757d',
+                                color: '#fff',
+                                borderRadius: '12px',
+                                fontWeight: '600',
+                                textTransform: 'uppercase'
+                              }}>
+                                {stop.type}
+                              </span>
+                            )}
                           </div>
-                        </label>
-                      ))}
-                      {transitStops.length > 0 && (
-                        <button
-                          onClick={() => setShowTransitStopsModal(true)}
-                          style={{
-                            padding: '0.75rem 1rem',
-                            fontSize: '0.875rem',
-                            backgroundColor: '#0070f3',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontWeight: '500',
-                            marginTop: '0.5rem',
-                            transition: 'background-color 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#0056b3'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#0070f3'
-                          }}
-                        >
-                          Show More
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div style={{ padding: '1rem', color: '#666', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                      No {transportMode === 'bus' ? 'bus' : 'train'} stops found nearby. Try a different address.
-                    </div>
-                  )}
-                </div>
+                          <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
+                            {stop.address}
+                          </div>
+                          <div style={{ fontSize: '0.875rem', color: '#0070f3' }}>
+                            {stop.distance} away
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                    {transitStops.length > 0 && (
+                      <button
+                        onClick={() => setShowTransitStopsModal(true)}
+                        style={{
+                          padding: '0.75rem 1rem',
+                          fontSize: '0.875rem',
+                          backgroundColor: '#0070f3',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontWeight: '500',
+                          marginTop: '0.5rem',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#0056b3'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#0070f3'
+                        }}
+                      >
+                        Show More
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ padding: '1rem', color: '#666', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                    No {transportMode === 'bus' ? 'bus' : 'train'} stops found nearby. Try a different address.
+                  </div>
+                )}
+              </div>
+              
+              {/* Map below the stops list */}
+              {selectedStop && results?.location && (
                 <div style={{ 
-                  flexShrink: 0,
-                  width: isMobile ? '100%' : '400px',
-                  maxWidth: '100%'
+                  width: '100%',
+                  maxWidth: '100%',
+                  marginTop: '1.5rem',
+                  boxSizing: 'border-box'
                 }}>
                   {selectedStop && results?.location ? (
                     <TransitStopDirectionsMap
@@ -1316,7 +1318,7 @@ export default function Home() {
                     />
                   )}
                 </div>
-              </div>
+              )}
 
               {/* Transit Stops Modal */}
               {results?.location && (
