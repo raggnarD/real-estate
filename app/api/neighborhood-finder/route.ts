@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiKey } from '@/utils/apiKeyResolver'
+import { getCitiesNearLocation, formatCityForGeocoding } from '@/utils/cityDataLoader'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -148,112 +149,109 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Strategy 3: Use Geocoding API to search for known cities in the state
-    // This helps find cities that Places API might miss, especially smaller towns
-    // Only use this if we haven't found many cities yet
-    if (workState && cities.length < 50) {
-      // Use a predefined list of common city/town names by state
-      // This is a fallback to ensure we find more cities
-      const commonCityNames: { [key: string]: string[] } = {
-        'CA': [
-          'Los Angeles', 'San Diego', 'San Jose', 'San Francisco', 'Fresno', 'Sacramento',
-          'Long Beach', 'Oakland', 'Bakersfield', 'Anaheim', 'Santa Ana', 'Riverside',
-          'Stockton', 'Irvine', 'Chula Vista', 'Fremont', 'San Bernardino', 'Modesto',
-          'Fontana', 'Oxnard', 'Moreno Valley', 'Huntington Beach', 'Glendale', 'Santa Clarita',
-          'Garden Grove', 'Oceanside', 'Rancho Cucamonga', 'Santa Rosa', 'Ontario', 'Lancaster',
-          'Elk Grove', 'Corona', 'Palmdale', 'Salinas', 'Pomona', 'Hayward', 'Escondido',
-          'Torrance', 'Sunnyvale', 'Orange', 'Fullerton', 'Pasadena', 'Thousand Oaks',
-          'Visalia', 'Simi Valley', 'Concord', 'Roseville', 'Vallejo', 'Victorville',
-          'Fairfield', 'Inglewood', 'Santa Clara', 'El Monte', 'Berkeley', 'Downey',
-          'Costa Mesa', 'San Mateo', 'Rialto', 'Jurupa Valley', 'Antioch', 'Temecula',
-          'Norwalk', 'Daly City', 'Burbank', 'Santa Maria', 'El Cajon', 'San Leandro',
-          'Hawthorne', 'Livermore', 'Buena Park', 'Lakewood', 'Merced', 'Hemet',
-          'Chico', 'Napa', 'Redwood City', 'Whittier', 'Lake Forest', 'Alameda',
-          'Tulare', 'Mountain View', 'Redondo Beach', 'Tracy', 'Bellflower', 'Upland',
-          'San Rafael', 'Yuba City', 'Folsom', 'Union City', 'Palo Alto', 'Petaluma',
-          'South Gate', 'Compton', 'Carson', 'San Marcos', 'Davis', 'Westminster',
-          'Citrus Heights', 'Carlsbad', 'Mission Viejo', 'Santa Monica', 'Hawthorne',
-          'Redding', 'Clovis', 'Richmond', 'Vacaville', 'San Buenaventura', 'Chino',
-          'Newport Beach', 'San Clemente', 'San Ramon', 'Lodi', 'Turlock', 'Milpitas',
-          'Baldwin Park', 'Chino Hills', 'Alhambra', 'Lynwood', 'Watsonville', 'Pacifica',
-          'Laguna Niguel', 'Montebello', 'Hesperia', 'La Habra', 'Encinitas', 'La Mesa',
-          'Cupertino', 'Monterey Park', 'Gardena', 'San Gabriel', 'Manhattan Beach',
-          'Hollister', 'Camarillo', 'Foster City', 'La Mirada', 'Castro Valley', 'Pico Rivera',
-        ],
-        'PA': [
-          'Philadelphia', 'Pittsburgh', 'Allentown', 'Erie', 'Reading', 'Scranton', 'Bethlehem',
-          'Lancaster', 'Harrisburg', 'York', 'Altoona', 'State College', 'Wilkes-Barre',
-          'Chester', 'Williamsport', 'Easton', 'Lebanon', 'Hazleton', 'New Castle', 'Johnstown',
-          'Washington', 'Greensburg', 'Butler', 'McKeesport', 'Pottstown', 'Coatesville',
-          'Norristown', 'Chambersburg', 'Monroeville', 'Plum', 'Upper Darby', 'Bensalem',
-          'Lower Merion', 'Abington', 'Bristol', 'Cheltenham', 'Radnor', 'Springfield',
-          'Warminster', 'Haverford', 'Ridley', 'Marple', 'Tredyffrin', 'West Chester',
-          'Doylestown', 'Media', 'Newtown', 'Langhorne', 'Jenkintown', 'Ardmore',
-          'Narberth', 'Conshohocken', 'Ambler', 'Lansdale', 'Hatfield', 'Souderton',
-          'Perkasie', 'Quakertown', 'Dublin', 'Chalfont', 'New Hope', 'Yardley',
-          'Morrisville', 'Tullytown', 'Falls', 'Middletown', 'Levittown', 'Fairless Hills',
-          'Bristol', 'Croydon', 'Cornwells Heights', 'Eddington', 'Bensalem', 'Feasterville',
-          'Trevose', 'Southampton', 'Huntingdon Valley', 'Willow Grove', 'Horsham', 'Maple Glen',
-          'Fort Washington', 'Flourtown', 'Wyndmoor', 'Glenside', 'Elkins Park', 'Melrose Park',
-          'Cheltenham', 'Wyncote', 'Jenkintown', 'Abington', 'Roslyn', 'Huntingdon Valley',
-          'Highland Park', 'Upper Darby Township', 'Drexel Hill', 'Lansdowne', 'Clifton Heights',
-          'Darby', 'Sharon Hill', 'Collingdale', 'Aldan', 'Yeadon', 'East Lansdowne',
-          'Millbourne', 'Tinicum', 'Ridley Park', 'Swarthmore', 'Rutledge', 'Morton',
-          'Norwood', 'Prospect Park', 'Glenolden', 'Folcroft', 'Sharon Hill', 'Collingdale',
-          'Darby Borough', 'Darby Township', 'Upper Darby', 'Haverford Township', 'Radnor Township',
-          'Lower Merion Township', 'Abington Township', 'Cheltenham Township', 'Springfield Township',
-          'Warminster Township', 'Bensalem Township', 'Bristol Township', 'Falls Township',
-          'Middletown Township', 'Lower Makefield Township', 'Upper Makefield Township',
-          'Newtown Township', 'Wrightstown Township', 'Northampton Township', 'Warrington Township',
-          'Doylestown Township', 'Plumstead Township', 'Bedminster Township', 'Hilltown Township',
-          'New Britain Township', 'Chalfont Borough', 'New Hope Borough', 'Yardley Borough',
-          'Morrisville Borough', 'Tullytown Borough', 'Falls Township', 'Middletown Township',
-          'Levittown', 'Fairless Hills', 'Bristol', 'Croydon', 'Cornwells Heights', 'Eddington',
-          'Bensalem', 'Feasterville', 'Trevose', 'Southampton', 'Huntingdon Valley', 'Willow Grove',
-          'Horsham', 'Maple Glen', 'Fort Washington', 'Flourtown', 'Wyndmoor', 'Glenside',
-          'Elkins Park', 'Melrose Park', 'Cheltenham', 'Wyncote', 'Jenkintown', 'Abington',
-          'Roslyn', 'Highland Park', 'Upper Darby', 'Drexel Hill', 'Lansdowne', 'Clifton Heights',
-        ],
-        // Add more states as needed
-      }
-      
-      const citiesToSearch = commonCityNames[workState] || []
-      
-      // Search for each city using Geocoding API
-      for (const cityName of citiesToSearch) {
-        if (cities.length >= 100) break // Limit total cities
+    // Strategy 3: Use comprehensive city data from local JSON file
+    // This provides a complete list of all US cities and is more reliable than hardcoded lists
+    // City data source: https://simplemaps.com/data/us-cities
+    // The fallback city data used by this application was accessed via SimpleMaps.
+    // Only use this if we haven't found many cities yet, or if Places API searches failed
+    if (workState && (cities.length < 50 || cities.length === 0)) {
+      try {
+        // Get cities from the comprehensive dataset
+        // Use a generous radius (200km) to ensure we get all cities within reasonable commute distance
+        // The actual commute time filtering happens later via Distance Matrix API
+        const maxCommuteKm = Math.max(160, maxTimeMinutes * 1.5) // Rough estimate: 1.5km per minute
+        const cityDataList = await getCitiesNearLocation(lat, lng, maxCommuteKm, workState)
         
-        try {
-          const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(cityName + ', ' + workState)}&key=${apiKey}`
-          const geocodeResponse = await fetch(geocodeUrl)
-          const geocodeData = await geocodeResponse.json()
+        // Limit to top 200 cities by distance to avoid too many API calls
+        const citiesToProcess = cityDataList.slice(0, 200)
+        
+        // Geocode each city to get place_id and formatted address
+        // Process in batches to avoid overwhelming the API
+        const batchSize = 10
+        for (let i = 0; i < citiesToProcess.length; i += batchSize) {
+          const batch = citiesToProcess.slice(i, i + batchSize)
           
-          if (geocodeData.status === 'OK' && geocodeData.results.length > 0) {
-            // Find the result that represents the city center (has locality type)
-            const cityResult = geocodeData.results.find((result: any) => 
-              result.types.includes('locality') || 
-              result.types.includes('administrative_area_level_3') ||
-              (result.address_components?.some((comp: any) => comp.types.includes('locality')))
-            ) || geocodeData.results[0]
-            
-            const cityNameLower = cityName.toLowerCase().trim()
-            if (!cityNames.has(cityNameLower)) {
-              cityNames.add(cityNameLower)
+          await Promise.all(batch.map(async (cityData) => {
+            try {
+              const cityNameLower = cityData.city.toLowerCase().trim()
+              // Skip if we already have this city
+              if (cityNames.has(cityNameLower)) return
               
-              // Create a place-like object for consistency
-              cities.push({
-                place_id: cityResult.place_id,
-                name: cityResult.address_components?.find((comp: any) => 
-                  comp.types.includes('locality')
-                )?.long_name || cityName,
-                formatted_address: cityResult.formatted_address,
-                geometry: cityResult.geometry,
-              })
+              // Use existing coordinates if available, otherwise geocode
+              const cityLat = typeof cityData.lat === 'string' ? parseFloat(cityData.lat) : cityData.lat
+              const cityLng = typeof cityData.lng === 'string' ? parseFloat(cityData.lng) : cityData.lng
+              
+              if (!isNaN(cityLat) && !isNaN(cityLng)) {
+                // Try to get place_id via reverse geocoding
+                try {
+                  const reverseGeocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${cityLat},${cityLng}&key=${apiKey}`
+                  const reverseResponse = await fetch(reverseGeocodeUrl)
+                  const reverseData = await reverseResponse.json()
+                  
+                  if (reverseData.status === 'OK' && reverseData.results.length > 0) {
+                    // Find result with locality type
+                    const cityResult = reverseData.results.find((result: any) => 
+                      result.types.includes('locality') || 
+                      result.types.includes('administrative_area_level_3')
+                    ) || reverseData.results[0]
+                    
+                    cityNames.add(cityNameLower)
+                    cities.push({
+                      place_id: cityResult.place_id,
+                      name: cityData.city,
+                      formatted_address: cityResult.formatted_address,
+                      geometry: {
+                        location: {
+                          lat: cityLat,
+                          lng: cityLng
+                        }
+                      }
+                    })
+                  } else {
+                    // Fallback: use coordinates directly
+                    cityNames.add(cityNameLower)
+                    cities.push({
+                      place_id: `city_${cityData.city}_${cityData.state_id}`,
+                      name: cityData.city,
+                      formatted_address: formatCityForGeocoding(cityData),
+                      geometry: {
+                        location: {
+                          lat: cityLat,
+                          lng: cityLng
+                        }
+                      }
+                    })
+                  }
+                } catch (error) {
+                  // Fallback: use coordinates directly
+                  cityNames.add(cityNameLower)
+                  cities.push({
+                    place_id: `city_${cityData.city}_${cityData.state_id}`,
+                    name: cityData.city,
+                    formatted_address: formatCityForGeocoding(cityData),
+                    geometry: {
+                      location: {
+                        lat: cityLat,
+                        lng: cityLng
+                      }
+                    }
+                  })
+                }
+              }
+            } catch (error) {
+              // Skip city on error
+              console.error(`Error processing city ${cityData.city}:`, error)
             }
+          }))
+          
+          // Small delay between batches to avoid rate limiting
+          if (i + batchSize < citiesToProcess.length) {
+            await new Promise(resolve => setTimeout(resolve, 100))
           }
-        } catch (error) {
-          // Skip city on error
         }
+      } catch (error) {
+        console.error('Error loading city data:', error)
+        // Fallback to empty - Places API results should still work
       }
     }
 
