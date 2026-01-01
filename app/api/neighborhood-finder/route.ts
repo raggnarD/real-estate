@@ -150,10 +150,36 @@ export async function GET(request: NextRequest) {
 
     // Strategy 3: Use Geocoding API to search for known cities in the state
     // This helps find cities that Places API might miss, especially smaller towns
-    if (workState && cities.length < 30) {
-      // Use a predefined list of common city/town names for Pennsylvania
+    // Only use this if we haven't found many cities yet
+    if (workState && cities.length < 50) {
+      // Use a predefined list of common city/town names by state
       // This is a fallback to ensure we find more cities
       const commonCityNames: { [key: string]: string[] } = {
+        'CA': [
+          'Los Angeles', 'San Diego', 'San Jose', 'San Francisco', 'Fresno', 'Sacramento',
+          'Long Beach', 'Oakland', 'Bakersfield', 'Anaheim', 'Santa Ana', 'Riverside',
+          'Stockton', 'Irvine', 'Chula Vista', 'Fremont', 'San Bernardino', 'Modesto',
+          'Fontana', 'Oxnard', 'Moreno Valley', 'Huntington Beach', 'Glendale', 'Santa Clarita',
+          'Garden Grove', 'Oceanside', 'Rancho Cucamonga', 'Santa Rosa', 'Ontario', 'Lancaster',
+          'Elk Grove', 'Corona', 'Palmdale', 'Salinas', 'Pomona', 'Hayward', 'Escondido',
+          'Torrance', 'Sunnyvale', 'Orange', 'Fullerton', 'Pasadena', 'Thousand Oaks',
+          'Visalia', 'Simi Valley', 'Concord', 'Roseville', 'Vallejo', 'Victorville',
+          'Fairfield', 'Inglewood', 'Santa Clara', 'El Monte', 'Berkeley', 'Downey',
+          'Costa Mesa', 'San Mateo', 'Rialto', 'Jurupa Valley', 'Antioch', 'Temecula',
+          'Norwalk', 'Daly City', 'Burbank', 'Santa Maria', 'El Cajon', 'San Leandro',
+          'Hawthorne', 'Livermore', 'Buena Park', 'Lakewood', 'Merced', 'Hemet',
+          'Chico', 'Napa', 'Redwood City', 'Whittier', 'Lake Forest', 'Alameda',
+          'Tulare', 'Mountain View', 'Redondo Beach', 'Tracy', 'Bellflower', 'Upland',
+          'San Rafael', 'Yuba City', 'Folsom', 'Union City', 'Palo Alto', 'Petaluma',
+          'South Gate', 'Compton', 'Carson', 'San Marcos', 'Davis', 'Westminster',
+          'Citrus Heights', 'Carlsbad', 'Mission Viejo', 'Santa Monica', 'Hawthorne',
+          'Redding', 'Clovis', 'Richmond', 'Vacaville', 'San Buenaventura', 'Chino',
+          'Newport Beach', 'San Clemente', 'San Ramon', 'Lodi', 'Turlock', 'Milpitas',
+          'Baldwin Park', 'Chino Hills', 'Alhambra', 'Lynwood', 'Watsonville', 'Pacifica',
+          'Laguna Niguel', 'Montebello', 'Hesperia', 'La Habra', 'Encinitas', 'La Mesa',
+          'Cupertino', 'Monterey Park', 'Gardena', 'San Gabriel', 'Manhattan Beach',
+          'Hollister', 'Camarillo', 'Foster City', 'La Mirada', 'Castro Valley', 'Pico Rivera',
+        ],
         'PA': [
           'Philadelphia', 'Pittsburgh', 'Allentown', 'Erie', 'Reading', 'Scranton', 'Bethlehem',
           'Lancaster', 'Harrisburg', 'York', 'Altoona', 'State College', 'Wilkes-Barre',
