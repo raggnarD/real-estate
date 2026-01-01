@@ -156,8 +156,8 @@ export default function StageGate() {
         <div style={{
           position: 'absolute',
           top: isMobile ? '18px' : '22px',
-          left: isMobile ? '18px' : '22px',
-          right: isMobile ? '18px' : '22px',
+          left: isMobile ? 'calc(18px + 18px)' : 'calc(22px + 22px)',
+          right: isMobile ? 'calc(18px + 18px)' : 'calc(22px + 22px)',
           height: '2px',
           backgroundColor: '#e0e0e0',
           zIndex: 0
@@ -253,10 +253,10 @@ export default function StageGate() {
         <div style={{
           position: 'absolute',
           top: isMobile ? '18px' : '22px',
-          left: isMobile ? '18px' : '22px',
+          left: isMobile ? 'calc(18px + 18px)' : 'calc(22px + 22px)',
           height: '2px',
           width: currentStep > 1 
-            ? `calc(${((currentStep - 1) / (stages.length - 1)) * 100}% - ${isMobile ? '18px' : '22px'})`
+            ? `calc(${((currentStep - 1) / (stages.length - 1)) * 100}% - ${isMobile ? '36px' : '44px'})`
             : '0',
           backgroundColor: '#28a745',
           transition: 'width 0.3s',
