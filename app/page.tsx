@@ -1294,8 +1294,9 @@ export default function Home() {
                 <div style={{ 
                   marginTop: '1rem',
                   width: '100%',
-                  maxWidth: isMobile ? '100%' : '400px',
-                  boxSizing: 'border-box'
+                  maxWidth: '100%',
+                  boxSizing: 'border-box',
+                  overflow: 'hidden'
                 }}>
                   {selectedStop && results?.location ? (
                     <TransitStopDirectionsMap

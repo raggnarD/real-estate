@@ -186,13 +186,15 @@ export default function TransitStopDirectionsMap({
   return (
     <div style={{
       width: width ? `${width}px` : '100%',
+      maxWidth: '100%',
       height: `${height}px`,
       borderRadius: '8px',
       overflow: 'hidden',
       border: '1px solid #ddd',
       boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
       position: 'relative',
-      backgroundColor: '#f0f0f0'
+      backgroundColor: '#f0f0f0',
+      boxSizing: 'border-box'
     }}>
       {isLoading && (
         <div style={{
