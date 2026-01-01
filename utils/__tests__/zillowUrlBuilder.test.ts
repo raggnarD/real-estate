@@ -71,5 +71,22 @@ describe('buildZillowUrl', () => {
       expect(result).toBe('https://www.zillow.com/philadelphia-pa/')
     })
   })
+
+  describe('zip code handling', () => {
+    it('should handle addresses with zip codes combined with state', () => {
+      const result = buildZillowUrl('Eddington, PA 19020, USA')
+      expect(result).toBe('https://www.zillow.com/eddington-pa/')
+    })
+
+    it('should handle addresses with zip codes in separate part', () => {
+      const result = buildZillowUrl('Philadelphia, PA, 19107, USA')
+      expect(result).toBe('https://www.zillow.com/philadelphia-pa/')
+    })
+
+    it('should handle addresses with state and zip combined', () => {
+      const result = buildZillowUrl('Bensalem, PA 19020, USA')
+      expect(result).toBe('https://www.zillow.com/bensalem-pa/')
+    })
+  })
 })
 

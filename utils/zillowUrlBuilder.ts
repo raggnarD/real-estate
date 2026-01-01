@@ -39,10 +39,17 @@ export function buildZillowUrl(address: string, cityName?: string): string {
   
   // Look for 2-letter state abbreviation (US states)
   for (let i = parts.length - 1; i >= 0; i--) {
-    const part = parts[i].toUpperCase()
+    const part = parts[i].toUpperCase().trim()
     // Check if it's a 2-letter state code
     if (part.length === 2 && /^[A-Z]{2}$/.test(part)) {
       state = parts[i].toLowerCase()
+      stateIndex = i
+      break
+    }
+    // Check if part contains state + zip code (e.g., "PA 19020")
+    const stateZipMatch = part.match(/^([A-Z]{2})\s+(\d{5}|\d{5}-\d{4})$/)
+    if (stateZipMatch) {
+      state = stateZipMatch[1].toLowerCase()
       stateIndex = i
       break
     }
@@ -54,16 +61,24 @@ export function buildZillowUrl(address: string, cityName?: string): string {
     // Skip common country indicators
     if (lastPart === 'USA' || lastPart === 'US' || lastPart === 'UNITED STATES') {
       if (parts.length >= 2) {
-        const potentialState = parts[parts.length - 2]
-        if (potentialState.length === 2) {
-          state = potentialState.toLowerCase()
+        const potentialStatePart = parts[parts.length - 2].toUpperCase().trim()
+        // Check if it's just a 2-letter state
+        if (potentialStatePart.length === 2 && /^[A-Z]{2}$/.test(potentialStatePart)) {
+          state = parts[parts.length - 2].toLowerCase()
           stateIndex = parts.length - 2
+        } else {
+          // Check if it contains state + zip (e.g., "PA 19020")
+          const stateZipMatch = potentialStatePart.match(/^([A-Z]{2})\s+(\d{5}|\d{5}-\d{4})$/)
+          if (stateZipMatch) {
+            state = stateZipMatch[1].toLowerCase()
+            stateIndex = parts.length - 2
+          }
         }
       }
     }
   }
 
-  // Extract location parts (everything before state)
+  // Extract location parts (everything before state, excluding zip codes)
   let locationParts: string[] = []
   
   if (stateIndex > 0) {
@@ -73,13 +88,27 @@ export function buildZillowUrl(address: string, cityName?: string): string {
     // If no state found but we have multiple parts, use all but the last (which might be country)
     const lastPart = parts[parts.length - 1].toUpperCase()
     if (lastPart === 'USA' || lastPart === 'US' || lastPart === 'UNITED STATES') {
-      locationParts = parts.slice(0, parts.length - 1)
+      // Check if second-to-last part contains state+zip, if so exclude it
+      const secondToLast = parts[parts.length - 2].toUpperCase().trim()
+      if (secondToLast.match(/^[A-Z]{2}\s+(\d{5}|\d{5}-\d{4})$/)) {
+        // Extract state from this part and exclude it from location
+        locationParts = parts.slice(0, parts.length - 2)
+      } else {
+        locationParts = parts.slice(0, parts.length - 1)
+      }
     } else {
       locationParts = parts.slice(0, parts.length)
     }
   } else {
     locationParts = parts
   }
+
+  // Remove any zip codes from location parts (standalone 5-digit numbers)
+  locationParts = locationParts.filter(part => {
+    const trimmed = part.trim()
+    // Filter out standalone zip codes (5 digits or 5+4 format)
+    return !/^\d{5}(-\d{4})?$/.test(trimmed)
+  })
 
   // Handle different address formats
   let locationString = ''
