@@ -74,6 +74,12 @@ export default function AccountPage() {
         setPendingChanges(false)
         setSaveMessage('API key saved successfully!')
         setTimeout(() => setSaveMessage(null), 3000)
+        
+        // If wizard is active, navigate to neighborhood finder
+        if (wizardActive) {
+          setWizardStep('neighborhood-finder')
+          router.push('/neighborhood-finder')
+        }
       } else {
         setSaveMessage('Please enter a valid API key')
         setTimeout(() => setSaveMessage(null), 3000)
@@ -98,9 +104,8 @@ export default function AccountPage() {
       // If wizard is active, navigate to neighborhood finder
       if (wizardActive) {
         setWizardStep('neighborhood-finder')
-        setTimeout(() => {
-          router.push('/neighborhood-finder')
-        }, 1000) // Small delay to show success message
+        // Navigate immediately - the success message will still show briefly
+        router.push('/neighborhood-finder')
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to activate shared key'

@@ -94,7 +94,7 @@ test.describe('Wizard Flow', () => {
     await ownKeyRadio.click()
 
     // Enter API key
-    const apiKeyInput = page.getByPlaceholder(/enter your api key/i)
+    const apiKeyInput = page.getByPlaceholder(/enter your google maps api key/i)
     await expect(apiKeyInput).toBeVisible({ timeout: 10000 })
     await apiKeyInput.fill('test-api-key-12345')
 

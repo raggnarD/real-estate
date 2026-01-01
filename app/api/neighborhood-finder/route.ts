@@ -153,100 +153,49 @@ export async function GET(request: NextRequest) {
     // This provides a complete list of all US cities and is more reliable than hardcoded lists
     // City data source: https://simplemaps.com/data/us-cities
     // The fallback city data used by this application was accessed via SimpleMaps.
-    // Only use this if we haven't found many cities yet, or if Places API searches failed
-    if (workState && (cities.length < 50 || cities.length === 0)) {
+    // Always use this as a supplement to Places API results to ensure comprehensive coverage
+    if (workState) {
       try {
         // Get cities from the comprehensive dataset
-        // Use a generous radius (200km) to ensure we get all cities within reasonable commute distance
+        // Use a generous radius based on commute time to ensure we get all cities within reasonable commute distance
         // The actual commute time filtering happens later via Distance Matrix API
         const maxCommuteKm = Math.max(160, maxTimeMinutes * 1.5) // Rough estimate: 1.5km per minute
         const cityDataList = await getCitiesNearLocation(lat, lng, maxCommuteKm, workState)
         
-        // Limit to top 200 cities by distance to avoid too many API calls
-        const citiesToProcess = cityDataList.slice(0, 200)
+        // Process more cities from the dataset (up to 500) to ensure good coverage
+        // This gives us a comprehensive list that will be filtered by actual commute time
+        const citiesToProcess = cityDataList.slice(0, 500)
         
-        // Geocode each city to get place_id and formatted address
-        // Process in batches to avoid overwhelming the API
-        const batchSize = 10
-        for (let i = 0; i < citiesToProcess.length; i += batchSize) {
-          const batch = citiesToProcess.slice(i, i + batchSize)
-          
-          await Promise.all(batch.map(async (cityData) => {
-            try {
-              const cityNameLower = cityData.city.toLowerCase().trim()
-              // Skip if we already have this city
-              if (cityNames.has(cityNameLower)) return
-              
-              // Use existing coordinates if available, otherwise geocode
-              const cityLat = typeof cityData.lat === 'string' ? parseFloat(cityData.lat) : cityData.lat
-              const cityLng = typeof cityData.lng === 'string' ? parseFloat(cityData.lng) : cityData.lng
-              
-              if (!isNaN(cityLat) && !isNaN(cityLng)) {
-                // Try to get place_id via reverse geocoding
-                try {
-                  const reverseGeocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${cityLat},${cityLng}&key=${apiKey}`
-                  const reverseResponse = await fetch(reverseGeocodeUrl)
-                  const reverseData = await reverseResponse.json()
-                  
-                  if (reverseData.status === 'OK' && reverseData.results.length > 0) {
-                    // Find result with locality type
-                    const cityResult = reverseData.results.find((result: any) => 
-                      result.types.includes('locality') || 
-                      result.types.includes('administrative_area_level_3')
-                    ) || reverseData.results[0]
-                    
-                    cityNames.add(cityNameLower)
-                    cities.push({
-                      place_id: cityResult.place_id,
-                      name: cityData.city,
-                      formatted_address: cityResult.formatted_address,
-                      geometry: {
-                        location: {
-                          lat: cityLat,
-                          lng: cityLng
-                        }
-                      }
-                    })
-                  } else {
-                    // Fallback: use coordinates directly
-                    cityNames.add(cityNameLower)
-                    cities.push({
-                      place_id: `city_${cityData.city}_${cityData.state_id}`,
-                      name: cityData.city,
-                      formatted_address: formatCityForGeocoding(cityData),
-                      geometry: {
-                        location: {
-                          lat: cityLat,
-                          lng: cityLng
-                        }
-                      }
-                    })
+        // Add cities from the dataset directly using their coordinates
+        // We skip reverse geocoding to avoid rate limits and speed up processing
+        // The formatted address is generated from the city data
+        for (const cityData of citiesToProcess) {
+          try {
+            const cityNameLower = cityData.city.toLowerCase().trim()
+            // Skip if we already have this city from Places API
+            if (cityNames.has(cityNameLower)) continue
+            
+            // Use coordinates from the dataset
+            const cityLat = typeof cityData.lat === 'string' ? parseFloat(cityData.lat) : cityData.lat
+            const cityLng = typeof cityData.lng === 'string' ? parseFloat(cityData.lng) : cityData.lng
+            
+            if (!isNaN(cityLat) && !isNaN(cityLng)) {
+              cityNames.add(cityNameLower)
+              cities.push({
+                place_id: `city_${cityData.city.replace(/\s+/g, '_')}_${cityData.state_id}`,
+                name: cityData.city,
+                formatted_address: formatCityForGeocoding(cityData),
+                geometry: {
+                  location: {
+                    lat: cityLat,
+                    lng: cityLng
                   }
-                } catch (error) {
-                  // Fallback: use coordinates directly
-                  cityNames.add(cityNameLower)
-                  cities.push({
-                    place_id: `city_${cityData.city}_${cityData.state_id}`,
-                    name: cityData.city,
-                    formatted_address: formatCityForGeocoding(cityData),
-                    geometry: {
-                      location: {
-                        lat: cityLat,
-                        lng: cityLng
-                      }
-                    }
-                  })
                 }
-              }
-            } catch (error) {
-              // Skip city on error
-              console.error(`Error processing city ${cityData.city}:`, error)
+              })
             }
-          }))
-          
-          // Small delay between batches to avoid rate limiting
-          if (i + batchSize < citiesToProcess.length) {
-            await new Promise(resolve => setTimeout(resolve, 100))
+          } catch (error) {
+            // Skip city on error
+            console.error(`Error processing city ${cityData.city}:`, error)
           }
         }
       } catch (error) {
