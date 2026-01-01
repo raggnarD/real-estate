@@ -72,9 +72,15 @@ export default function CommuteMap({
         if (!mapRef.current) return
 
         // Create map if it doesn't exist
+        // Handle case where origin might be a placeId - use destination or default center
+        const originIsPlaceId = origin && typeof origin === 'object' && 'placeId' in origin
+        const mapCenter = originIsPlaceId 
+          ? (destination || { lat: 0, lng: 0 })
+          : (origin as { lat: number; lng: number } | null) || destination || { lat: 0, lng: 0 }
+        
         if (!mapInstanceRef.current) {
           const map = new google.maps.Map(mapRef.current, {
-            center: origin,
+            center: mapCenter,
             zoom: 12,
             mapTypeId: 'roadmap',
             disableDefaultUI: false,
