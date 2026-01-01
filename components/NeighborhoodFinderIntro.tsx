@@ -138,12 +138,16 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
 
   const handleApiKeyComplete = () => {
     localStorage.setItem('hasSeenNeighborhoodFinderIntro', 'true')
-    if (wizardActive) {
+    // Check wizardActive from localStorage as well, in case context hasn't updated
+    const isWizardActive = wizardActive || localStorage.getItem('wizard_active') === 'true'
+    if (isWizardActive) {
       setWizardStep('neighborhood-finder')
-      // Close modal and navigate
-      onClose()
-      // Navigate immediately - router.push will handle the navigation
+      // Navigate immediately - don't wait for modal to close
       router.push('/neighborhood-finder')
+      // Close modal after a brief delay to allow navigation to start
+      setTimeout(() => {
+        onClose()
+      }, 100)
     } else {
       onClose()
     }
