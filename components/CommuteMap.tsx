@@ -12,6 +12,7 @@ interface CommuteMapProps {
   mode?: 'driving' | 'walking' | 'bicycling' | 'transit'
   width?: number
   height?: number
+  arrivalTime?: number // Unix timestamp in seconds
 }
 
 export default function CommuteMap({
@@ -23,6 +24,7 @@ export default function CommuteMap({
   mode = 'driving',
   width = 800,
   height = 600,
+  arrivalTime,
 }: CommuteMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
@@ -212,6 +214,12 @@ export default function CommuteMap({
               routingPreference: google.maps.TransitRoutePreference.LESS_WALKING,
             },
           }
+          
+          // Add arrival time if provided (for transit, this ensures accurate scheduling)
+          // Note: arrivalTime is supported by the API but not in TypeScript definitions
+          if (arrivalTime) {
+            (leg2Request as any).arrivalTime = new Date(arrivalTime * 1000)
+          }
 
           directionsServiceRef.current.route(leg2Request, (result, status) => {
             if (status === google.maps.DirectionsStatus.OK && result) {
@@ -299,6 +307,13 @@ export default function CommuteMap({
             destination: destination,
             travelMode: travelMode,
           }
+          
+          // Add arrival time if provided (only for transit mode)
+          // Note: arrivalTime is supported for transit mode by the API but not in TypeScript definitions
+          // For driving mode, the API route handles departure_time calculation
+          if (arrivalTime && travelMode === google.maps.TravelMode.TRANSIT) {
+            (routeRequest as any).arrivalTime = new Date(arrivalTime * 1000)
+          }
 
           directionsServiceRef.current.route(routeRequest, (result, status) => {
             if (status === google.maps.DirectionsStatus.OK && result) {
@@ -334,7 +349,7 @@ export default function CommuteMap({
       markersRef.current.forEach(marker => marker.setMap(null))
       markersRef.current = []
     }
-  }, [origin, transitStop, destination, leg1Mode, transitType, mode, apiKeyLoading, getEffectiveApiKey])
+  }, [origin, transitStop, destination, leg1Mode, transitType, mode, arrivalTime, apiKeyLoading, getEffectiveApiKey])
 
   if (!origin || !destination) {
     return (

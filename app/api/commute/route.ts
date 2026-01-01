@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const transitStop = searchParams.get('transitStop') // place ID or coordinates
   const leg1Mode = searchParams.get('leg1Mode') // 'walking' or 'driving'
   const transitType = searchParams.get('transitType') // 'bus' or 'train'
+  const arrivalTime = searchParams.get('arrivalTime') // Unix timestamp in seconds
   const userApiKey = searchParams.get('apiKey') // Optional user API key from client
 
   if (!origin || !destination) {
@@ -49,7 +50,12 @@ export async function GET(request: NextRequest) {
       // Leg 2: Calculate from transit stop to destination using Directions API
       // Directions API provides better transit routing with waypoints
       const transitModeParam = transitType === 'bus' ? 'bus' : 'train'
-      const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=place_id:${encodeURIComponent(transitStop)}&destination=${encodeURIComponent(destination)}&mode=transit&transit_mode=${transitModeParam}&key=${apiKey}&units=imperial`
+      let directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=place_id:${encodeURIComponent(transitStop)}&destination=${encodeURIComponent(destination)}&mode=transit&transit_mode=${transitModeParam}&key=${apiKey}&units=imperial`
+      
+      // Add arrival_time if provided
+      if (arrivalTime) {
+        directionsUrl += `&arrival_time=${arrivalTime}`
+      }
       
       const leg2Response = await fetch(directionsUrl)
       const leg2Data = await leg2Response.json()
@@ -117,28 +123,80 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Standard single-leg journey (existing functionality)
+    // Standard single-leg journey
     const modeParam = mode === 'transit' ? 'transit' : mode === 'walking' ? 'walking' : mode === 'bicycling' ? 'bicycling' : 'driving'
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=${encodeURIComponent(destination)}&mode=${modeParam}&key=${apiKey}&units=imperial`
-    )
+    
+    // Use Directions API if arrival_time is provided (Distance Matrix doesn't support arrival_time)
+    // Otherwise use Distance Matrix API for efficiency
+    if (arrivalTime) {
+      let directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&mode=${modeParam}&key=${apiKey}&units=imperial`
+      
+      // For transit mode, use arrival_time directly
+      // For driving mode, we need to calculate departure_time
+      if (modeParam === 'transit') {
+        directionsUrl += `&arrival_time=${arrivalTime}`
+      } else if (modeParam === 'driving') {
+        // For driving, first get an estimate without time to calculate departure_time
+        const estimateUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&mode=driving&key=${apiKey}&units=imperial`
+        const estimateResponse = await fetch(estimateUrl)
+        const estimateData = await estimateResponse.json()
+        
+        if (estimateData.status === 'OK' && estimateData.routes && estimateData.routes.length > 0) {
+          const estimatedDuration = estimateData.routes[0].legs[0].duration.value // in seconds
+          const arrivalTimestamp = parseInt(arrivalTime, 10)
+          const departureTimestamp = arrivalTimestamp - estimatedDuration
+          // Only use departure_time if it's in the future
+          if (departureTimestamp > Math.floor(Date.now() / 1000)) {
+            directionsUrl += `&departure_time=${departureTimestamp}&traffic_model=best_guess`
+          } else {
+            // If calculated departure is in the past, use current time
+            directionsUrl += `&departure_time=${Math.floor(Date.now() / 1000)}&traffic_model=best_guess`
+          }
+        }
+      }
+      
+      const directionsResponse = await fetch(directionsUrl)
+      const directionsData = await directionsResponse.json()
 
-    const data = await response.json()
-
-    if (data.status === 'OK' && data.rows[0]?.elements[0]?.status === 'OK') {
-      const element = data.rows[0].elements[0]
-      return NextResponse.json({
-        distance: element.distance.text,
-        duration: element.duration.text,
-        distanceValue: element.distance.value,
-        durationValue: element.duration.value,
-        mode: modeParam,
-      })
+      if (directionsData.status === 'OK' && directionsData.routes && directionsData.routes.length > 0) {
+        const route = directionsData.routes[0]
+        const leg = route.legs[0]
+        return NextResponse.json({
+          distance: leg.distance.text,
+          duration: leg.duration.text,
+          distanceValue: leg.distance.value,
+          durationValue: leg.duration.value,
+          mode: modeParam,
+        })
+      } else {
+        return NextResponse.json(
+          { error: 'Commute calculation failed', details: directionsData.status },
+          { status: 400 }
+        )
+      }
     } else {
-      return NextResponse.json(
-        { error: 'Commute calculation failed', details: data.status },
-        { status: 400 }
+      // Use Distance Matrix API when no arrival time is specified
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=${encodeURIComponent(destination)}&mode=${modeParam}&key=${apiKey}&units=imperial`
       )
+
+      const data = await response.json()
+
+      if (data.status === 'OK' && data.rows[0]?.elements[0]?.status === 'OK') {
+        const element = data.rows[0].elements[0]
+        return NextResponse.json({
+          distance: element.distance.text,
+          duration: element.duration.text,
+          distanceValue: element.distance.value,
+          durationValue: element.duration.value,
+          mode: modeParam,
+        })
+      } else {
+        return NextResponse.json(
+          { error: 'Commute calculation failed', details: data.status },
+          { status: 400 }
+        )
+      }
     }
   } catch (error) {
     console.error('Commute calculation error:', error)

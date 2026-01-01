@@ -69,6 +69,7 @@ export default function Home() {
   const [commuteResults, setCommuteResults] = useState<CommuteResults | null>(null)
   const [destinationLocation, setDestinationLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [showWizardMessage, setShowWizardMessage] = useState(false)
+  const [arrivalTime, setArrivalTime] = useState<string>('')
 
   // Memoize origin location to prevent unnecessary re-renders
   const originLocation = useMemo(() => results?.location || null, [
@@ -650,6 +651,15 @@ export default function Home() {
       // Calculate commute if both addresses are geocoded
       if (originAddress && destinationAddressGeocoded) {
         try {
+          // Convert arrival time to Unix timestamp (seconds since epoch) if provided
+          let arrivalTimeParam: string | undefined = undefined
+          if (arrivalTime) {
+            const arrivalDate = new Date(arrivalTime)
+            if (!isNaN(arrivalDate.getTime())) {
+              arrivalTimeParam = Math.floor(arrivalDate.getTime() / 1000).toString()
+            }
+          }
+
           // Check if this is a multi-leg transit journey
           if ((transportMode === 'bus' || transportMode === 'train') && selectedStop && leg1Mode) {
             console.log('Calculating multi-leg commute:', { 
@@ -662,17 +672,22 @@ export default function Home() {
               selectedStopLocation: selectedStop.location,
               leg1Mode,
               transitType: transportMode,
-              allTransitStops: transitStops.map(s => ({ name: s.name, placeId: s.placeId }))
+              allTransitStops: transitStops.map(s => ({ name: s.name, placeId: s.placeId })),
+              arrivalTime: arrivalTimeParam
             })
+            const commuteParams: Record<string, string> = {
+              origin: originAddress,
+              destination: destinationAddressGeocoded,
+              mode: 'transit',
+              transitStop: selectedStop.placeId,
+              leg1Mode: leg1Mode,
+              transitType: transportMode
+            }
+            if (arrivalTimeParam) {
+              commuteParams.arrivalTime = arrivalTimeParam
+            }
             const commuteResponse = await safeTrackedFetch(
-              buildApiUrl('/api/commute', {
-                origin: originAddress,
-                destination: destinationAddressGeocoded,
-                mode: 'transit',
-                transitStop: selectedStop.placeId,
-                leg1Mode: leg1Mode,
-                transitType: transportMode
-              }),
+              buildApiUrl('/api/commute', commuteParams),
             )
             const commuteData = await commuteResponse.json()
             console.log('Multi-leg commute response:', commuteData)
@@ -691,13 +706,17 @@ export default function Home() {
             }
           } else {
             // Standard single-leg journey
-            console.log('Calculating commute:', { originAddress, destinationAddressGeocoded, transportMode })
+            console.log('Calculating commute:', { originAddress, destinationAddressGeocoded, transportMode, arrivalTime: arrivalTimeParam })
+            const commuteParams: Record<string, string> = {
+              origin: originAddress,
+              destination: destinationAddressGeocoded,
+              mode: transportMode
+            }
+            if (arrivalTimeParam) {
+              commuteParams.arrivalTime = arrivalTimeParam
+            }
             const commuteResponse = await safeTrackedFetch(
-              buildApiUrl('/api/commute', {
-                origin: originAddress,
-                destination: destinationAddressGeocoded,
-                mode: transportMode
-              }),
+              buildApiUrl('/api/commute', commuteParams),
             )
             const commuteData = await commuteResponse.json()
             console.log('Commute response:', commuteData)
@@ -1001,6 +1020,46 @@ export default function Home() {
                 />
               </div>
             )}
+          </div>
+
+          {/* Arrival Time Section */}
+          <div style={{ 
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
+          }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '0.5rem', 
+              color: '#000', 
+              fontWeight: '500',
+              fontSize: isMobile ? '0.875rem' : '1rem'
+            }}>
+              Desired Arrival Time (optional):
+            </label>
+            <input
+              type="datetime-local"
+              value={arrivalTime}
+              onChange={(e) => setArrivalTime(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                fontSize: '1rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                color: '#000',
+                backgroundColor: '#fff',
+                boxSizing: 'border-box'
+              }}
+            />
+            <p style={{ 
+              fontSize: '0.875rem', 
+              color: '#666', 
+              marginTop: '0.5rem',
+              marginBottom: 0
+            }}>
+              Specify when you want to arrive at your destination for more accurate commute times based on traffic conditions.
+            </p>
           </div>
 
           {/* Transportation Mode Section */}
@@ -1426,6 +1485,7 @@ export default function Home() {
                     transitType={transitType}
                     width={400}
                     height={300}
+                    arrivalTime={arrivalTime ? Math.floor(new Date(arrivalTime).getTime() / 1000) : undefined}
                   />
                 </div>
               )}
@@ -1474,6 +1534,7 @@ export default function Home() {
                           commuteResults.mode === 'bicycling' ? 'bicycling' : 'driving'}
                     width={400}
                     height={300}
+                    arrivalTime={arrivalTime ? Math.floor(new Date(arrivalTime).getTime() / 1000) : undefined}
                   />
                 </div>
               )}
