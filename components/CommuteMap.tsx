@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useApiKey } from '@/contexts/ApiKeyContext'
 
 interface CommuteMapProps {
-  origin: { lat: number; lng: number } | null
+  origin: { lat: number; lng: number } | { placeId: string } | null
   destination: { lat: number; lng: number } | null
   transitStop?: { lat: number; lng: number; name: string; placeId?: string } | null
   leg1Mode?: 'walking' | 'driving' | null
@@ -257,44 +257,54 @@ export default function CommuteMap({
 
           directionsRendererRef.current = directionsRenderer
 
-          // Calculate bounds
-          const bounds = new google.maps.LatLngBounds()
-          bounds.extend(origin)
-          bounds.extend(destination)
-          mapInstanceRef.current.fitBounds(bounds)
+          // Calculate bounds and add markers
+          // Handle case where origin might be a placeId object
+          const originIsPlaceId = origin && typeof origin === 'object' && 'placeId' in origin
+          const originCoords = originIsPlaceId ? null : origin as { lat: number; lng: number } | null
+          
+          if (originCoords) {
+            const bounds = new google.maps.LatLngBounds()
+            bounds.extend(originCoords)
+            bounds.extend(destination)
+            mapInstanceRef.current.fitBounds(bounds)
 
-          // Add custom markers
-          const originMarker = new google.maps.Marker({
-            position: origin,
-            map: mapInstanceRef.current,
-            title: 'Origin',
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: '#0070f3',
-              fillOpacity: 1,
-              strokeColor: '#fff',
-              strokeWeight: 3,
-            },
-            zIndex: 1000,
-          })
+            // Add custom markers
+            const originMarker = new google.maps.Marker({
+              position: originCoords,
+              map: mapInstanceRef.current,
+              title: 'Origin',
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: '#0070f3',
+                fillOpacity: 1,
+                strokeColor: '#fff',
+                strokeWeight: 3,
+              },
+              zIndex: 1000,
+            })
 
-          const destinationMarker = new google.maps.Marker({
-            position: destination,
-            map: mapInstanceRef.current,
-            title: 'Destination',
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: '#00a86b',
-              fillOpacity: 1,
-              strokeColor: '#fff',
-              strokeWeight: 3,
-            },
-            zIndex: 1000,
-          })
+            const destinationMarker = new google.maps.Marker({
+              position: destination,
+              map: mapInstanceRef.current,
+              title: 'Destination',
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: '#00a86b',
+                fillOpacity: 1,
+                strokeColor: '#fff',
+                strokeWeight: 3,
+              },
+              zIndex: 1000,
+            })
 
-          markersRef.current = [originMarker, destinationMarker]
+            markersRef.current = [originMarker, destinationMarker]
+          } else {
+            // For placeId origins, let the directions renderer handle bounds and markers
+            // We'll set bounds after getting the route result
+            markersRef.current = []
+          }
 
           // Convert mode to Google Maps TravelMode
           let travelMode: google.maps.TravelMode
@@ -314,9 +324,17 @@ export default function CommuteMap({
 
           // Request route
           const routeRequest: google.maps.DirectionsRequest = {
-            origin: origin,
+            origin: origin as any,
             destination: destination,
             travelMode: travelMode,
+          }
+          
+          // Add transit options if transit mode and transitType is specified
+          if (travelMode === google.maps.TravelMode.TRANSIT && transitType) {
+            routeRequest.transitOptions = {
+              modes: [transitType === 'bus' ? google.maps.TransitMode.BUS : google.maps.TransitMode.RAIL],
+              routingPreference: google.maps.TransitRoutePreference.LESS_WALKING,
+            }
           }
           
           // Add arrival time if provided (only for transit mode)
@@ -329,6 +347,15 @@ export default function CommuteMap({
           directionsServiceRef.current.route(routeRequest, (result, status) => {
             if (status === google.maps.DirectionsStatus.OK && result) {
               directionsRenderer.setDirections(result)
+              // If origin was a placeId, fit bounds to the route
+              if (originIsPlaceId && result.routes && result.routes.length > 0) {
+                const bounds = new google.maps.LatLngBounds()
+                result.routes[0].legs.forEach(leg => {
+                  bounds.extend(leg.start_location)
+                  bounds.extend(leg.end_location)
+                })
+                mapInstanceRef.current.fitBounds(bounds)
+              }
               setIsLoading(false)
             } else {
               console.error('Directions error:', status)
