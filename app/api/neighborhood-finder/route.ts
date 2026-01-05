@@ -107,8 +107,60 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Strategy 1b: Search for neighborhoods and sublocalities in large cities
+    // This helps find sub-neighborhoods within major metropolitan areas like LA, NY, etc.
+    const neighborhoodQueries = [
+      `neighborhoods near ${lat},${lng}`,
+      `districts near ${lat},${lng}`,
+    ]
+    
+    if (workState) {
+      neighborhoodQueries.push(
+        `neighborhoods in ${workState}`,
+        `districts in ${workState}`
+      )
+    }
+
+    for (const query of neighborhoodQueries) {
+      try {
+        // Search for neighborhoods (sublocality) and districts
+        const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}`
+        const textResponse = await fetch(textSearchUrl)
+        const textData = await textResponse.json()
+        
+        if (textData.status === 'OK' && textData.results) {
+          for (const place of textData.results) {
+            // Include neighborhoods, sublocalities, and political subdivisions
+            const isNeighborhood = place.types?.some((type: string) => 
+              type === 'neighborhood' || 
+              type === 'sublocality' || 
+              type === 'sublocality_level_1' ||
+              type === 'sublocality_level_2' ||
+              type === 'political'
+            )
+            
+            if (isNeighborhood) {
+              const placeName = place.name?.toLowerCase().trim()
+              if (placeName && !cityNames.has(placeName)) {
+                cityNames.add(placeName)
+                cities.push({
+                  place_id: place.place_id,
+                  name: place.name,
+                  formatted_address: place.formatted_address || place.vicinity || place.name,
+                  geometry: place.geometry,
+                })
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Error searching neighborhoods with query "${query}":`, error)
+      }
+    }
+
     // Strategy 2: Nearby Search with multiple radii and pagination
-    const searchRadiuses = [50000, 100000, 160000] // 50km, 100km, 160km
+    // Start from 1km to find nearby cities and progressively expand
+    const searchRadiuses = [1000, 5000, 10000, 25000, 50000, 100000, 160000] // 1km, 5km, 10km, 25km, 50km, 100km, 160km
     for (const radius of searchRadiuses) {
       try {
         let nextPageToken: string | null = null
@@ -146,6 +198,62 @@ export async function GET(request: NextRequest) {
         } while (nextPageToken && pageCount < maxPages)
       } catch (error) {
         console.error(`Error with nearby search radius ${radius}:`, error)
+      }
+    }
+
+    // Strategy 2b: Nearby Search for neighborhoods and sublocalities
+    // This finds neighborhoods within the search radius, important for large cities
+    // Use progressively larger radii starting from 1km to find nearby neighborhoods
+    const neighborhoodRadiuses = [1000, 5000, 10000, 25000, 50000, 100000] // 1km, 5km, 10km, 25km, 50km, 100km
+    for (const radius of neighborhoodRadiuses) {
+      try {
+        let nextPageToken: string | null = null
+        let pageCount = 0
+        const maxPages = 3
+        
+        do {
+          // Search without type restriction to get neighborhoods, sublocalities, etc.
+          let nearbyUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&key=${apiKey}`
+          if (nextPageToken) {
+            nearbyUrl += `&pagetoken=${nextPageToken}`
+            await new Promise(resolve => setTimeout(resolve, 2000))
+          }
+          
+          const nearbyResponse = await fetch(nearbyUrl)
+          const nearbyData = await nearbyResponse.json()
+          
+          if (nearbyData.status === 'OK' && nearbyData.results) {
+            for (const place of nearbyData.results) {
+              // Filter for neighborhoods, sublocalities, and political subdivisions
+              const isNeighborhood = place.types?.some((type: string) => 
+                type === 'neighborhood' || 
+                type === 'sublocality' || 
+                type === 'sublocality_level_1' ||
+                type === 'sublocality_level_2' ||
+                (type === 'political' && !place.types.includes('locality'))
+              )
+              
+              if (isNeighborhood) {
+                const placeName = place.name?.toLowerCase().trim()
+                if (placeName && !cityNames.has(placeName)) {
+                  cityNames.add(placeName)
+                  cities.push({
+                    place_id: place.place_id,
+                    name: place.name,
+                    formatted_address: place.formatted_address || place.vicinity || place.name,
+                    geometry: place.geometry,
+                  })
+                }
+              }
+            }
+            nextPageToken = nearbyData.next_page_token || null
+            pageCount++
+          } else {
+            nextPageToken = null
+          }
+        } while (nextPageToken && pageCount < maxPages)
+      } catch (error) {
+        console.error(`Error with neighborhood nearby search radius ${radius}:`, error)
       }
     }
 
