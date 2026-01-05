@@ -82,6 +82,45 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Strategy 1a: Also search for cities within a specific radius by name
+    // This helps catch cities that might be missed by general searches
+    // We'll use reverse geocoding to get the county/region and search for cities there
+    let workCounty = ''
+    let workCity = ''
+    try {
+      const reverseGeocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+      const reverseResponse = await fetch(reverseGeocodeUrl)
+      const reverseData = await reverseResponse.json()
+      
+      if (reverseData.status === 'OK' && reverseData.results.length > 0) {
+        for (const result of reverseData.results) {
+          const county = result.address_components?.find((comp: any) => 
+            comp.types.includes('administrative_area_level_2')
+          )
+          const city = result.address_components?.find((comp: any) => 
+            comp.types.includes('locality')
+          )
+          if (county) {
+            workCounty = county.long_name
+          }
+          if (city) {
+            workCity = city.long_name
+          }
+          if (workCounty && workCity) break
+        }
+      }
+    } catch (error) {
+      console.error('Error getting county/city:', error)
+    }
+
+    // Add county-specific searches if we found a county
+    if (workCounty && workState) {
+      searchQueries.push(
+        `cities in ${workCounty} County, ${workState}`,
+        `towns in ${workCounty} County, ${workState}`
+      )
+    }
+
     for (const query of searchQueries) {
       try {
         const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&type=locality&key=${apiKey}`
@@ -265,19 +304,22 @@ export async function GET(request: NextRequest) {
     if (workState) {
       try {
         // Get cities from the comprehensive dataset
-        // Use a generous radius based on commute time to ensure we get all cities within reasonable commute distance
+        // Use a very generous radius to ensure we get all cities within reasonable commute distance
         // The actual commute time filtering happens later via Distance Matrix API
-        const maxCommuteKm = Math.max(160, maxTimeMinutes * 1.5) // Rough estimate: 1.5km per minute
+        // For driving, estimate ~1km per minute, but use a larger multiplier to be safe
+        // For transit/walking, use even larger radius since they're slower
+        // Always use at least 200km radius to ensure we catch all nearby cities
+        const speedMultiplier = mode === 'walking' ? 0.1 : mode === 'bicycling' ? 0.2 : mode === 'transit' || mode === 'bus' || mode === 'train' ? 0.5 : 1.0
+        const estimatedKm = maxTimeMinutes * 2.0 * speedMultiplier
+        const maxCommuteKm = Math.max(200, estimatedKm) // Very generous estimate, minimum 200km
         const cityDataList = await getCitiesNearLocation(lat, lng, maxCommuteKm, workState)
         
-        // Process more cities from the dataset (up to 500) to ensure good coverage
-        // This gives us a comprehensive list that will be filtered by actual commute time
-        const citiesToProcess = cityDataList.slice(0, 500)
+        console.log(`City data: Found ${cityDataList.length} cities within ${maxCommuteKm}km radius in ${workState}`)
         
-        // Add cities from the dataset directly using their coordinates
-        // We skip reverse geocoding to avoid rate limits and speed up processing
-        // The formatted address is generated from the city data
-        for (const cityData of citiesToProcess) {
+        // Process ALL cities from the dataset within the radius (not limited to 500)
+        // This ensures we don't miss any cities like El Segundo, Manhattan Beach, etc.
+        // The Distance Matrix API will filter by actual commute time later
+        for (const cityData of cityDataList) {
           try {
             const cityNameLower = cityData.city.toLowerCase().trim()
             // Skip if we already have this city from Places API
