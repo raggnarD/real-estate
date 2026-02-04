@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import Navigation from '@/components/Navigation'
 import StageGate from '@/components/StageGate'
 import ApiKeyBanner from '@/components/ApiKeyBanner'
@@ -60,6 +61,7 @@ export default function RootLayout({
           </WizardProvider>
         </ApiKeyProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
