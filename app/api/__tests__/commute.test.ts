@@ -55,8 +55,14 @@ jest.mock('@/utils/apiKeyResolver', () => ({
   resolveApiKey: jest.fn(),
 }))
 
+// Mock the auth module
+jest.mock('@/auth', () => ({
+  auth: jest.fn(),
+}))
+
 import { GET } from '../commute/route'
 import { resolveApiKey } from '@/utils/apiKeyResolver'
+import { auth } from '@/auth'
 
 // Mock fetch
 global.fetch = jest.fn()
@@ -102,7 +108,8 @@ describe('/api/commute', () => {
   describe('GET', () => {
     it('should return commute time for standard journey', async () => {
       const mockApiKey = 'test-api-key'
-      ;(resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
 
       const mockDistanceMatrixResponse = {
         status: 'OK',
@@ -119,9 +126,9 @@ describe('/api/commute', () => {
         ],
       }
 
-      ;(global.fetch as jest.Mock).mockResolvedValue({
-        json: async () => mockDistanceMatrixResponse,
-      })
+        ; (global.fetch as jest.Mock).mockResolvedValue({
+          json: async () => mockDistanceMatrixResponse,
+        })
 
       const request = new MockNextRequest(
         'http://localhost:3000/api/commute?origin=40.7128,-74.006&destination=40.7589,-73.9851&mode=driving'
@@ -142,6 +149,7 @@ describe('/api/commute', () => {
     })
 
     it('should return 400 error when origin is missing', async () => {
+      ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
       const request = new MockNextRequest(
         'http://localhost:3000/api/commute?destination=40.7589,-73.9851'
       )
@@ -153,6 +161,7 @@ describe('/api/commute', () => {
     })
 
     it('should return 400 error when destination is missing', async () => {
+      ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
       const request = new MockNextRequest(
         'http://localhost:3000/api/commute?origin=40.7128,-74.006'
       )
@@ -164,26 +173,28 @@ describe('/api/commute', () => {
     })
 
     it('should return 500 error when API key is not configured', async () => {
-      ;(resolveApiKey as jest.Mock).mockReturnValue(null)
+      ; (resolveApiKey as jest.Mock).mockReturnValue(null)
+        ; (auth as jest.Mock).mockResolvedValue(null)
 
       const request = new MockNextRequest(
         'http://localhost:3000/api/commute?origin=40.7128,-74.006&destination=40.7589,-73.9851'
       )
       const response = await GET(request as any)
 
-      expect(response.status).toBe(500)
+      expect(response.status).toBe(401)
       const responseData = await response.json()
-      expect(responseData.error).toBe('Google Maps API key not configured')
+      expect(responseData.error).toBe('Please sign in or provide a Google Maps API key')
     })
 
     it('should handle different travel modes', async () => {
       const mockApiKey = 'test-api-key'
-      ;(resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
 
       const modes = ['driving', 'walking', 'bicycling', 'transit']
-      
+
       for (const mode of modes) {
-        ;(global.fetch as jest.Mock).mockResolvedValue({
+        ; (global.fetch as jest.Mock).mockResolvedValue({
           json: async () => ({
             status: 'OK',
             rows: [
@@ -212,7 +223,8 @@ describe('/api/commute', () => {
 
     it('should handle transit journey with stop', async () => {
       const mockApiKey = 'test-api-key'
-      ;(resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
 
       const mockLeg1Response = {
         status: 'OK',
@@ -243,13 +255,13 @@ describe('/api/commute', () => {
         ],
       }
 
-      ;(global.fetch as jest.Mock)
-        .mockResolvedValueOnce({
-          json: async () => mockLeg1Response,
-        })
-        .mockResolvedValueOnce({
-          json: async () => mockLeg2Response,
-        })
+        ; (global.fetch as jest.Mock)
+          .mockResolvedValueOnce({
+            json: async () => mockLeg1Response,
+          })
+          .mockResolvedValueOnce({
+            json: async () => mockLeg2Response,
+          })
 
       const request = new MockNextRequest(
         'http://localhost:3000/api/commute?origin=40.7128,-74.006&destination=40.7589,-73.9851&transitStop=ChIJ123&leg1Mode=walking&transitType=bus'
@@ -266,7 +278,8 @@ describe('/api/commute', () => {
 
     it('should return 400 error when commute calculation fails', async () => {
       const mockApiKey = 'test-api-key'
-      ;(resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
 
       const mockDistanceMatrixResponse = {
         status: 'ZERO_RESULTS',
@@ -281,9 +294,9 @@ describe('/api/commute', () => {
         ],
       }
 
-      ;(global.fetch as jest.Mock).mockResolvedValue({
-        json: async () => mockDistanceMatrixResponse,
-      })
+        ; (global.fetch as jest.Mock).mockResolvedValue({
+          json: async () => mockDistanceMatrixResponse,
+        })
 
       const request = new MockNextRequest(
         'http://localhost:3000/api/commute?origin=40.7128,-74.006&destination=40.7589,-73.9851'
@@ -297,11 +310,12 @@ describe('/api/commute', () => {
 
     it('should handle network errors gracefully', async () => {
       const mockApiKey = 'test-api-key'
-      ;(resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
 
-      ;(global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'))
+        ; (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'))
 
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { })
 
       const request = new MockNextRequest(
         'http://localhost:3000/api/commute?origin=40.7128,-74.006&destination=40.7589,-73.9851'
