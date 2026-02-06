@@ -5,12 +5,13 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import ApiKeyDebug from '@/components/ApiKeyDebug'
 import { useApiKey } from '@/contexts/ApiKeyContext'
+import LoginButton from '@/components/auth/LoginButton'
 
 export default function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
-  const { 
-    apiKey, 
+  const {
+    apiKey,
     sharedKeyActive,
     sharedKeyTimeRemaining,
     revokeSharedKey
@@ -124,11 +125,11 @@ export default function Navigation() {
             </button>
           )}
         </div>
-        
+
         {/* Desktop Navigation */}
         {!isMobile && (
           <>
-            <Link 
+            <Link
               href="/neighborhood-finder"
               style={{
                 textDecoration: 'none',
@@ -143,7 +144,7 @@ export default function Navigation() {
             >
               📍 Neighborhood Finder
             </Link>
-            <Link 
+            <Link
               href="/"
               style={{
                 textDecoration: 'none',
@@ -158,7 +159,7 @@ export default function Navigation() {
             >
               ⏱️ True Commute Time
             </Link>
-            
+
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <Link
                 href="/account"
@@ -179,30 +180,33 @@ export default function Navigation() {
                 }}
                 title="Account Settings"
               >
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                   style={{ color: 'currentColor' }}
                 >
-                  <path 
-                    d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
+                  <path
+                    d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                  <path 
-                    d="M20.59 22C20.59 18.13 16.74 15 12 15C7.26003 15 3.41003 18.13 3.41003 22" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
+                  <path
+                    d="M20.59 22C20.59 18.13 16.74 15 12 15C7.26003 15 3.41003 18.13 3.41003 22"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
                     strokeLinejoin="round"
                   />
                 </svg>
               </Link>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', marginLeft: '1rem' }}>
+              <LoginButton />
             </div>
           </>
         )}
@@ -217,7 +221,7 @@ export default function Navigation() {
             paddingTop: '1rem',
             borderTop: '1px solid #eee'
           }}>
-            <Link 
+            <Link
               href="/neighborhood-finder"
               onClick={() => setIsMobileMenuOpen(false)}
               style={{
@@ -233,7 +237,7 @@ export default function Navigation() {
             >
               📍 Neighborhood Finder
             </Link>
-            <Link 
+            <Link
               href="/"
               onClick={() => setIsMobileMenuOpen(false)}
               style={{
@@ -266,31 +270,34 @@ export default function Navigation() {
                 gap: '0.5rem'
               }}
             >
-              <svg 
-                width="20" 
-                height="20" 
-                viewBox="0 0 24 24" 
-                fill="none" 
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 style={{ color: 'currentColor' }}
               >
-                <path 
-                  d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
+                <path
+                  d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                <path 
-                  d="M20.59 22C20.59 18.13 16.74 15 12 15C7.26003 15 3.41003 18.13 3.41003 22" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
+                <path
+                  d="M20.59 22C20.59 18.13 16.74 15 12 15C7.26003 15 3.41003 18.13 3.41003 22"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
               Account Settings
             </Link>
+            <div style={{ padding: '0.75rem 1rem' }}>
+              <LoginButton />
+            </div>
           </div>
         )}
       </div>

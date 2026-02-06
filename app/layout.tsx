@@ -9,6 +9,7 @@ import WizardOnboardingModal from '@/components/WizardOnboardingModal'
 import Footer from '@/components/Footer'
 import { ApiKeyProvider } from '@/contexts/ApiKeyContext'
 import { WizardProvider } from '@/contexts/WizardContext'
+import SessionProviderWrapper from '@/components/auth/SessionProviderWrapper'
 
 export const metadata: Metadata = {
   title: 'RushRoost',
@@ -41,9 +42,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" style={{ width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
-      <body style={{ 
-        margin: 0, 
-        padding: 0, 
+      <body style={{
+        margin: 0,
+        padding: 0,
         fontFamily: 'system-ui, -apple-system, sans-serif',
         backgroundColor: '#fff',
         color: '#000',
@@ -55,11 +56,13 @@ export default function RootLayout({
         overflowX: 'hidden',
         boxSizing: 'border-box'
       }}>
-        <ApiKeyProvider>
-          <WizardProvider>
-            <LayoutContent>{children}</LayoutContent>
-          </WizardProvider>
-        </ApiKeyProvider>
+        <SessionProviderWrapper>
+          <ApiKeyProvider>
+            <WizardProvider>
+              <LayoutContent>{children}</LayoutContent>
+            </WizardProvider>
+          </ApiKeyProvider>
+        </SessionProviderWrapper>
         <Analytics />
         <SpeedInsights />
       </body>

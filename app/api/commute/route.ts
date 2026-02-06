@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiKey } from '@/utils/apiKeyResolver'
+import { auth } from '@/auth'
 
 export async function GET(request: NextRequest) {
+  const session = await auth()
   const searchParams = request.nextUrl.searchParams
   const origin = searchParams.get('origin')
   const destination = searchParams.get('destination')
@@ -21,9 +23,21 @@ export async function GET(request: NextRequest) {
 
   try {
     const apiKey = resolveApiKey(request, userApiKey)
-    if (!apiKey) {
+    const isAuthed = !!session || !!apiKey
+
+    if (!isAuthed) {
       return NextResponse.json(
-        { error: 'Google Maps API key not configured' },
+        { error: 'Please sign in or provide a Google Maps API key' },
+        { status: 401 }
+      )
+    }
+
+    // Use server-side env key if authenticated via session (and no user key provided)
+    const effectiveApiKey = apiKey || process.env.GOOGLE_MAPS_API_KEY
+
+    if (!effectiveApiKey) {
+      return NextResponse.json(
+        { error: 'Server configuration error: Google Maps API Key missing' },
         { status: 500 }
       )
     }
@@ -33,7 +47,7 @@ export async function GET(request: NextRequest) {
       // Leg 1: Calculate from origin to transit stop
       const leg1ModeParam = leg1Mode === 'walking' ? 'walking' : 'driving'
       const leg1Response = await fetch(
-        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=place_id:${encodeURIComponent(transitStop)}&mode=${leg1ModeParam}&key=${apiKey}&units=imperial`
+        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=place_id:${encodeURIComponent(transitStop)}&mode=${leg1ModeParam}&key=${effectiveApiKey}&units=imperial`
       )
 
       const leg1Data = await leg1Response.json()
@@ -50,13 +64,13 @@ export async function GET(request: NextRequest) {
       // Leg 2: Calculate from transit stop to destination using Directions API
       // Directions API provides better transit routing with waypoints
       const transitModeParam = transitType === 'bus' ? 'bus' : 'train'
-      let directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=place_id:${encodeURIComponent(transitStop)}&destination=${encodeURIComponent(destination)}&mode=transit&transit_mode=${transitModeParam}&key=${apiKey}&units=imperial`
-      
+      let directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=place_id:${encodeURIComponent(transitStop)}&destination=${encodeURIComponent(destination)}&mode=transit&transit_mode=${transitModeParam}&key=${effectiveApiKey}&units=imperial`
+
       // Add arrival_time if provided
       if (arrivalTime) {
         directionsUrl += `&arrival_time=${arrivalTime}`
       }
-      
+
       const leg2Response = await fetch(directionsUrl)
       const leg2Data = await leg2Response.json()
 
@@ -125,22 +139,22 @@ export async function GET(request: NextRequest) {
 
     // Standard single-leg journey
     const modeParam = mode === 'transit' ? 'transit' : mode === 'walking' ? 'walking' : mode === 'bicycling' ? 'bicycling' : 'driving'
-    
+
     // Use Directions API if arrival_time is provided (Distance Matrix doesn't support arrival_time)
     // Otherwise use Distance Matrix API for efficiency
     if (arrivalTime) {
-      let directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&mode=${modeParam}&key=${apiKey}&units=imperial`
-      
+      let directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&mode=${modeParam}&key=${effectiveApiKey}&units=imperial`
+
       // For transit mode, use arrival_time directly
       // For driving mode, we need to calculate departure_time
       if (modeParam === 'transit') {
         directionsUrl += `&arrival_time=${arrivalTime}`
       } else if (modeParam === 'driving') {
         // For driving, first get an estimate without time to calculate departure_time
-        const estimateUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&mode=driving&key=${apiKey}&units=imperial`
+        const estimateUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&mode=driving&key=${effectiveApiKey}&units=imperial`
         const estimateResponse = await fetch(estimateUrl)
         const estimateData = await estimateResponse.json()
-        
+
         if (estimateData.status === 'OK' && estimateData.routes && estimateData.routes.length > 0) {
           const estimatedDuration = estimateData.routes[0].legs[0].duration.value // in seconds
           const arrivalTimestamp = parseInt(arrivalTime, 10)
@@ -154,7 +168,7 @@ export async function GET(request: NextRequest) {
           }
         }
       }
-      
+
       const directionsResponse = await fetch(directionsUrl)
       const directionsData = await directionsResponse.json()
 
@@ -177,7 +191,7 @@ export async function GET(request: NextRequest) {
     } else {
       // Use Distance Matrix API when no arrival time is specified
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=${encodeURIComponent(destination)}&mode=${modeParam}&key=${apiKey}&units=imperial`
+        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=${encodeURIComponent(destination)}&mode=${modeParam}&key=${effectiveApiKey}&units=imperial`
       )
 
       const data = await response.json()
