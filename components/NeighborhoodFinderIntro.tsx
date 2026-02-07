@@ -32,9 +32,9 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
   const [isActivating, setIsActivating] = useState(false)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const router = useRouter()
-  const { 
-    apiKey, 
-    setApiKey, 
+  const {
+    apiKey,
+    setApiKey,
     sharedKeyActive,
     activateSharedKey,
     revokeSharedKey
@@ -166,7 +166,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
 
   // Don't render if not open
   if (!isOpen) return null
-  
+
   // In wizard mode, always show if isOpen is true
   // Only auto-close if not in wizard mode and already seen
   if (!wizardActive) {
@@ -191,8 +191,8 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
       padding: isMobile ? '0' : '0.5rem',
       overflow: 'auto'
     }} onClick={() => {
-      // Don't close on backdrop click if in wizard mode or showing API setup
-      if (!wizardActive && !showApiKeySetup) {
+      // Allow closing on backdrop click unless activating
+      if (!isActivating) {
         onClose()
       }
     }}>
@@ -217,8 +217,26 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
           background: 'linear-gradient(135deg, #0070f3 0%, #0051cc 100%)',
           borderRadius: isMobile ? '0' : (showApiKeySetup ? '12px 12px 0 0' : '12px 12px 0 0'),
           color: '#fff',
-          flexShrink: 0
+          flexShrink: 0,
+          position: 'relative'
         }}>
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              lineHeight: 1
+            }}
+            title="Dismiss"
+          >
+            &times;
+          </button>
           <h2 style={{
             margin: 0,
             fontSize: isMobile ? '1.25rem' : '1.75rem',
@@ -414,10 +432,10 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
 
             {/* Key Type Selection */}
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '1rem', 
-                color: '#000', 
+              <label style={{
+                display: 'block',
+                marginBottom: '1rem',
+                color: '#000',
                 fontWeight: '500',
                 fontSize: '1rem'
               }}>
@@ -480,11 +498,11 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
             {saveMessage && (
               <div style={{
                 padding: '0.75rem 1rem',
-                backgroundColor: saveMessage.includes('success') || saveMessage.includes('cleared') 
-                  ? '#d4edda' 
+                backgroundColor: saveMessage.includes('success') || saveMessage.includes('cleared')
+                  ? '#d4edda'
                   : '#f8d7da',
-                border: `1px solid ${saveMessage.includes('success') || saveMessage.includes('cleared') 
-                  ? '#28a745' 
+                border: `1px solid ${saveMessage.includes('success') || saveMessage.includes('cleared')
+                  ? '#28a745'
                   : '#dc3545'}`,
                 borderRadius: '4px',
                 marginBottom: '1rem',
@@ -500,10 +518,10 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
             {/* Show input field only if "My Own API Key" is selected */}
             {keyType === 'own' && (
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '0.5rem', 
-                  color: '#000', 
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                  color: '#000',
                   fontWeight: '500',
                   fontSize: '1rem'
                 }}>
@@ -598,29 +616,46 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
           } : {})
         }}>
           {!showApiKeySetup ? (
-            <button
-              onClick={handleSetupApiKey}
-              style={{
-                padding: '0.75rem 2rem',
-                fontSize: '1rem',
-                backgroundColor: '#0070f3',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: '600',
-                transition: 'background-color 0.2s',
-                boxShadow: '0 2px 4px rgba(0, 112, 243, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#0056b3'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#0070f3'
-              }}
-            >
-              Get Started
-            </button>
+            <>
+              <button
+                onClick={onClose}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '1rem',
+                  backgroundColor: 'transparent',
+                  color: '#666',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: '500',
+                  textDecoration: 'underline'
+                }}
+              >
+                Skip intro
+              </button>
+              <button
+                onClick={handleSetupApiKey}
+                style={{
+                  padding: '0.75rem 2rem',
+                  fontSize: '1rem',
+                  backgroundColor: '#0070f3',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'background-color 0.2s',
+                  boxShadow: '0 2px 4px rgba(0, 112, 243, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0056b3'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0070f3'
+                }}
+              >
+                Get Started
+              </button>
+            </>
           ) : (
             <>
               <button
