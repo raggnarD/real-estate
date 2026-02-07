@@ -5,7 +5,7 @@ test.describe('Neighborhood Finder', () => {
     // Set up API key in localStorage
     await page.goto('/neighborhood-finder')
     await page.evaluate(() => {
-      localStorage.setItem('rushroost_api_key', 'test-api-key')
+      localStorage.setItem('google_maps_api_key', 'test-api-key')
     })
   })
 
@@ -34,7 +34,7 @@ test.describe('Neighborhood Finder', () => {
     await page.goto('/neighborhood-finder')
     await page.evaluate(() => {
       localStorage.setItem('wizard_active', 'true')
-      localStorage.setItem('rushroost_api_key', 'test-api-key')
+      localStorage.setItem('google_maps_api_key', 'test-api-key')
     })
     await page.reload()
     // Wait for page to load
