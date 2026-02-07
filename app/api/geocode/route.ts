@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const apiKey = resolveApiKey(request, userApiKey)
+    const apiKey = await resolveApiKey(request, userApiKey)
     if (!apiKey) {
       return NextResponse.json(
         { error: 'Google Maps API key not configured' },

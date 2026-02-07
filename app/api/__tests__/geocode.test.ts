@@ -104,7 +104,7 @@ describe('/api/geocode', () => {
   describe('GET', () => {
     it('should return geocoded address when valid address is provided', async () => {
       const mockApiKey = 'test-api-key'
-      ;(resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockResolvedValue(mockApiKey)
 
       const mockGeocodeResponse = {
         status: 'OK',
@@ -122,9 +122,9 @@ describe('/api/geocode', () => {
         ],
       }
 
-      ;(global.fetch as jest.Mock).mockResolvedValue({
-        json: async () => mockGeocodeResponse,
-      })
+        ; (global.fetch as jest.Mock).mockResolvedValue({
+          json: async () => mockGeocodeResponse,
+        })
 
       const request = new MockNextRequest('http://localhost:3000/api/geocode?address=123%20Main%20St')
       const response = await GET(request as any)
@@ -148,7 +148,7 @@ describe('/api/geocode', () => {
 
     it('should use user API key from query parameter when provided', async () => {
       const userApiKey = 'user-api-key-123'
-      ;(resolveApiKey as jest.Mock).mockReturnValue(userApiKey)
+        ; (resolveApiKey as jest.Mock).mockResolvedValue(userApiKey)
 
       const mockGeocodeResponse = {
         status: 'OK',
@@ -163,9 +163,9 @@ describe('/api/geocode', () => {
         ],
       }
 
-      ;(global.fetch as jest.Mock).mockResolvedValue({
-        json: async () => mockGeocodeResponse,
-      })
+        ; (global.fetch as jest.Mock).mockResolvedValue({
+          json: async () => mockGeocodeResponse,
+        })
 
       const request = new MockNextRequest('http://localhost:3000/api/geocode?address=456%20Oak%20Ave&apiKey=user-api-key-123')
       await GET(request as any)
@@ -183,7 +183,7 @@ describe('/api/geocode', () => {
     })
 
     it('should return 500 error when API key is not configured', async () => {
-      ;(resolveApiKey as jest.Mock).mockReturnValue(null)
+      ; (resolveApiKey as jest.Mock).mockResolvedValue(null)
 
       const request = new MockNextRequest('http://localhost:3000/api/geocode?address=123%20Main%20St')
       const response = await GET(request as any)
@@ -195,16 +195,16 @@ describe('/api/geocode', () => {
 
     it('should return 400 error when geocoding fails', async () => {
       const mockApiKey = 'test-api-key'
-      ;(resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockResolvedValue(mockApiKey)
 
       const mockGeocodeResponse = {
         status: 'ZERO_RESULTS',
         results: [],
       }
 
-      ;(global.fetch as jest.Mock).mockResolvedValue({
-        json: async () => mockGeocodeResponse,
-      })
+        ; (global.fetch as jest.Mock).mockResolvedValue({
+          json: async () => mockGeocodeResponse,
+        })
 
       const request = new MockNextRequest('http://localhost:3000/api/geocode?address=InvalidAddress12345')
       const response = await GET(request as any)
@@ -217,11 +217,11 @@ describe('/api/geocode', () => {
 
     it('should handle network errors gracefully', async () => {
       const mockApiKey = 'test-api-key'
-      ;(resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockResolvedValue(mockApiKey)
 
-      ;(global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'))
+        ; (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'))
 
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { })
 
       const request = new MockNextRequest('http://localhost:3000/api/geocode?address=123%20Main%20St')
       const response = await GET(request as any)

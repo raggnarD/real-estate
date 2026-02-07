@@ -132,7 +132,7 @@ describe('/api/commute', () => {
   describe('GET', () => {
     it('should return commute time for standard journey', async () => {
       const mockApiKey = 'test-api-key'
-        ; (resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockResolvedValue(mockApiKey)
         ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
 
       const mockDistanceMatrixResponse = {
@@ -197,7 +197,7 @@ describe('/api/commute', () => {
     })
 
     it('should return 500 error when API key is not configured', async () => {
-      ; (resolveApiKey as jest.Mock).mockReturnValue(null)
+      ; (resolveApiKey as jest.Mock).mockResolvedValue(null)
         ; (auth as jest.Mock).mockResolvedValue(null)
 
       const request = new MockNextRequest(
@@ -212,7 +212,7 @@ describe('/api/commute', () => {
 
     it('should handle different travel modes', async () => {
       const mockApiKey = 'test-api-key'
-        ; (resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockResolvedValue(mockApiKey)
         ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
 
       const modes = ['driving', 'walking', 'bicycling', 'transit']
@@ -247,7 +247,7 @@ describe('/api/commute', () => {
 
     it('should handle transit journey with stop', async () => {
       const mockApiKey = 'test-api-key'
-        ; (resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockResolvedValue(mockApiKey)
         ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
 
       const mockLeg1Response = {
@@ -302,7 +302,7 @@ describe('/api/commute', () => {
 
     it('should return 400 error when commute calculation fails', async () => {
       const mockApiKey = 'test-api-key'
-        ; (resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockResolvedValue(mockApiKey)
         ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
 
       const mockDistanceMatrixResponse = {
@@ -334,7 +334,7 @@ describe('/api/commute', () => {
 
     it('should handle network errors gracefully', async () => {
       const mockApiKey = 'test-api-key'
-        ; (resolveApiKey as jest.Mock).mockReturnValue(mockApiKey)
+        ; (resolveApiKey as jest.Mock).mockResolvedValue(mockApiKey)
         ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
 
         ; (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'))

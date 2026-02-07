@@ -1,73 +1,53 @@
 import { NextRequest } from 'next/server'
+import { auth } from '@/auth'
 
 /**
  * Resolves the API key to use for Google Maps API calls
- * Priority: user's API key > shared key cookie (if valid) > environment variable
+ * Priority: user's API key > server guest key (if authenticated)
  * 
  * @param request - Next.js request object
  * @param userApiKey - Optional user-provided API key from client
  * @returns The resolved API key or null if none available
  */
-export function resolveApiKey(request: NextRequest, userApiKey?: string | null): string | null {
+export async function resolveApiKey(request: NextRequest, userApiKey?: string | null): Promise<string | null> {
   // Priority 1: User's own API key (if provided)
   if (userApiKey && userApiKey.trim()) {
     return userApiKey.trim()
   }
 
-  // Priority 2: Shared key cookie (if valid and not expired)
-  const sharedKeyCookie = request.cookies.get('shared_api_key_expires')
-  if (sharedKeyCookie) {
-    try {
-      const expiresAt = parseInt(sharedKeyCookie.value, 10)
-      const now = Date.now()
-      
-      // Check if cookie is still valid (not expired)
-      if (now < expiresAt) {
-        const envKey = process.env.GOOGLE_MAPS_API_KEY
-        if (envKey) {
-          return envKey // Use shared key from environment
-        }
+  // Priority 2: Server guest key (if user is authenticated)
+  try {
+    const session = await auth()
+    if (session) {
+      const envKey = process.env.GOOGLE_MAPS_API_KEY
+      if (envKey) {
+        return envKey
       }
-    } catch (error) {
-      console.error('Error parsing shared key cookie:', error)
-      // Don't fall through - require explicit consent
     }
+  } catch (error) {
+    console.error('Error resolving guest API key:', error)
   }
 
-  // No API key available - user must provide their own or consent to shared key
+  // No API key available
   return null
 }
 
 /**
- * Checks if a shared key cookie is active and valid
- * 
- * @param request - Next.js request object
- * @returns Object with active status, expiration time, and time remaining
+ * Checks if the user is authenticated and has access to the guest key
+ * (Legacy support for components that expect this shape)
  */
-export function checkSharedKeyStatus(request: NextRequest) {
-  const cookie = request.cookies.get('shared_api_key_expires')
-  
-  if (!cookie) {
-    return {
-      active: false,
-      expiresAt: null,
-      timeRemaining: null
-    }
-  }
-
+export async function checkSharedKeyStatus(request: NextRequest) {
   try {
-    const expiresAt = parseInt(cookie.value, 10)
-    const now = Date.now()
-    const isActive = now < expiresAt
-    const timeRemaining = isActive ? expiresAt - now : null
+    const session = await auth()
+    const isActive = !!session
 
     return {
       active: isActive,
-      expiresAt: isActive ? expiresAt : null,
-      timeRemaining: timeRemaining
+      expiresAt: null, // Session-based
+      timeRemaining: null
     }
   } catch (error) {
-    console.error('Error checking shared key status:', error)
+    console.error('Error checking guest key status:', error)
     return {
       active: false,
       expiresAt: null,
@@ -75,5 +55,3 @@ export function checkSharedKeyStatus(request: NextRequest) {
     }
   }
 }
-
-

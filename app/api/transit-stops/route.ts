@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const userApiKey = searchParams.get('apiKey') // Optional user API key from client
-    const apiKey = resolveApiKey(request, userApiKey)
+    const apiKey = await resolveApiKey(request, userApiKey)
     if (!apiKey) {
       return NextResponse.json(
         { error: 'Google Maps API key not configured' },
@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
     // For bus: search for "bus stop", "bus station"
     let query = ''
     let placeType = ''
-    
+
     // Check if subway stops should be included (only for train mode)
     const includeSubway = searchParams.get('includeSubway') === 'true'
-    
+
     if (type === 'train') {
       if (includeSubway) {
         query = 'train station OR subway station OR metro station OR railway station'
@@ -51,21 +51,21 @@ export async function GET(request: NextRequest) {
       query = 'bus stop OR bus station'
       placeType = 'bus_station'
     }
-    
+
     // First, try text search for more specific results
     const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${lat},${lng}&radius=5000&key=${apiKey}`
-    
+
     const textSearchResponse = await fetch(textSearchUrl)
     const textSearchData = await textSearchResponse.json()
-    
+
     let places: any[] = []
-    
+
     if (textSearchData.status === 'OK' && textSearchData.results) {
       // Filter results based on place types to ensure accuracy
       places = textSearchData.results.filter((place: any) => {
         const types = place.types || []
         const name = (place.name || '').toLowerCase()
-        
+
         if (type === 'train') {
           // For train: must have train-related types AND NOT have bus_station
           const hasTrainType = types.includes('train_station')
@@ -73,34 +73,34 @@ export async function GET(request: NextRequest) {
           const hasBusType = types.includes('bus_station')
           const hasTrainInName = name.includes('train') || name.includes('rail')
           const hasSubwayInName = name.includes('subway') || name.includes('metro')
-          
+
           // Exclude bus stations
           if (hasBusType) return false
-          
+
           // If includeSubway is false, exclude subway stations
           if (!includeSubway && (hasSubwayType || hasSubwayInName)) {
             return false
           }
-          
+
           // Allow train stations (and subway if includeSubway is true)
           return hasTrainType || hasSubwayType || hasTrainInName || (includeSubway && hasSubwayInName)
         } else {
           // For bus: must have bus_station type AND NOT have train-related types
           const hasBusType = types.includes('bus_station')
-          const hasTrainType = types.includes('train_station') || 
-                              types.includes('subway_station')
+          const hasTrainType = types.includes('train_station') ||
+            types.includes('subway_station')
           const hasBusInName = name.includes('bus')
-          
+
           // Exclude if it's a train station, but allow if it has bus type or bus in name
           return !hasTrainType && (hasBusType || hasBusInName)
         }
       })
     }
-    
+
     // If we don't have enough results, try nearby search with specific type
     if (places.length < 3) {
       const nearbySearchUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=${placeType}&key=${apiKey}`
-      
+
       const nearbyResponse = await fetch(nearbySearchUrl)
       const nearbyData = await nearbyResponse.json()
 
@@ -109,10 +109,10 @@ export async function GET(request: NextRequest) {
         const existingPlaceIds = new Set(places.map((p: any) => p.place_id))
         const additionalPlaces = nearbyData.results.filter((p: any) => {
           if (existingPlaceIds.has(p.place_id)) return false
-          
+
           const types = p.types || []
           const name = (p.name || '').toLowerCase()
-          
+
           // Additional filtering for train vs bus - more strict
           if (type === 'train') {
             const hasTrainType = types.includes('train_station')
@@ -120,23 +120,23 @@ export async function GET(request: NextRequest) {
             const hasBusType = types.includes('bus_station')
             const hasTrainInName = name.includes('train') || name.includes('rail')
             const hasSubwayInName = name.includes('subway') || name.includes('metro')
-            
+
             // Exclude bus stations
             if (hasBusType) return false
-            
+
             // If includeSubway is false, exclude subway stations
             if (!includeSubway && (hasSubwayType || hasSubwayInName)) {
               return false
             }
-            
+
             // Allow train stations (and subway if includeSubway is true)
             return hasTrainType || hasSubwayType || hasTrainInName || (includeSubway && hasSubwayInName)
           } else {
             const hasBusType = types.includes('bus_station')
-            const hasTrainType = types.includes('train_station') || 
-                                types.includes('subway_station')
+            const hasTrainType = types.includes('train_station') ||
+              types.includes('subway_station')
             const hasBusInName = name.includes('bus')
-            
+
             // Exclude train stations, only include bus stations
             return !hasTrainType && (hasBusType || hasBusInName)
           }
@@ -151,8 +151,8 @@ export async function GET(request: NextRequest) {
     }
 
     const destinations = places.map((place: any) => {
-      const lat = typeof place.geometry.location.lat === 'function' 
-        ? place.geometry.location.lat() 
+      const lat = typeof place.geometry.location.lat === 'function'
+        ? place.geometry.location.lat()
         : place.geometry.location.lat
       const lng = typeof place.geometry.location.lng === 'function'
         ? place.geometry.location.lng()
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
     }).join('|')
 
     const distanceMatrixUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${lat},${lng}&destinations=${destinations}&mode=walking&key=${apiKey}&units=imperial`
-    
+
     const distanceResponse = await fetch(distanceMatrixUrl)
     const distanceData = await distanceResponse.json()
 
@@ -175,13 +175,13 @@ export async function GET(request: NextRequest) {
     // Combine place data with distance data
     const stopsWithDistance = places.map((place: any, index: number) => {
       const element = distanceData.rows[0]?.elements[index]
-      const lat = typeof place.geometry.location.lat === 'function' 
-        ? place.geometry.location.lat() 
+      const lat = typeof place.geometry.location.lat === 'function'
+        ? place.geometry.location.lat()
         : place.geometry.location.lat
       const lng = typeof place.geometry.location.lng === 'function'
         ? place.geometry.location.lng()
         : place.geometry.location.lng
-      
+
       // Determine the specific type label based on place types
       const types = place.types || []
       const name = (place.name || '').toLowerCase()
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
       } else if (types.includes('bus_station')) {
         stopType = 'Bus'
       }
-      
+
       return {
         name: place.name,
         address: place.vicinity || place.formatted_address || 'Address not available',
@@ -218,7 +218,7 @@ export async function GET(request: NextRequest) {
     const paginatedStops = sortedStops.slice(offset, offset + limit)
     const hasMore = sortedStops.length > offset + limit
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       stops: paginatedStops,
       hasMore,
       total: sortedStops.length

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const apiKey = resolveApiKey(request, userApiKey)
+    const apiKey = await resolveApiKey(request, userApiKey)
     const isAuthed = !!session || !!apiKey
 
     if (!isAuthed) {

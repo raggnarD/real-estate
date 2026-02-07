@@ -1,42 +1,32 @@
 import { resolveApiKey, checkSharedKeyStatus } from '../apiKeyResolver'
 
+// Mock the auth module
+jest.mock('@/auth', () => ({
+  auth: jest.fn(),
+}))
+
+import { auth } from '@/auth'
+
 // Create a mock NextRequest class
 class MockNextRequest {
-  private cookieMap: Map<string, { value: string }>
-  
-  constructor(url: string, init?: { headers?: { cookie?: string } }) {
-    this.cookieMap = new Map()
-    if (init?.headers?.cookie) {
-      const cookies = init.headers.cookie.split(';').map(c => c.trim())
-      cookies.forEach(cookie => {
-        const [name, value] = cookie.split('=')
-        if (name && value) {
-          this.cookieMap.set(name, { value })
-        }
-      })
-    }
-  }
-  
+  constructor(url: string) { }
   get cookies() {
     return {
-      get: (name: string) => {
-        return this.cookieMap.get(name) || undefined
-      }
+      get: (name: string) => undefined
     }
   }
 }
 
-// Mock NextRequest before importing the module
+// Mock NextRequest
 jest.mock('next/server', () => ({
   NextRequest: MockNextRequest
 }))
 
-// Mock environment variable
-const originalEnv = process.env.GOOGLE_MAPS_API_KEY
-
 describe('apiKeyResolver', () => {
+  const originalEnv = process.env.GOOGLE_MAPS_API_KEY
+
   beforeEach(() => {
-    // Reset environment variable
+    jest.clearAllMocks()
     delete process.env.GOOGLE_MAPS_API_KEY
   })
 
@@ -45,118 +35,72 @@ describe('apiKeyResolver', () => {
   })
 
   describe('resolveApiKey', () => {
-    it('should return user API key when provided', () => {
+    it('should return user API key when provided', async () => {
       const { NextRequest } = require('next/server')
       const request = new NextRequest('http://localhost:3000')
       const userKey = 'user-api-key-123'
-      const result = resolveApiKey(request, userKey)
+      const result = await resolveApiKey(request, userKey)
       expect(result).toBe(userKey)
     })
 
-    it('should return null when no user key and no shared key cookie', () => {
+    it('should return guest key when authenticated and no user key', async () => {
       const { NextRequest } = require('next/server')
       const request = new NextRequest('http://localhost:3000')
-      const result = resolveApiKey(request, null)
+      process.env.GOOGLE_MAPS_API_KEY = 'server-guest-key'
+
+        // Mock authenticated session
+        ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
+
+      const result = await resolveApiKey(request, null)
+      expect(result).toBe('server-guest-key')
+    })
+
+    it('should return null when not authenticated and no user key', async () => {
+      const { NextRequest } = require('next/server')
+      const request = new NextRequest('http://localhost:3000')
+      process.env.GOOGLE_MAPS_API_KEY = 'server-guest-key'
+
+        // Mock unauthenticated (null session)
+        ; (auth as jest.Mock).mockResolvedValue(null)
+
+      const result = await resolveApiKey(request, null)
       expect(result).toBeNull()
     })
 
-    it('should return shared key when valid cookie exists', () => {
+    it('should prioritize user key over guest key', async () => {
       const { NextRequest } = require('next/server')
-      process.env.GOOGLE_MAPS_API_KEY = 'shared-key-123'
-      const expiresAt = Date.now() + 24 * 60 * 60 * 1000 // 24 hours from now
-      const request = new NextRequest('http://localhost:3000', {
-        headers: {
-          cookie: `shared_api_key_expires=${expiresAt}`,
-        },
-      })
-      const result = resolveApiKey(request, null)
-      expect(result).toBe('shared-key-123')
-    })
+      const request = new NextRequest('http://localhost:3000')
+      process.env.GOOGLE_MAPS_API_KEY = 'server-guest-key'
 
-    it('should return null when shared key cookie is expired', () => {
-      const { NextRequest } = require('next/server')
-      process.env.GOOGLE_MAPS_API_KEY = 'shared-key-123'
-      const expiresAt = Date.now() - 1000 // Expired 1 second ago
-      const request = new NextRequest('http://localhost:3000', {
-        headers: {
-          cookie: `shared_api_key_expires=${expiresAt}`,
-        },
-      })
-      const result = resolveApiKey(request, null)
-      expect(result).toBeNull()
-    })
+        // Mock authenticated session
+        ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
 
-    it('should prioritize user key over shared key', () => {
-      const { NextRequest } = require('next/server')
-      process.env.GOOGLE_MAPS_API_KEY = 'shared-key-123'
-      const expiresAt = Date.now() + 24 * 60 * 60 * 1000
-      const request = new NextRequest('http://localhost:3000', {
-        headers: {
-          cookie: `shared_api_key_expires=${expiresAt}`,
-        },
-      })
-      const result = resolveApiKey(request, 'user-key-456')
+      const result = await resolveApiKey(request, 'user-key-456')
       expect(result).toBe('user-key-456')
-    })
-
-    it('should trim whitespace from user key', () => {
-      const { NextRequest } = require('next/server')
-      const request = new NextRequest('http://localhost:3000')
-      const result = resolveApiKey(request, '  user-key-123  ')
-      expect(result).toBe('user-key-123')
     })
   })
 
   describe('checkSharedKeyStatus', () => {
-    it('should return inactive when no cookie exists', () => {
+    it('should return active true when authenticated', async () => {
       const { NextRequest } = require('next/server')
       const request = new NextRequest('http://localhost:3000')
-      const status = checkSharedKeyStatus(request)
-      expect(status.active).toBe(false)
-      expect(status.expiresAt).toBeNull()
-      expect(status.timeRemaining).toBeNull()
-    })
 
-    it('should return active when valid cookie exists', () => {
-      const { NextRequest } = require('next/server')
-      const expiresAt = Date.now() + 24 * 60 * 60 * 1000
-      const request = new NextRequest('http://localhost:3000', {
-        headers: {
-          cookie: `shared_api_key_expires=${expiresAt}`,
-        },
-      })
-      const status = checkSharedKeyStatus(request)
+        // Mock authenticated session
+        ; (auth as jest.Mock).mockResolvedValue({ user: { name: 'Test User' } })
+
+      const status = await checkSharedKeyStatus(request)
       expect(status.active).toBe(true)
-      expect(status.expiresAt).toBe(expiresAt)
-      expect(status.timeRemaining).toBeGreaterThan(0)
     })
 
-    it('should return inactive when cookie is expired', () => {
+    it('should return active false when not authenticated', async () => {
       const { NextRequest } = require('next/server')
-      const expiresAt = Date.now() - 1000
-      const request = new NextRequest('http://localhost:3000', {
-        headers: {
-          cookie: `shared_api_key_expires=${expiresAt}`,
-        },
-      })
-      const status = checkSharedKeyStatus(request)
-      expect(status.active).toBe(false)
-      expect(status.expiresAt).toBeNull()
-      expect(status.timeRemaining).toBeNull()
-    })
+      const request = new NextRequest('http://localhost:3000')
 
-    it('should handle invalid cookie values gracefully', () => {
-      const { NextRequest } = require('next/server')
-      const request = new NextRequest('http://localhost:3000', {
-        headers: {
-          cookie: 'shared_api_key_expires=invalid',
-        },
-      })
-      const status = checkSharedKeyStatus(request)
+        // Mock unauthenticated (null session)
+        ; (auth as jest.Mock).mockResolvedValue(null)
+
+      const status = await checkSharedKeyStatus(request)
       expect(status.active).toBe(false)
-      expect(status.expiresAt).toBeNull()
-      expect(status.timeRemaining).toBeNull()
     })
   })
 })
-

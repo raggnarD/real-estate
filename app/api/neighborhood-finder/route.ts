@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const apiKey = resolveApiKey(request, userApiKey)
+    const apiKey = await resolveApiKey(request, userApiKey)
     if (!apiKey) {
       return NextResponse.json(
         { error: 'Google Maps API key not configured' },
@@ -44,10 +44,10 @@ export async function GET(request: NextRequest) {
       const reverseGeocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
       const reverseResponse = await fetch(reverseGeocodeUrl)
       const reverseData = await reverseResponse.json()
-      
+
       if (reverseData.status === 'OK' && reverseData.results.length > 0) {
         for (const result of reverseData.results) {
-          const state = result.address_components?.find((comp: any) => 
+          const state = result.address_components?.find((comp: any) =>
             comp.types.includes('administrative_area_level_1')
           )
           if (state) {
@@ -64,17 +64,17 @@ export async function GET(request: NextRequest) {
     // Step 2: Use a comprehensive list of cities/towns to search for
     // We'll use Geocoding API to find city centers by searching for city names
     // This approach is more reliable than Places API for finding all cities
-    
+
     const cities: any[] = []
     const cityNames = new Set<string>()
-    
+
     // Strategy 1: Use Places API Text Search with broader queries
     const searchQueries = [
       `cities near ${lat},${lng}`,
       `towns near ${lat},${lng}`,
       `municipalities near ${lat},${lng}`,
     ]
-    
+
     if (workState) {
       searchQueries.push(
         `cities in ${workState}`,
@@ -91,13 +91,13 @@ export async function GET(request: NextRequest) {
       const reverseGeocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
       const reverseResponse = await fetch(reverseGeocodeUrl)
       const reverseData = await reverseResponse.json()
-      
+
       if (reverseData.status === 'OK' && reverseData.results.length > 0) {
         for (const result of reverseData.results) {
-          const county = result.address_components?.find((comp: any) => 
+          const county = result.address_components?.find((comp: any) =>
             comp.types.includes('administrative_area_level_2')
           )
-          const city = result.address_components?.find((comp: any) => 
+          const city = result.address_components?.find((comp: any) =>
             comp.types.includes('locality')
           )
           if (county) {
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
         const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&type=locality&key=${apiKey}`
         const textResponse = await fetch(textSearchUrl)
         const textData = await textResponse.json()
-        
+
         if (textData.status === 'OK' && textData.results) {
           for (const place of textData.results) {
             const cityName = place.name?.toLowerCase().trim()
@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
       `neighborhoods near ${lat},${lng}`,
       `districts near ${lat},${lng}`,
     ]
-    
+
     if (workState) {
       neighborhoodQueries.push(
         `neighborhoods in ${workState}`,
@@ -166,18 +166,18 @@ export async function GET(request: NextRequest) {
         const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}`
         const textResponse = await fetch(textSearchUrl)
         const textData = await textResponse.json()
-        
+
         if (textData.status === 'OK' && textData.results) {
           for (const place of textData.results) {
             // Include neighborhoods, sublocalities, and political subdivisions
-            const isNeighborhood = place.types?.some((type: string) => 
-              type === 'neighborhood' || 
-              type === 'sublocality' || 
+            const isNeighborhood = place.types?.some((type: string) =>
+              type === 'neighborhood' ||
+              type === 'sublocality' ||
               type === 'sublocality_level_1' ||
               type === 'sublocality_level_2' ||
               type === 'political'
             )
-            
+
             if (isNeighborhood) {
               const placeName = place.name?.toLowerCase().trim()
               if (placeName && !cityNames.has(placeName)) {
@@ -205,17 +205,17 @@ export async function GET(request: NextRequest) {
         let nextPageToken: string | null = null
         let pageCount = 0
         const maxPages = 5 // Increased pages
-        
+
         do {
           let nearbyUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=locality&key=${apiKey}`
           if (nextPageToken) {
             nearbyUrl += `&pagetoken=${nextPageToken}`
             await new Promise(resolve => setTimeout(resolve, 2000))
           }
-          
+
           const nearbyResponse = await fetch(nearbyUrl)
           const nearbyData = await nearbyResponse.json()
-          
+
           if (nearbyData.status === 'OK' && nearbyData.results) {
             for (const place of nearbyData.results) {
               const cityName = place.name?.toLowerCase().trim()
@@ -249,7 +249,7 @@ export async function GET(request: NextRequest) {
         let nextPageToken: string | null = null
         let pageCount = 0
         const maxPages = 3
-        
+
         do {
           // Search without type restriction to get neighborhoods, sublocalities, etc.
           let nearbyUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&key=${apiKey}`
@@ -257,21 +257,21 @@ export async function GET(request: NextRequest) {
             nearbyUrl += `&pagetoken=${nextPageToken}`
             await new Promise(resolve => setTimeout(resolve, 2000))
           }
-          
+
           const nearbyResponse = await fetch(nearbyUrl)
           const nearbyData = await nearbyResponse.json()
-          
+
           if (nearbyData.status === 'OK' && nearbyData.results) {
             for (const place of nearbyData.results) {
               // Filter for neighborhoods, sublocalities, and political subdivisions
-              const isNeighborhood = place.types?.some((type: string) => 
-                type === 'neighborhood' || 
-                type === 'sublocality' || 
+              const isNeighborhood = place.types?.some((type: string) =>
+                type === 'neighborhood' ||
+                type === 'sublocality' ||
                 type === 'sublocality_level_1' ||
                 type === 'sublocality_level_2' ||
                 (type === 'political' && !place.types.includes('locality'))
               )
-              
+
               if (isNeighborhood) {
                 const placeName = place.name?.toLowerCase().trim()
                 if (placeName && !cityNames.has(placeName)) {
@@ -313,9 +313,9 @@ export async function GET(request: NextRequest) {
         const estimatedKm = maxTimeMinutes * 2.0 * speedMultiplier
         const maxCommuteKm = Math.max(200, estimatedKm) // Very generous estimate, minimum 200km
         const cityDataList = await getCitiesNearLocation(lat, lng, maxCommuteKm, workState)
-        
+
         console.log(`City data: Found ${cityDataList.length} cities within ${maxCommuteKm}km radius in ${workState}`)
-        
+
         // Process ALL cities from the dataset within the radius (not limited to 500)
         // This ensures we don't miss any cities like El Segundo, Manhattan Beach, etc.
         // The Distance Matrix API will filter by actual commute time later
@@ -324,11 +324,11 @@ export async function GET(request: NextRequest) {
             const cityNameLower = cityData.city.toLowerCase().trim()
             // Skip if we already have this city from Places API
             if (cityNames.has(cityNameLower)) continue
-            
+
             // Use coordinates from the dataset
             const cityLat = typeof cityData.lat === 'string' ? parseFloat(cityData.lat) : cityData.lat
             const cityLng = typeof cityData.lng === 'string' ? parseFloat(cityData.lng) : cityData.lng
-            
+
             if (!isNaN(cityLat) && !isNaN(cityLng)) {
               cityNames.add(cityNameLower)
               cities.push({
@@ -358,20 +358,20 @@ export async function GET(request: NextRequest) {
     // Places API results already include city center coordinates in geometry.location
     // Filter out duplicates and ensure we have valid locations
     const uniqueCities = new Map<string, any>()
-    
+
     for (const city of cities) {
       // Skip if we already have this city
       if (uniqueCities.has(city.place_id)) continue
-      
+
       // Ensure we have valid location data
       if (city.geometry && city.geometry.location) {
-        const cityLat = typeof city.geometry.location.lat === 'function' 
-          ? city.geometry.location.lat() 
+        const cityLat = typeof city.geometry.location.lat === 'function'
+          ? city.geometry.location.lat()
           : city.geometry.location.lat
         const cityLng = typeof city.geometry.location.lng === 'function'
           ? city.geometry.location.lng()
           : city.geometry.location.lng
-        
+
         // Include all cities - we'll filter by actual commute time using Distance Matrix API
         // Don't pre-filter by distance as it might exclude valid cities due to road network differences
         uniqueCities.set(city.place_id, {
@@ -402,8 +402,8 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < citiesWithCenters.length; i += batchSize) {
       const batch = citiesWithCenters.slice(i, i + batchSize)
       const destinations = batch.map((city: any) => {
-        const lat = typeof city.geometry.location.lat === 'function' 
-          ? city.geometry.location.lat() 
+        const lat = typeof city.geometry.location.lat === 'function'
+          ? city.geometry.location.lat()
           : city.geometry.location.lat
         const lng = typeof city.geometry.location.lng === 'function'
           ? city.geometry.location.lng()
@@ -422,7 +422,7 @@ export async function GET(request: NextRequest) {
       }
 
       const distanceMatrixUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${lat},${lng}&destinations=${destinations}&mode=${travelMode}&units=imperial&key=${apiKey}`
-      
+
       // For transit, add transit mode filter
       if (travelMode === 'transit') {
         const transitMode = mode === 'bus' ? 'bus' : mode === 'train' ? 'rail' : 'bus|rail'
@@ -436,13 +436,13 @@ export async function GET(request: NextRequest) {
               const durationMinutes = Math.round(element.duration.value / 60)
               if (durationMinutes <= maxTimeMinutes) {
                 const city = batch[index]
-                const cityLat = typeof city.geometry.location.lat === 'function' 
-                  ? city.geometry.location.lat() 
+                const cityLat = typeof city.geometry.location.lat === 'function'
+                  ? city.geometry.location.lat()
                   : city.geometry.location.lat
                 const cityLng = typeof city.geometry.location.lng === 'function'
                   ? city.geometry.location.lng()
                   : city.geometry.location.lng
-                
+
                 allCityResults.push({
                   name: city.name || city.formatted_address?.split(',')[0] || 'Unknown City',
                   address: city.formatted_address || city.vicinity || city.name || 'Address not available',
@@ -470,13 +470,13 @@ export async function GET(request: NextRequest) {
               const durationMinutes = Math.round(element.duration.value / 60)
               if (durationMinutes <= maxTimeMinutes) {
                 const city = batch[index]
-                const cityLat = typeof city.geometry.location.lat === 'function' 
-                  ? city.geometry.location.lat() 
+                const cityLat = typeof city.geometry.location.lat === 'function'
+                  ? city.geometry.location.lat()
                   : city.geometry.location.lat
                 const cityLng = typeof city.geometry.location.lng === 'function'
                   ? city.geometry.location.lng()
                   : city.geometry.location.lng
-                
+
                 allCityResults.push({
                   name: city.name || city.formatted_address?.split(',')[0] || 'Unknown City',
                   address: city.formatted_address || city.vicinity || city.name || 'Address not available',
