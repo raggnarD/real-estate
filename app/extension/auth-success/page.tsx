@@ -3,18 +3,19 @@
 import { useEffect, useState } from "react";
 
 export default function AuthSuccessPage() {
-    const [countdown, setCountdown] = useState(5);
+    const [countdown, setCountdown] = useState(1);
 
     useEffect(() => {
+        // Attempt to close immediately
+        const closeWindow = () => {
+            window.close();
+            // Fallback: if window.close() is blocked, show message
+        };
+
+        closeWindow();
         const timer = setInterval(() => {
-            setCountdown((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    window.close(); // Attempt to close
-                    return 0;
-                }
-                return prev - 1;
-            });
+            closeWindow();
+            setCountdown((prev) => Math.max(0, prev - 1));
         }, 1000);
 
         return () => clearInterval(timer);

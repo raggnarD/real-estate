@@ -430,9 +430,24 @@ function showMain(user) {
 
 // Login Handler
 loginBtn.addEventListener('click', () => {
-    // Open direct Google sign-in, redirecting to success page which will close itself
+    // Open sign-in page in a popup window for a cleaner experience
     const callbackUrl = encodeURIComponent(`${API_BASE}/extension/auth-success`);
-    chrome.tabs.create({ url: `${API_BASE}/api/auth/signin/google?callbackUrl=${callbackUrl}` });
+    const authUrl = `${API_BASE}/api/auth/signin?callbackUrl=${callbackUrl}`;
+
+    // Calculate center positioning
+    const width = 500;
+    const height = 600;
+    const left = Math.round((screen.width - width) / 2);
+    const top = Math.round((screen.height - height) / 2);
+
+    chrome.windows.create({
+        url: authUrl,
+        type: 'popup',
+        width: width,
+        height: height,
+        left: left,
+        top: top
+    });
 });
 
 // Sign Out Handler
