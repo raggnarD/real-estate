@@ -43,7 +43,7 @@ const stages: Stage[] = [
 export default function StageGate() {
   const pathname = usePathname()
   const { wizardActive, wizardStep, workAddress } = useWizard()
-  const { apiKey, sharedKeyActive } = useApiKey()
+  const { apiKey, guestKey } = useApiKey()
   const [currentStep, setCurrentStep] = useState<number>(0)
   const [hasNeighborhoodResults, setHasNeighborhoodResults] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -116,7 +116,7 @@ export default function StageGate() {
   }, [pathname])
 
   // Don't show if wizard is not active or no API key is set
-  if (!wizardActive || (!apiKey && !sharedKeyActive)) {
+  if (!wizardActive || (!apiKey && !guestKey)) {
     return null
   }
 
@@ -194,10 +194,10 @@ export default function StageGate() {
                 width: isMobile ? '36px' : '44px',
                 height: isMobile ? '36px' : '44px',
                 borderRadius: '50%',
-                backgroundColor: isCompleted 
-                  ? '#28a745' 
-                  : isActive 
-                    ? '#0070f3' 
+                backgroundColor: isCompleted
+                  ? '#28a745'
+                  : isActive
+                    ? '#0070f3'
                     : '#e0e0e0',
                 color: isCompleted || isActive ? '#fff' : '#666',
                 display: 'flex',

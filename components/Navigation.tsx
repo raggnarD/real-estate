@@ -11,12 +11,8 @@ export default function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
   const {
-    apiKey,
-    sharedKeyActive,
-    sharedKeyTimeRemaining,
-    revokeSharedKey
+    apiKey
   } = useApiKey()
-  const [countdown, setCountdown] = useState<number | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
@@ -32,32 +28,6 @@ export default function Navigation() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
-
-  // Live countdown timer for shared key
-  useEffect(() => {
-    if (sharedKeyTimeRemaining !== null && sharedKeyTimeRemaining > 0) {
-      setCountdown(sharedKeyTimeRemaining)
-      const interval = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev === null || prev <= 1000) {
-            return null
-          }
-          return prev - 1000
-        })
-      }, 1000)
-
-      return () => clearInterval(interval)
-    } else {
-      setCountdown(null)
-    }
-  }, [sharedKeyTimeRemaining])
-
-  const formatTime = (ms: number | null) => {
-    if (!ms || ms <= 0) return 'Expired'
-    const hours = Math.floor(ms / (1000 * 60 * 60))
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60))
-    return `${hours}h ${minutes}m`
-  }
 
   return (
     <nav style={{
