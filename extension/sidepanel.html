@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>RushRoost Commute</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 p-4 w-full">
+  <div id="app" class="space-y-4">
+    <div class="flex items-center justify-between border-b pb-2">
+      <h1 class="text-lg font-bold text-blue-600">RushRoost</h1>
+      <div class="flex items-center gap-2">
+        <div id="auth-status" class="text-xs text-gray-500">Checking auth...</div>
+        <button id="sign-out-btn" class="hidden text-xs text-red-500 hover:text-red-700 underline">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Login Prompt (Hidden by default) -->
+    <div id="login-section" class="hidden text-center py-4">
+      <p class="text-sm text-gray-600 mb-3">Please sign in to calculate commutes.</p>
+      <button id="login-btn"
+        class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 w-full transition">
+        Sign in with Google
+      </button>
+    </div>
+
+    <!-- Main Content (Hidden by default) -->
+    <div id="main-section" class="hidden space-y-4">
+      <!-- Current Property -->
+      <div class="bg-white p-3 rounded shadow-sm border">
+        <label class="block text-xs font-semibold text-gray-500 uppercase">Property Address</label>
+        <p id="current-address" class="text-sm font-medium text-gray-900 mt-1">Detecting address...</p>
+      </div>
+
+      <!-- Destinations -->
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-gray-500 uppercase">Commute To</label>
+        <select id="destination-select" class="w-full text-sm p-2 border rounded bg-white">
+          <option value="">Select a destination...</option>
+        </select>
+        <div class="flex gap-2">
+          <input type="text" id="new-destination-name" placeholder="Name (e.g. Work)"
+            class="flex-1 text-sm p-2 border rounded">
+          <input type="text" id="new-destination-address" placeholder="Address"
+            class="flex-2 text-sm p-2 border rounded w-full">
+        </div>
+        <button id="add-destination-btn"
+          class="w-full bg-gray-200 text-gray-700 text-xs py-2 rounded hover:bg-gray-300">
+          + Add Destination
+        </button>
+      </div>
+
+      <!-- Results -->
+      <div id="results-area" class="hidden bg-blue-50 p-3 rounded border border-blue-100">
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-blue-900">Commute Time:</span>
+          <span id="commute-time" class="text-lg font-bold text-blue-700">-- min</span>
+        </div>
+        <div class="text-xs text-blue-600 mt-1 flex justify-between">
+          <span id="commute-distance">-- miles</span>
+          <span id="commute-mode">Driving</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="sidepanel.js"></script>
+</body>
+
+</html>

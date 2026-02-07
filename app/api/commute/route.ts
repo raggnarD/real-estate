@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiKey } from '@/utils/apiKeyResolver'
 import { auth } from '@/auth'
 
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  if (origin && origin.startsWith('chrome-extension://')) {
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
+    }
+  }
+  return {}
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin')
+  return NextResponse.json({}, { headers: getCorsHeaders(origin) })
+}
+
 export async function GET(request: NextRequest) {
   const session = await auth()
   const searchParams = request.nextUrl.searchParams
@@ -14,10 +31,13 @@ export async function GET(request: NextRequest) {
   const arrivalTime = searchParams.get('arrivalTime') // Unix timestamp in seconds
   const userApiKey = searchParams.get('apiKey') // Optional user API key from client
 
+  const requestOrigin = request.headers.get('origin')
+  const corsHeaders = getCorsHeaders(requestOrigin)
+
   if (!origin || !destination) {
     return NextResponse.json(
       { error: 'Origin and destination parameters are required' },
-      { status: 400 }
+      { status: 400, headers: corsHeaders }
     )
   }
 
@@ -28,7 +48,7 @@ export async function GET(request: NextRequest) {
     if (!isAuthed) {
       return NextResponse.json(
         { error: 'Please sign in or provide a Google Maps API key' },
-        { status: 401 }
+        { status: 401, headers: corsHeaders }
       )
     }
 
@@ -38,7 +58,7 @@ export async function GET(request: NextRequest) {
     if (!effectiveApiKey) {
       return NextResponse.json(
         { error: 'Server configuration error: Google Maps API Key missing' },
-        { status: 500 }
+        { status: 500, headers: corsHeaders }
       )
     }
 
@@ -55,7 +75,7 @@ export async function GET(request: NextRequest) {
       if (leg1Data.status !== 'OK' || leg1Data.rows[0]?.elements[0]?.status !== 'OK') {
         return NextResponse.json(
           { error: 'Failed to calculate route to transit stop', details: leg1Data.status },
-          { status: 400 }
+          { status: 400, headers: corsHeaders }
         )
       }
 
@@ -83,7 +103,7 @@ export async function GET(request: NextRequest) {
         }
         return NextResponse.json(
           { error: errorMessage, details: leg2Data.status },
-          { status: 400 }
+          { status: 400, headers: corsHeaders }
         )
       }
 
@@ -134,7 +154,7 @@ export async function GET(request: NextRequest) {
         },
         mode: 'transit',
         transitType: transitType,
-      })
+      }, { headers: corsHeaders })
     }
 
     // Standard single-leg journey
@@ -181,11 +201,11 @@ export async function GET(request: NextRequest) {
           distanceValue: leg.distance.value,
           durationValue: leg.duration.value,
           mode: modeParam,
-        })
+        }, { headers: corsHeaders })
       } else {
         return NextResponse.json(
           { error: 'Commute calculation failed', details: directionsData.status },
-          { status: 400 }
+          { status: 400, headers: corsHeaders }
         )
       }
     } else {
@@ -204,11 +224,11 @@ export async function GET(request: NextRequest) {
           distanceValue: element.distance.value,
           durationValue: element.duration.value,
           mode: modeParam,
-        })
+        }, { headers: corsHeaders })
       } else {
         return NextResponse.json(
           { error: 'Commute calculation failed', details: data.status },
-          { status: 400 }
+          { status: 400, headers: corsHeaders }
         )
       }
     }
@@ -216,7 +236,7 @@ export async function GET(request: NextRequest) {
     console.error('Commute calculation error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     )
   }
 }

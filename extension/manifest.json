@@ -1,0 +1,44 @@
+{
+    "manifest_version": 3,
+    "name": "RushRoost Commute Calculator",
+    "version": "1.0",
+    "description": "Calculate true commute times on Zillow and Realtor.com",
+    "permissions": [
+        "sidePanel",
+        "storage",
+        "cookies",
+        "activeTab",
+        "scripting"
+    ],
+    "host_permissions": [
+        "*://*.zillow.com/*",
+        "*://*.realtor.com/*",
+        "http://localhost:3000/*",
+        "https://real-estate-raggnard.vercel.app/*"
+    ],
+    "background": {
+        "service_worker": "service-worker.js"
+    },
+    "action": {
+        "default_title": "Check Commute"
+    },
+    "side_panel": {
+        "default_path": "sidepanel.html"
+    },
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*.zillow.com/*",
+                "*://*.realtor.com/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ]
+}
