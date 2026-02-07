@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useApiKey } from '@/contexts/ApiKeyContext'
+import { useSession, signIn } from 'next-auth/react'
 import { useWizard } from '@/contexts/WizardContext'
-import TermsModal from '@/components/TermsModal'
 
 interface NeighborhoodFinderIntroProps {
   isOpen: boolean
@@ -12,8 +11,9 @@ interface NeighborhoodFinderIntroProps {
 }
 
 export default function NeighborhoodFinderIntro({ isOpen, onClose }: NeighborhoodFinderIntroProps) {
+  const { data: session, status } = useSession()
   const [hasSeenIntro, setHasSeenIntro] = useState(false)
-  const [showApiKeySetup, setShowApiKeySetup] = useState(false)
+  const [showAuthStep, setShowAuthStep] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   // Detect mobile screen size
@@ -25,20 +25,8 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
-  const [keyType, setKeyType] = useState<'shared' | 'own'>('shared')
-  const [inputValue, setInputValue] = useState('')
-  const [showKey, setShowKey] = useState(false)
-  const [showTermsModal, setShowTermsModal] = useState(false)
-  const [isActivating, setIsActivating] = useState(false)
-  const [saveMessage, setSaveMessage] = useState<string | null>(null)
+
   const router = useRouter()
-  const {
-    apiKey,
-    setApiKey,
-    sharedKeyActive,
-    activateSharedKey,
-    revokeSharedKey
-  } = useApiKey()
   const { wizardActive, setWizardStep } = useWizard()
 
   useEffect(() => {
@@ -54,108 +42,19 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
     if (wizardActive && isOpen && !hasSeenIntro) {
       setHasSeenIntro(false) // Reset to ensure modal shows
     }
-  }, [onClose, wizardActive, isOpen])
+  }, [onClose, wizardActive, isOpen, hasSeenIntro])
 
-  useEffect(() => {
-    // Set default to shared key
-    if (apiKey) {
-      setKeyType('own')
-      setInputValue(apiKey)
-    } else if (sharedKeyActive) {
-      setKeyType('shared')
-    }
-  }, [apiKey, sharedKeyActive])
-
-  const handleSetupApiKey = () => {
-    setShowApiKeySetup(true)
+  const handleStartOnboarding = () => {
+    setShowAuthStep(true)
   }
 
-  const handleSave = async () => {
-    if (keyType === 'shared') {
-      // User wants to use shared key
-      if (!sharedKeyActive) {
-        // Need to activate shared key - show terms modal first
-        setShowTermsModal(true)
-        return
-      } else {
-        // Already active, just clear user's API key if they had one
-        if (apiKey) {
-          setApiKey(null)
-          setInputValue('')
-        }
-        setSaveMessage('Switched to shared API key')
-        setTimeout(() => setSaveMessage(null), 3000)
-        // Navigate to neighborhood finder
-        handleApiKeyComplete()
-      }
-    } else {
-      // User wants to use their own API key
-      if (inputValue.trim()) {
-        const trimmedKey = inputValue.trim()
-        setApiKey(trimmedKey)
-        // Revoke shared key if active
-        if (sharedKeyActive) {
-          try {
-            await revokeSharedKey()
-          } catch (error) {
-            console.error('Error revoking shared key:', error)
-          }
-        }
-        setSaveMessage('API key saved successfully!')
-        setTimeout(() => setSaveMessage(null), 3000)
-        // Navigate to neighborhood finder - API key is saved synchronously
-        handleApiKeyComplete()
-      } else {
-        setSaveMessage('Please enter a valid API key')
-        setTimeout(() => setSaveMessage(null), 3000)
-      }
-    }
-  }
-
-  const handleActivateSharedKey = async () => {
-    setIsActivating(true)
-    let activationSucceeded = false
-    try {
-      await activateSharedKey()
-      activationSucceeded = true
-      setShowTermsModal(false)
-      // Clear user's API key if they had one
-      if (apiKey) {
-        setApiKey(null)
-        setInputValue('')
-      }
-      setSaveMessage('24-hour shared API key activated successfully!')
-      setTimeout(() => setSaveMessage(null), 3000)
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to activate shared key'
-      setSaveMessage(errorMessage)
-      setTimeout(() => setSaveMessage(null), 10000)
-      // In test/development mode, still navigate even if API call fails
-      // This allows tests to pass and users to continue in development
-      if (process.env.NODE_ENV === 'test' || window.location.hostname === 'localhost') {
-        activationSucceeded = true
-        setShowTermsModal(false)
-      } else {
-        throw error
-      }
-    } finally {
-      setIsActivating(false)
-      // Navigate to neighborhood finder if activation succeeded (or in test mode)
-      if (activationSucceeded) {
-        handleApiKeyComplete()
-      }
-    }
-  }
-
-  const handleApiKeyComplete = () => {
+  const handleContinue = () => {
     localStorage.setItem('hasSeenNeighborhoodFinderIntro', 'true')
     // Check wizardActive from localStorage as well, in case context hasn't updated
     const isWizardActive = wizardActive || localStorage.getItem('wizard_active') === 'true'
     if (isWizardActive) {
       setWizardStep('neighborhood-finder')
-      // Navigate immediately - don't wait for modal to close
       router.push('/neighborhood-finder')
-      // Close modal after a brief delay to allow navigation to start
       setTimeout(() => {
         onClose()
       }, 100)
@@ -190,12 +89,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
       zIndex: 10000,
       padding: isMobile ? '0' : '0.5rem',
       overflow: 'auto'
-    }} onClick={() => {
-      // Allow closing on backdrop click unless activating
-      if (!isActivating) {
-        onClose()
-      }
-    }}>
+    }} onClick={onClose}>
       <div style={{
         backgroundColor: '#fff',
         borderRadius: isMobile ? '0' : '12px',
@@ -215,7 +109,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
           padding: isMobile ? '0.75rem 1rem' : '1.5rem',
           borderBottom: '1px solid #e0e0e0',
           background: 'linear-gradient(135deg, #0070f3 0%, #0051cc 100%)',
-          borderRadius: isMobile ? '0' : (showApiKeySetup ? '12px 12px 0 0' : '12px 12px 0 0'),
+          borderRadius: isMobile ? '0' : '12px 12px 0 0',
           color: '#fff',
           flexShrink: 0,
           position: 'relative'
@@ -243,354 +137,107 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
             fontWeight: '700',
             color: '#fff'
           }}>
-            {showApiKeySetup ? 'Setup API Key' : 'How RushRoost Works'}
+            {showAuthStep ? 'One Final Step' : 'How RushRoost Works'}
           </h2>
-          {!showApiKeySetup && (
+          {!showAuthStep && (
             <p style={{
               margin: isMobile ? '0.25rem 0 0 0' : '0.5rem 0 0 0',
               fontSize: isMobile ? '0.875rem' : '1rem',
               color: 'rgba(255, 255, 255, 0.9)'
             }}>
-              Follow these 4 simple steps to find your perfect home
+              Follow these simple steps to find your perfect home
             </p>
           )}
         </div>
 
         {/* Content */}
-        {!showApiKeySetup && (
+        {!showAuthStep ? (
           <div style={{
-            padding: isMobile ? '0.75rem 1rem 5rem 1rem' : '2rem',
+            padding: isMobile ? '1rem' : '2rem',
             fontSize: isMobile ? '0.875rem' : '1rem',
             lineHeight: isMobile ? '1.5' : '1.7',
             color: '#333',
             flex: 1,
-            minHeight: 0,
-            overflowY: isMobile ? 'hidden' : 'auto',
-            overflowX: 'hidden',
-            WebkitOverflowScrolling: 'touch',
+            overflowY: 'auto'
+          }}>
+            {[
+              { num: 1, title: 'Enter Your Work Address' },
+              { num: 2, title: 'Find Towns Within Your Commute' },
+              { num: 3, title: 'Find a Home on Zillow' },
+              { num: 4, title: 'See the True Commute Time' }
+            ].map((step) => (
+              <div key={step.num} style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem', alignItems: 'center' }}>
+                <div style={{
+                  flexShrink: 0,
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: '#0070f3',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.25rem',
+                  fontWeight: '700'
+                }}>
+                  {step.num}
+                </div>
+                <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600', color: '#000' }}>{step.title}</h3>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{
+            padding: '2rem',
+            flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between'
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: '#f9f9f9'
           }}>
-            {/* Step 1 */}
-            <div style={{
-              display: 'flex',
-              gap: isMobile ? '0.75rem' : '1.5rem',
-              marginBottom: isMobile ? '1rem' : '2rem',
-              alignItems: 'center'
-            }}>
-              <div style={{
-                flexShrink: 0,
-                width: isMobile ? '36px' : '50px',
-                height: isMobile ? '36px' : '50px',
-                borderRadius: '50%',
-                backgroundColor: '#0070f3',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: isMobile ? '1.125rem' : '1.5rem',
-                fontWeight: '700'
-              }}>
-                1
+            {status === 'authenticated' ? (
+              <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
+                <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#000' }}>You're all set, {session.user?.name?.split(' ')[0]}!</h3>
+                <p style={{ color: '#666', marginBottom: '2rem' }}>You've successfully signed in. We'll automatically use our guest API key to calculate your commutes.</p>
               </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{
-                  margin: 0,
-                  fontSize: isMobile ? '1rem' : '1.25rem',
-                  fontWeight: '600',
-                  color: '#000'
-                }}>
-                  Enter Your Work Address
-                </h3>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div style={{
-              display: 'flex',
-              gap: isMobile ? '0.75rem' : '1.5rem',
-              marginBottom: isMobile ? '1rem' : '2rem',
-              alignItems: 'center'
-            }}>
-              <div style={{
-                flexShrink: 0,
-                width: isMobile ? '36px' : '50px',
-                height: isMobile ? '36px' : '50px',
-                borderRadius: '50%',
-                backgroundColor: '#0070f3',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: isMobile ? '1.125rem' : '1.5rem',
-                fontWeight: '700'
-              }}>
-                2
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{
-                  margin: 0,
-                  fontSize: isMobile ? '1rem' : '1.25rem',
-                  fontWeight: '600',
-                  color: '#000'
-                }}>
-                  Find Towns Within Your Commute Time
-                </h3>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div style={{
-              display: 'flex',
-              gap: isMobile ? '0.75rem' : '1.5rem',
-              marginBottom: isMobile ? '1rem' : '2rem',
-              alignItems: 'center'
-            }}>
-              <div style={{
-                flexShrink: 0,
-                width: isMobile ? '36px' : '50px',
-                height: isMobile ? '36px' : '50px',
-                borderRadius: '50%',
-                backgroundColor: '#0070f3',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: isMobile ? '1.125rem' : '1.5rem',
-                fontWeight: '700'
-              }}>
-                3
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{
-                  margin: 0,
-                  fontSize: isMobile ? '1rem' : '1.25rem',
-                  fontWeight: '600',
-                  color: '#000'
-                }}>
-                  Find a Home on Zillow
-                </h3>
-              </div>
-            </div>
-
-            {/* Step 4 */}
-            <div style={{
-              display: 'flex',
-              gap: isMobile ? '0.75rem' : '1.5rem',
-              marginBottom: '0',
-              alignItems: 'center'
-            }}>
-              <div style={{
-                flexShrink: 0,
-                width: isMobile ? '36px' : '50px',
-                height: isMobile ? '36px' : '50px',
-                borderRadius: '50%',
-                backgroundColor: '#0070f3',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: isMobile ? '1.125rem' : '1.5rem',
-                fontWeight: '700'
-              }}>
-                4
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{
-                  margin: 0,
-                  fontSize: isMobile ? '1rem' : '1.25rem',
-                  fontWeight: '600',
-                  color: '#000'
-                }}>
-                  See the True Commute Time
-                </h3>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* API Key Setup Section */}
-        {showApiKeySetup && (
-          <div style={{
-            padding: isMobile ? '1rem 1.5rem 5rem 1.5rem' : '2rem',
-            flex: 1,
-            minHeight: 0,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            backgroundColor: '#f9f9f9',
-            WebkitOverflowScrolling: 'touch'
-          }}>
-            <h3 style={{
-              margin: '0 0 1.5rem 0',
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              color: '#000'
-            }}>
-              Setup API Key
-            </h3>
-
-            {/* Key Type Selection */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '1rem',
-                color: '#000',
-                fontWeight: '500',
-                fontSize: '1rem'
-              }}>
-                Select API Key Type:
-              </label>
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                  padding: '0.75rem 1rem',
-                  border: `2px solid ${keyType === 'shared' ? '#28a745' : '#ddd'}`,
-                  borderRadius: '4px',
-                  backgroundColor: keyType === 'shared' ? '#d4edda' : '#fff',
-                  transition: 'all 0.2s',
-                  flex: 1,
-                  minWidth: '200px'
-                }}>
-                  <input
-                    type="radio"
-                    name="keyType"
-                    value="shared"
-                    checked={keyType === 'shared'}
-                    onChange={() => setKeyType('shared')}
-                    style={{ cursor: 'pointer' }}
-                  />
-                  <span style={{ fontWeight: keyType === 'shared' ? '600' : '400' }}>
-                    24-Hour Shared Key
-                  </span>
-                </label>
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                  padding: '0.75rem 1rem',
-                  border: `2px solid ${keyType === 'own' ? '#0070f3' : '#ddd'}`,
-                  borderRadius: '4px',
-                  backgroundColor: keyType === 'own' ? '#e6f2ff' : '#fff',
-                  transition: 'all 0.2s',
-                  flex: 1,
-                  minWidth: '200px'
-                }}>
-                  <input
-                    type="radio"
-                    name="keyType"
-                    value="own"
-                    checked={keyType === 'own'}
-                    onChange={() => setKeyType('own')}
-                    style={{ cursor: 'pointer' }}
-                  />
-                  <span style={{ fontWeight: keyType === 'own' ? '600' : '400' }}>
-                    My Own API Key
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {saveMessage && (
-              <div style={{
-                padding: '0.75rem 1rem',
-                backgroundColor: saveMessage.includes('success') || saveMessage.includes('cleared')
-                  ? '#d4edda'
-                  : '#f8d7da',
-                border: `1px solid ${saveMessage.includes('success') || saveMessage.includes('cleared')
-                  ? '#28a745'
-                  : '#dc3545'}`,
-                borderRadius: '4px',
-                marginBottom: '1rem',
-                color: saveMessage.includes('success') || saveMessage.includes('cleared')
-                  ? '#155724'
-                  : '#721c24',
-                fontSize: '0.875rem'
-              }}>
-                {saveMessage}
-              </div>
-            )}
-
-            {/* Show input field only if "My Own API Key" is selected */}
-            {keyType === 'own' && (
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#000',
-                  fontWeight: '500',
-                  fontSize: '1rem'
-                }}>
-                  API Key:
-                </label>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <input
-                    type={showKey ? 'text' : 'password'}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Enter your Google Maps API key"
-                    style={{
-                      flex: 1,
-                      padding: '0.75rem',
-                      fontSize: '1rem',
-                      border: '1px solid #ccc',
-                      borderRadius: '4px',
-                      color: '#000',
-                      backgroundColor: '#fff',
-                      boxSizing: 'border-box',
-                      fontFamily: showKey ? 'monospace' : 'inherit'
-                    }}
-                  />
-                  {apiKey && inputValue && (
-                    <button
-                      type="button"
-                      onClick={() => setShowKey(!showKey)}
-                      style={{
-                        padding: '0.75rem 1rem',
-                        fontSize: '0.875rem',
-                        backgroundColor: '#6c757d',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {showKey ? '👁️ Hide' : '👁️ Show'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Show shared key info if "24-Hour Shared Key" is selected */}
-            {keyType === 'shared' && (
-              <div style={{
-                marginBottom: '1.5rem',
-                padding: '1rem',
-                backgroundColor: '#f0f8ff',
-                border: '1px solid #b3d9ff',
-                borderRadius: '4px'
-              }}>
-                {sharedKeyActive ? (
-                  <div style={{ fontSize: '0.875rem', color: '#004085' }}>
-                    <strong>✅ Shared API Key Active</strong>
-                    <p style={{ margin: '0.5rem 0 0 0' }}>
-                      You're all set! The shared key is active and ready to use.
-                    </p>
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '0.875rem', color: '#004085' }}>
-                    <strong>24-Hour Shared Key</strong>
-                    <p style={{ margin: '0.5rem 0 0 0' }}>
-                      Use our shared API key for 24 hours. You'll need to accept the terms and conditions to activate it.
-                    </p>
-                  </div>
-                )}
+            ) : (
+              <div>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔐</div>
+                <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#000' }}>Sign In to Activate</h3>
+                <p style={{ color: '#666', marginBottom: '2rem', maxWidth: '400px' }}>
+                  To provide accurate commute times using our Google Maps integration, please sign in with your Google account.
+                </p>
+                <button
+                  onClick={() => signIn('google')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 24px',
+                    backgroundColor: '#fff',
+                    color: '#3c4043',
+                    border: '1px solid #dadce0',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 2px rgba(60,64,67,0.3)',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1.01.68-2.33 1.09-3.71 1.09-2.85 0-5.27-1.92-6.13-4.51H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                    <path d="M5.87 14.15c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.13H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.87l3.69-2.72z" fill="#FBBC05" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.13l3.69 2.72c.86-2.59 3.28-4.51 6.13-4.51z" fill="#EA4335" />
+                  </svg>
+                  Sign In with Google
+                </button>
               </div>
             )}
           </div>
@@ -598,126 +245,66 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
 
         {/* Footer */}
         <div style={{
-          padding: isMobile ? '1rem 1.5rem' : '1rem 1.5rem',
+          padding: '1rem 1.5rem',
           borderTop: '1px solid #e0e0e0',
           display: 'flex',
           justifyContent: 'flex-end',
           gap: '1rem',
           backgroundColor: '#f9f9f9',
-          borderRadius: isMobile ? '0' : (showApiKeySetup ? '0' : '0 0 12px 12px'),
-          flexShrink: 0,
-          zIndex: 10,
-          ...(isMobile ? {
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)'
-          } : {})
+          flexShrink: 0
         }}>
-          {!showApiKeySetup ? (
+          {!showAuthStep ? (
             <>
               <button
                 onClick={onClose}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  fontSize: '1rem',
-                  backgroundColor: 'transparent',
-                  color: '#666',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontWeight: '500',
-                  textDecoration: 'underline'
-                }}
+                style={{ padding: '0.75rem 1.5rem', backgroundColor: 'transparent', color: '#666', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Skip intro
               </button>
               <button
-                onClick={handleSetupApiKey}
+                onClick={handleStartOnboarding}
                 style={{
                   padding: '0.75rem 2rem',
-                  fontSize: '1rem',
                   backgroundColor: '#0070f3',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  fontWeight: '600',
-                  transition: 'background-color 0.2s',
-                  boxShadow: '0 2px 4px rgba(0, 112, 243, 0.3)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#0056b3'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#0070f3'
+                  fontWeight: '600'
                 }}
               >
-                Get Started
+                Next
               </button>
             </>
           ) : (
             <>
               <button
-                onClick={() => setShowApiKeySetup(false)}
-                style={{
-                  padding: '0.75rem 2rem',
-                  fontSize: '1rem',
-                  backgroundColor: '#6c757d',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#5a6268'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#6c757d'
-                }}
+                onClick={() => setShowAuthStep(false)}
+                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
               >
                 Back
               </button>
               <button
-                onClick={handleSave}
-                disabled={isActivating || (keyType === 'own' && !inputValue.trim())}
+                onClick={handleContinue}
+                disabled={status !== 'authenticated'}
                 style={{
                   padding: '0.75rem 2rem',
-                  fontSize: '1rem',
-                  backgroundColor: (isActivating || (keyType === 'own' && !inputValue.trim())) ? '#ccc' : '#28a745',
+                  backgroundColor: status === 'authenticated' ? '#28a745' : '#ccc',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '6px',
-                  cursor: (isActivating || (keyType === 'own' && !inputValue.trim())) ? 'not-allowed' : 'pointer',
-                  fontWeight: '600',
-                  transition: 'background-color 0.2s',
-                  boxShadow: '0 2px 4px rgba(40, 167, 69, 0.3)'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActivating && !(keyType === 'own' && !inputValue.trim())) {
-                    e.currentTarget.style.backgroundColor = '#218838'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActivating && !(keyType === 'own' && !inputValue.trim())) {
-                    e.currentTarget.style.backgroundColor = '#28a745'
-                  }
+                  cursor: status === 'authenticated' ? 'pointer' : 'not-allowed',
+                  fontWeight: '600'
                 }}
               >
-                {isActivating ? 'Activating...' : 'Continue'}
+                Start Exploring
               </button>
             </>
           )}
         </div>
       </div>
-      <TermsModal
-        isOpen={showTermsModal}
-        onClose={() => setShowTermsModal(false)}
-        onAccept={handleActivateSharedKey}
-      />
     </div>
   )
 }
+
 
