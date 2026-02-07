@@ -20,15 +20,120 @@ const commuteDistEl = document.getElementById('commute-distance');
 const commuteModeIcon = document.getElementById('commute-mode-icon');
 const commuteModeText = document.getElementById('commute-mode-text');
 
+// New UI Elements for Modes
+const modeBtns = document.querySelectorAll('.mode-btn');
+const transitOptions = document.getElementById('transit-options');
+const legWalk = document.getElementById('leg-walk');
+const legDrive = document.getElementById('leg-drive');
+const nearestStopInfo = document.getElementById('nearest-stop-info');
+const nearestStopName = document.getElementById('nearest-stop-name');
+
 let currentPropertyAddress = null;
+let currentMode = 'driving';
+let currentLegMode = 'walking';
+let nearestStop = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+    const prefs = await chrome.storage.sync.get(['mode', 'legMode']);
+    if (prefs.mode) setMode(prefs.mode);
+    if (prefs.legMode) setLegMode(prefs.legMode);
+
     await checkAuth();
     loadDestinations();
 });
 
+// Mode Selection Handlers
+modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const mode = btn.id.replace('mode-', '');
+        setMode(mode);
+        calculateCommute();
+    });
+});
+
+function setMode(mode) {
+    currentMode = mode;
+    modeBtns.forEach(btn => {
+        if (btn.id === `mode-${mode}`) {
+            btn.classList.add('active-mode');
+        } else {
+            btn.classList.remove('active-mode');
+        }
+    });
+
+    if (mode === 'bus' || mode === 'train') {
+        transitOptions.classList.remove('hidden');
+        updateNearestStop();
+    } else {
+        transitOptions.classList.add('hidden');
+    }
+
+    chrome.storage.sync.set({ mode });
+}
+
+legWalk.addEventListener('click', () => {
+    setLegMode('walking');
+    calculateCommute();
+});
+
+legDrive.addEventListener('click', () => {
+    setLegMode('driving');
+    calculateCommute();
+});
+
+function setLegMode(leg) {
+    currentLegMode = leg;
+    if (leg === 'walking') {
+        legWalk.classList.add('active-leg');
+        legDrive.classList.remove('active-leg');
+    } else {
+        legWalk.classList.remove('active-leg');
+        legDrive.classList.add('active-leg');
+    }
+    chrome.storage.sync.set({ legMode: leg });
+}
+
+async function updateNearestStop() {
+    if (!currentPropertyAddress || (currentMode !== 'bus' && currentMode !== 'train')) {
+        nearestStopInfo.classList.add('hidden');
+        return;
+    }
+
+    nearestStopInfo.classList.remove('hidden');
+    nearestStopName.textContent = 'Searching...';
+
+    try {
+        // First get geocode for currentPropertyAddress to get lat/lng
+        const geoRes = await fetch(`${API_BASE}/api/geocode?address=${encodeURIComponent(currentPropertyAddress)}`);
+        const geoData = await geoRes.json();
+
+        if (geoData.location) {
+            const params = new URLSearchParams({
+                lat: geoData.location.lat,
+                lng: geoData.location.lng,
+                type: currentMode,
+                limit: '1'
+            });
+            const stopRes = await fetch(`${API_BASE}/api/transit-stops?${params.toString()}`);
+            const stopData = await stopRes.json();
+
+            if (stopData.stops && stopData.stops.length > 0) {
+                nearestStop = stopData.stops[0];
+                nearestStopName.textContent = `${nearestStop.name} (${nearestStop.distance})`;
+            } else {
+                nearestStop = null;
+                nearestStopName.textContent = 'No stops found nearby';
+            }
+        }
+    } catch (e) {
+        console.error('Failed to fetch nearest stop', e);
+        nearestStopName.textContent = 'Error finding stops';
+    }
+}
+
 // Check Authentication via Cookies
+// ... (previous checkAuth functions remain the same) ...
 async function checkAuth() {
     // Try prod first, then local
     const isProd = await checkCookie(API_BASE_PROD);
@@ -116,9 +221,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'ADDRESS_DETECTED') {
         currentPropertyAddress = message.address;
         currentAddressEl.textContent = message.address;
-        // Auto-calculate if destination is already selected
-        if (destinationSelect.value) {
-            calculateCommute();
+
+        if (currentMode === 'bus' || currentMode === 'train') {
+            updateNearestStop().then(() => {
+                if (destinationSelect.value) calculateCommute();
+            });
+        } else {
+            if (destinationSelect.value) calculateCommute();
         }
     }
 });
@@ -186,12 +295,25 @@ async function calculateCommute() {
     commuteModeText.textContent = '';
 
     try {
-        const params = new URLSearchParams({
+        const queryParams = {
             origin: currentPropertyAddress,
             destination: destination,
-            mode: 'driving' // Default to driving, could be made configurable
-        });
+            mode: currentMode
+        };
 
+        if (currentMode === 'bus' || currentMode === 'train') {
+            if (!nearestStop) {
+                await updateNearestStop();
+            }
+            if (nearestStop) {
+                queryParams.mode = 'transit';
+                queryParams.transitStop = nearestStop.placeId;
+                queryParams.leg1Mode = currentLegMode;
+                queryParams.transitType = currentMode;
+            }
+        }
+
+        const params = new URLSearchParams(queryParams);
         const response = await fetch(`${API_BASE}/api/commute?${params.toString()}`);
 
         if (response.status === 401) {
@@ -212,7 +334,7 @@ async function calculateCommute() {
 
         // Update icon based on mode
         if (data.mode === 'transit') {
-            commuteModeIcon.textContent = '🚌';
+            commuteModeIcon.textContent = data.transitType === 'bus' ? '🚌' : '🚆';
         } else if (data.mode === 'walking') {
             commuteModeIcon.textContent = '🚶';
         } else if (data.mode === 'bicycling') {

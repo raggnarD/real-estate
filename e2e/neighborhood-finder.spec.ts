@@ -11,12 +11,12 @@ test.describe('Neighborhood Finder', () => {
 
   test('should display neighborhood finder page', async ({ page }) => {
     await page.goto('/neighborhood-finder')
-    await expect(page.getByRole('heading', { name: /neighborhood finder/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: "Neighborhood Finder", exact: true })).toBeVisible()
   })
 
   test('should show work address input', async ({ page }) => {
     await page.goto('/neighborhood-finder')
-    const workAddressInput = page.getByPlaceholder(/enter your work address/i)
+    const workAddressInput = page.getByPlaceholder("Enter your work address...")
     await expect(workAddressInput).toBeVisible()
   })
 
@@ -24,8 +24,8 @@ test.describe('Neighborhood Finder', () => {
     await page.goto('/neighborhood-finder')
     // Wait for the form to be visible
     await page.waitForSelector('form', { state: 'visible' })
-    // Try label first, fallback to id selector
-    const commuteTimeInput = page.locator('#max-commute-time')
+    // Use label selector
+    const commuteTimeInput = page.getByLabel("Maximum Commute Time (minutes):")
     await expect(commuteTimeInput).toBeVisible()
   })
 
@@ -39,8 +39,8 @@ test.describe('Neighborhood Finder', () => {
     await page.reload()
     // Wait for page to load
     await page.waitForLoadState('networkidle')
-    // Stage gate should show step 1 - look for the title "Enter Your Work Address"
-    await expect(page.getByRole('heading', { name: /enter your work address/i }).first()).toBeVisible()
+    // Stage gate should show step 1 - look for the title "Step 1: Enter Your Work Address" or the heading
+    await expect(page.getByRole('heading', { name: "Enter Your Work Address", exact: true })).toBeVisible()
   })
 })
 

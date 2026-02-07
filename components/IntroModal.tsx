@@ -3,11 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWizard } from '@/contexts/WizardContext'
-import NeighborhoodFinderIntro from '@/components/NeighborhoodFinderIntro'
 
 export default function IntroModal() {
   const [isOpen, setIsOpen] = useState(false)
-  const [showNextModal, setShowNextModal] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const { setWizardActive, setWizardStep } = useWizard()
@@ -35,19 +33,11 @@ export default function IntroModal() {
     localStorage.setItem('hasSeenIntro', 'true')
     // Activate wizard mode
     setWizardActive(true)
-    // Immediately show the next modal
-    setShowNextModal(true)
   }
 
   const handleClose = () => {
     setIsOpen(false)
     localStorage.setItem('hasSeenIntro', 'true')
-  }
-
-  const handleNextModalClose = () => {
-    setShowNextModal(false)
-    // If wizard is active and we're closing after API key setup, navigate
-    // This will be handled by NeighborhoodFinderIntro, but we ensure modal closes
   }
 
   return (
@@ -204,12 +194,6 @@ export default function IntroModal() {
             </div>
           </div>
         </div>
-      )}
-      {showNextModal && (
-        <NeighborhoodFinderIntro
-          isOpen={showNextModal}
-          onClose={handleNextModalClose}
-        />
       )}
     </>
   )

@@ -18,23 +18,23 @@ test.describe('Wizard Flow', () => {
     await getStartedButton.click({ force: true })
 
     // Step 2: How RushRoost Works screen
-    await expect(page.getByRole('heading', { name: /how rushroost works/i }).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('heading', { name: "How RushRoost Works", exact: true })).toBeVisible({ timeout: 10000 })
 
-    const nextButton = page.getByRole('button', { name: /next/i })
+    const nextButton = page.getByRole('button', { name: "Next", exact: true })
     await expect(nextButton).toBeVisible({ timeout: 10000 })
     await nextButton.click()
 
     // Step 3: Auth Step - "One Final Step" or "Sign In to Activate"
-    await expect(page.getByRole('heading', { name: /one final step/i }).or(page.getByRole('heading', { name: /how rushroost works/i })).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('heading', { name: "One Final Step", exact: true }).or(page.getByRole('heading', { name: "How RushRoost Works", exact: true }))).toBeVisible({ timeout: 10000 })
 
     // Check for "Continue without signing in" button
-    const continueWithoutSignInButton = page.getByRole('button', { name: /continue without signing in/i })
+    const continueWithoutSignInButton = page.getByRole('button', { name: "Continue without signing in", exact: true })
     await expect(continueWithoutSignInButton).toBeVisible({ timeout: 10000 })
     await continueWithoutSignInButton.click()
 
     // Step 4: Should navigate to Neighborhood Finder
     await expect(page).toHaveURL(/.*neighborhood-finder/, { timeout: 15000 })
-    await expect(page.getByRole('heading', { name: /neighborhood finder/i })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('heading', { name: "Neighborhood Finder", exact: true })).toBeVisible({ timeout: 10000 })
   })
 
   test('should go back and forth between onboarding steps', async ({ page }) => {
@@ -45,16 +45,16 @@ test.describe('Wizard Flow', () => {
     await page.getByRole('button', { name: /get started/i }).click({ force: true })
 
     // On "How RushRoost Works"
-    await expect(page.getByRole('heading', { name: /how rushroost works/i }).first()).toBeVisible()
-    await page.getByRole('button', { name: /next/i }).click()
+    await expect(page.getByRole('heading', { name: "How RushRoost Works", exact: true })).toBeVisible()
+    await page.getByRole('button', { name: "Next", exact: true }).click()
 
     // On Auth screen
-    await expect(page.getByRole('heading', { name: /one final step/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: "One Final Step", exact: true })).toBeVisible()
 
     // Click Back
-    await page.getByRole('button', { name: /back/i }).click()
+    await page.getByRole('button', { name: "Back", exact: true }).click()
 
     // Should be back on "How RushRoost Works"
-    await expect(page.getByRole('heading', { name: /how rushroost works/i }).first()).toBeVisible()
+    await expect(page.getByRole('heading', { name: "How RushRoost Works", exact: true })).toBeVisible()
   })
 })

@@ -50,7 +50,16 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
 
   const handleSkip = () => {
     localStorage.setItem('hasSeenNeighborhoodFinderIntro', 'true')
-    onClose()
+    // Navigate if in wizard mode
+    const isWizardActive = wizardActive || localStorage.getItem('wizard_active') === 'true'
+    if (isWizardActive) {
+      router.push('/neighborhood-finder')
+      setTimeout(() => {
+        onClose()
+      }, 100)
+    } else {
+      onClose()
+    }
   }
 
   const handleContinue = () => {
