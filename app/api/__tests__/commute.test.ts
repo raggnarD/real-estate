@@ -4,18 +4,30 @@ jest.mock('next/server', () => {
   // Define MockNextRequest inside the factory
   class MockNextRequest {
     private url: URL
+    private headerMap: Map<string, string> = new Map()
     private cookieMap: Map<string, { value: string }> = new Map()
 
-    constructor(url: string, init?: { headers?: { cookie?: string } }) {
+    constructor(url: string, init?: { headers?: Record<string, string> }) {
       this.url = new URL(url)
-      if (init?.headers?.cookie) {
-        const cookies = init.headers.cookie.split(';').map(c => c.trim())
-        cookies.forEach(cookie => {
-          const [name, value] = cookie.split('=')
-          if (name && value) {
-            this.cookieMap.set(name, { value })
+      if (init?.headers) {
+        Object.entries(init.headers).forEach(([name, value]) => {
+          this.headerMap.set(name.toLowerCase(), value)
+          if (name.toLowerCase() === 'cookie') {
+            const cookies = value.split(';').map(c => c.trim())
+            cookies.forEach(cookie => {
+              const [cName, cValue] = cookie.split('=')
+              if (cName && cValue) {
+                this.cookieMap.set(cName, { value: cValue })
+              }
+            })
           }
         })
+      }
+    }
+
+    get headers() {
+      return {
+        get: (name: string) => this.headerMap.get(name.toLowerCase()) || null
       }
     }
 
@@ -70,18 +82,30 @@ global.fetch = jest.fn()
 // Export MockNextRequest for use in tests
 class MockNextRequest {
   private url: URL
+  private headerMap: Map<string, string> = new Map()
   private cookieMap: Map<string, { value: string }> = new Map()
 
-  constructor(url: string, init?: { headers?: { cookie?: string } }) {
+  constructor(url: string, init?: { headers?: Record<string, string> }) {
     this.url = new URL(url)
-    if (init?.headers?.cookie) {
-      const cookies = init.headers.cookie.split(';').map(c => c.trim())
-      cookies.forEach(cookie => {
-        const [name, value] = cookie.split('=')
-        if (name && value) {
-          this.cookieMap.set(name, { value })
+    if (init?.headers) {
+      Object.entries(init.headers).forEach(([name, value]) => {
+        this.headerMap.set(name.toLowerCase(), value)
+        if (name.toLowerCase() === 'cookie') {
+          const cookies = value.split(';').map(c => c.trim())
+          cookies.forEach(cookie => {
+            const [cName, cValue] = cookie.split('=')
+            if (cName && cValue) {
+              this.cookieMap.set(cName, { value: cValue })
+            }
+          })
         }
       })
+    }
+  }
+
+  get headers() {
+    return {
+      get: (name: string) => this.headerMap.get(name.toLowerCase()) || null
     }
   }
 
