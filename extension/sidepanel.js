@@ -1,6 +1,6 @@
 
 const API_BASE_LOCAL = 'http://localhost:3000';
-const API_BASE_PROD = 'https://real-estate-raggnard.vercel.app';
+const API_BASE_PROD = 'https://real-estate-five-tawny.vercel.app';
 let API_BASE = API_BASE_LOCAL; // Default to local, logic can switch based on env or failure
 
 // UI Elements
