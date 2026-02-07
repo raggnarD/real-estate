@@ -25,7 +25,7 @@ test.describe('Wizard Flow', () => {
     await nextButton.click()
 
     // Step 3: Auth Step - "One Final Step" or "Sign In to Activate"
-    await expect(page.getByRole('heading', { name: /one final step/i }).or(page.getByRole('heading', { name: /how rushroost works/i }))).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('heading', { name: /one final step/i }).or(page.getByRole('heading', { name: /how rushroost works/i })).first()).toBeVisible({ timeout: 10000 })
 
     // Check for "Continue without signing in" button
     const continueWithoutSignInButton = page.getByRole('button', { name: /continue without signing in/i })

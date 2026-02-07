@@ -40,7 +40,7 @@ test.describe('Neighborhood Finder', () => {
     // Wait for page to load
     await page.waitForLoadState('networkidle')
     // Stage gate should show step 1 - look for the title "Enter Your Work Address"
-    await expect(page.getByText(/enter your work address/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /enter your work address/i }).first()).toBeVisible()
   })
 })
 
