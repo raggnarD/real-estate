@@ -14,7 +14,7 @@
         "*://*.zillow.com/*",
         "*://*.realtor.com/*",
         "http://localhost:3000/*",
-        "https://real-estate-raggnard.vercel.app/*"
+        "https://real-estate-five-tawny.vercel.app/*"
     ],
     "background": {
         "service_worker": "service-worker.js"

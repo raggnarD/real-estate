@@ -402,6 +402,7 @@ function showLogin() {
 
     loginSection.classList.remove('hidden');
     mainSection.classList.add('hidden');
+    resultsArea.classList.add('hidden'); // Ensure results are cleared
     calculateBtn.classList.add('hidden');
     if (signOutBtn) signOutBtn.classList.add('hidden');
 }
@@ -429,9 +430,9 @@ function showMain(user) {
 
 // Login Handler
 loginBtn.addEventListener('click', () => {
-    // Open sign-in page, redirecting to success page which will close itself
+    // Open direct Google sign-in, redirecting to success page which will close itself
     const callbackUrl = encodeURIComponent(`${API_BASE}/extension/auth-success`);
-    chrome.tabs.create({ url: `${API_BASE}/api/auth/signin?callbackUrl=${callbackUrl}` });
+    chrome.tabs.create({ url: `${API_BASE}/api/auth/signin/google?callbackUrl=${callbackUrl}` });
 });
 
 // Sign Out Handler
