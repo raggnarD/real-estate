@@ -6,60 +6,91 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-50 p-4 w-full">
-  <div id="app" class="space-y-4">
-    <div class="flex items-center justify-between border-b pb-2">
-      <h1 class="text-lg font-bold text-blue-600">RushRoost</h1>
+<body class="bg-white p-4 w-full font-sans text-gray-900">
+  <div id="app" class="flex flex-col h-full">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
       <div class="flex items-center gap-2">
-        <div id="auth-status" class="text-xs text-gray-500">Checking auth...</div>
-        <button id="sign-out-btn" class="hidden text-xs text-red-500 hover:text-red-700 underline">Sign Out</button>
+        <img src="icons/icon48.png" class="w-6 h-6" alt="Logo">
+        <h1 class="text-base font-semibold text-gray-900">RushRoost</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <div id="auth-status" class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Not Connected</div>
+        <button id="sign-out-btn"
+          class="hidden text-[10px] text-red-500 hover:text-red-600 font-bold uppercase tracking-wider">Sign
+          Out</button>
       </div>
     </div>
 
-    <!-- Login Prompt (Hidden by default) -->
-    <div id="login-section" class="hidden text-center py-4">
-      <p class="text-sm text-gray-600 mb-3">Please sign in to calculate commutes.</p>
+    <!-- Login Prompt -->
+    <div id="login-section" class="hidden py-8 px-4 border border-gray-200 rounded-lg bg-[#f9f9f9] text-center">
+      <h2 class="text-sm font-semibold mb-2">Welcome to RushRoost</h2>
+      <p class="text-xs text-gray-500 mb-5 leading-relaxed">Sign in to sync your work destinations and calculate commute
+        times automatically.</p>
       <button id="login-btn"
-        class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 w-full transition">
+        class="bg-[#0070f3] text-white px-5 py-2.5 rounded-full text-xs font-semibold hover:bg-blue-700 w-full transition shadow-sm">
         Sign in with Google
       </button>
     </div>
 
-    <!-- Main Content (Hidden by default) -->
-    <div id="main-section" class="hidden space-y-4">
+    <!-- Main Content -->
+    <div id="main-section" class="hidden space-y-5">
       <!-- Current Property -->
-      <div class="bg-white p-3 rounded shadow-sm border">
-        <label class="block text-xs font-semibold text-gray-500 uppercase">Property Address</label>
-        <p id="current-address" class="text-sm font-medium text-gray-900 mt-1">Detecting address...</p>
+      <div class="bg-[#f9f9f9] p-4 rounded-lg border border-gray-200">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-sm">🏠</span>
+          <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Target Property</label>
+        </div>
+        <p id="current-address" class="text-sm font-semibold text-gray-900 truncate">Detecting address...</p>
       </div>
 
       <!-- Destinations -->
-      <div class="space-y-2">
-        <label class="block text-xs font-semibold text-gray-500 uppercase">Commute To</label>
-        <select id="destination-select" class="w-full text-sm p-2 border rounded bg-white">
-          <option value="">Select a destination...</option>
-        </select>
-        <div class="flex gap-2">
-          <input type="text" id="new-destination-name" placeholder="Name (e.g. Work)"
-            class="flex-1 text-sm p-2 border rounded">
-          <input type="text" id="new-destination-address" placeholder="Address"
-            class="flex-2 text-sm p-2 border rounded w-full">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Commute
+            Destination</label>
+          <select id="destination-select"
+            class="w-full text-sm p-2.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-100 outline-none transition cursor-pointer">
+            <option value="">Select a destination...</option>
+          </select>
         </div>
-        <button id="add-destination-btn"
-          class="w-full bg-gray-200 text-gray-700 text-xs py-2 rounded hover:bg-gray-300">
-          + Add Destination
-        </button>
+
+        <div class="bg-gray-50 p-3 rounded-lg border border-dashed border-gray-300 space-y-2">
+          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">+ New Destination</p>
+          <div class="flex flex-col gap-2">
+            <input type="text" id="new-destination-name" placeholder="Name (e.g. Work)"
+              class="text-xs p-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-100 outline-none">
+            <input type="text" id="new-destination-address" placeholder="Full Street Address"
+              class="text-xs p-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-100 outline-none">
+          </div>
+          <button id="add-destination-btn"
+            class="w-full bg-white border border-gray-200 text-gray-700 text-[10px] font-bold uppercase tracking-wider py-2 rounded-md hover:bg-gray-50 transition">
+            Save Destination 💾
+          </button>
+        </div>
       </div>
 
-      <!-- Results -->
-      <div id="results-area" class="hidden bg-blue-50 p-3 rounded border border-blue-100">
-        <div class="flex justify-between items-center">
-          <span class="text-sm font-medium text-blue-900">Commute Time:</span>
-          <span id="commute-time" class="text-lg font-bold text-blue-700">-- min</span>
+      <!-- Results Card -->
+      <div id="results-area"
+        class="hidden bg-[#0070f3] p-5 rounded-xl text-white shadow-lg shadow-blue-100 transition-all transform animate-in fade-in slide-in-from-bottom-2">
+        <div class="flex justify-between items-start mb-1">
+          <div class="flex flex-col">
+            <span class="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-1">Estimated Commute</span>
+            <span id="commute-time" class="text-3xl font-extrabold tracking-tight">-- min</span>
+          </div>
+          <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+            <span id="commute-mode-icon" class="text-xl">🚗</span>
+          </div>
         </div>
-        <div class="text-xs text-blue-600 mt-1 flex justify-between">
-          <span id="commute-distance">-- miles</span>
-          <span id="commute-mode">Driving</span>
+        <div class="flex items-center gap-2 mt-4 pt-4 border-t border-white/20">
+          <div class="flex-1 flex flex-col">
+            <span class="text-[9px] font-bold uppercase tracking-widest opacity-70">Distance</span>
+            <span id="commute-distance" class="text-xs font-semibold">-- miles</span>
+          </div>
+          <div class="flex-1 flex flex-col items-end">
+            <span class="text-[9px] font-bold uppercase tracking-widest opacity-70">Travel Mode</span>
+            <span id="commute-mode-text" class="text-xs font-semibold capitalize">Driving</span>
+          </div>
         </div>
       </div>
     </div>

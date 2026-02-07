@@ -161,52 +161,7 @@ export default function Navigation() {
             </Link>
 
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <Link
-                href="/account"
-                style={{
-                  textDecoration: 'none',
-                  color: pathname === '/account' ? '#0070f3' : '#333',
-                  fontWeight: pathname === '/account' ? '600' : '400',
-                  fontSize: '1rem',
-                  padding: '0.5rem',
-                  borderRadius: '4px',
-                  transition: 'all 0.2s',
-                  backgroundColor: pathname === '/account' ? '#e6f2ff' : 'transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '40px',
-                  height: '40px'
-                }}
-                title="Account Settings"
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{ color: 'currentColor' }}
-                >
-                  <path
-                    d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M20.59 22C20.59 18.13 16.74 15 12 15C7.26003 15 3.41003 18.13 3.41003 22"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </Link>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', marginLeft: '1rem' }}>
-              <LoginButton />
+              <AccountMenu />
             </div>
           </>
         )}
@@ -253,50 +208,8 @@ export default function Navigation() {
             >
               ⏱️ True Commute Time
             </Link>
-            <Link
-              href="/account"
-              onClick={() => setIsMobileMenuOpen(false)}
-              style={{
-                textDecoration: 'none',
-                color: pathname === '/account' ? '#0070f3' : '#333',
-                fontWeight: pathname === '/account' ? '600' : '400',
-                fontSize: '1rem',
-                padding: '0.75rem 1rem',
-                borderRadius: '4px',
-                transition: 'all 0.2s',
-                backgroundColor: pathname === '/account' ? '#e6f2ff' : 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                style={{ color: 'currentColor' }}
-              >
-                <path
-                  d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M20.59 22C20.59 18.13 16.74 15 12 15C7.26003 15 3.41003 18.13 3.41003 22"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Account Settings
-            </Link>
-            <div style={{ padding: '0.75rem 1rem' }}>
-              <LoginButton />
+            <div style={{ padding: '0.5rem 1rem' }}>
+              <AccountMenu mobile onClick={() => setIsMobileMenuOpen(false)} />
             </div>
           </div>
         )}
@@ -305,4 +218,179 @@ export default function Navigation() {
     </nav>
   )
 }
+
+import { signIn, signOut, useSession } from "next-auth/react"
+
+function AccountMenu({ mobile, onClick }: { mobile?: boolean, onClick?: () => void }) {
+  const { data: session } = useSession()
+  const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname()
+
+  if (!session) {
+    return (
+      <button
+        onClick={() => {
+          signIn("google")
+          onClick?.()
+        }}
+        style={{
+          background: '#0070f3',
+          color: '#fff',
+          border: 'none',
+          padding: '0.5rem 1rem',
+          borderRadius: '20px',
+          fontWeight: '600',
+          cursor: 'pointer',
+          fontSize: '0.9rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        Sign In
+      </button>
+    )
+  }
+
+  if (mobile) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div style={{ padding: '0.5rem 0', fontWeight: '600', color: '#666', fontSize: '0.8rem' }}>
+          SIGNED IN AS {session.user?.name?.toUpperCase()}
+        </div>
+        <Link
+          href="/account"
+          onClick={onClick}
+          style={{
+            textDecoration: 'none',
+            color: pathname === '/account' ? '#0070f3' : '#333',
+            padding: '0.75rem 0',
+            fontSize: '1rem'
+          }}
+        >
+          👤 Account Settings
+        </Link>
+        <button
+          onClick={() => signOut()}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#ff4d4f',
+            padding: '0.75rem 0',
+            fontSize: '1rem',
+            textAlign: 'left',
+            cursor: 'pointer'
+          }}
+        >
+          🚪 Sign Out
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          borderRadius: '50%'
+        }}
+        title={session.user?.name || 'Account'}
+      >
+        {session.user?.image ? (
+          <img
+            src={session.user.image}
+            alt={session.user.name || ''}
+            style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid #0070f3' }}
+          />
+        ) : (
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            backgroundColor: '#0070f3',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            fontSize: '14px'
+          }}>
+            {session.user?.name?.[0] || session.user?.email?.[0] || '?'}
+          </div>
+        )}
+      </button>
+
+      {isOpen && (
+        <>
+          <div
+            onClick={() => setIsOpen(false)}
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }}
+          />
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            right: 0,
+            marginTop: '8px',
+            backgroundColor: '#fff',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            width: '200px',
+            zIndex: 1001,
+            overflow: 'hidden'
+          }}>
+            <div style={{ padding: '12px', borderBottom: '1px solid #eee' }}>
+              <div style={{ fontWeight: '600', fontSize: '0.9rem', color: '#000' }}>{session.user?.name}</div>
+              <div style={{ fontSize: '0.75rem', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.user?.email}</div>
+            </div>
+            <Link
+              href="/account"
+              onClick={() => setIsOpen(false)}
+              style={{
+                display: 'block',
+                padding: '10px 12px',
+                textDecoration: 'none',
+                color: '#333',
+                fontSize: '0.9rem',
+                backgroundColor: pathname === '/account' ? '#f0f7ff' : 'transparent'
+              }}
+            >
+              Account Settings
+            </Link>
+            <button
+              onClick={() => signOut()}
+              style={{
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+                padding: '10px 12px',
+                background: 'none',
+                border: 'none',
+                color: '#ff4d4f',
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                borderTop: '1px solid #eee'
+              }}
+            >
+              Sign Out
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 

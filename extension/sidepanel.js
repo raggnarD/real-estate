@@ -17,6 +17,9 @@ const resultsArea = document.getElementById('results-area');
 const commuteTimeEl = document.getElementById('commute-time');
 const commuteDistEl = document.getElementById('commute-distance');
 
+const commuteModeIcon = document.getElementById('commute-mode-icon');
+const commuteModeText = document.getElementById('commute-mode-text');
+
 let currentPropertyAddress = null;
 
 // Initialize
@@ -75,8 +78,8 @@ async function checkCookie(url) {
 const signOutBtn = document.getElementById('sign-out-btn');
 
 function showLogin() {
-    authStatus.textContent = 'Not Signed In';
-    authStatus.className = 'text-xs text-red-500 font-medium';
+    authStatus.textContent = 'Not Connected';
+    authStatus.className = 'text-[10px] uppercase tracking-wider font-bold text-red-500';
 
     // Force visibility using style to ensure no class conflicts
     loginSection.style.display = 'block';
@@ -87,7 +90,7 @@ function showLogin() {
 function showMain(user) {
     const name = user.name || user.email || 'Connected';
     authStatus.textContent = name;
-    authStatus.className = 'text-xs text-gray-700 font-semibold truncate max-w-[100px]';
+    authStatus.className = 'text-[10px] uppercase tracking-wider font-bold text-gray-700 truncate max-w-[100px]';
 
     // Force visibility
     loginSection.style.display = 'none';
@@ -175,13 +178,12 @@ async function calculateCommute() {
     const destination = destinationSelect.value;
     if (!destination || !currentPropertyAddress) return;
 
-    resultsArea.classList.remove('hidden');
-    resultsArea.classList.remove('bg-red-50', 'border-red-100');
-    resultsArea.classList.add('bg-blue-50', 'border-blue-100');
+    resultsArea.classList.remove('hidden', 'bg-red-500', 'shadow-red-100');
+    resultsArea.classList.add('bg-[#0070f3]', 'shadow-blue-100');
 
-    commuteTimeEl.textContent = 'Loading...';
-    commuteTimeEl.className = 'text-lg font-bold text-blue-700';
-    commuteDistEl.textContent = '';
+    commuteTimeEl.textContent = '...';
+    commuteDistEl.textContent = 'Calculating';
+    commuteModeText.textContent = '';
 
     try {
         const params = new URLSearchParams({
@@ -205,7 +207,19 @@ async function calculateCommute() {
         }
 
         commuteTimeEl.textContent = data.duration;
-        commuteDistEl.textContent = `${data.distance} • ${data.mode}`;
+        commuteDistEl.textContent = data.distance;
+        commuteModeText.textContent = data.mode;
+
+        // Update icon based on mode
+        if (data.mode === 'transit') {
+            commuteModeIcon.textContent = '🚌';
+        } else if (data.mode === 'walking') {
+            commuteModeIcon.textContent = '🚶';
+        } else if (data.mode === 'bicycling') {
+            commuteModeIcon.textContent = '🚲';
+        } else {
+            commuteModeIcon.textContent = '🚗';
+        }
 
     } catch (error) {
         console.error('Calculation failed details:', error);
@@ -214,11 +228,11 @@ async function calculateCommute() {
 }
 
 function showError(msg) {
-    resultsArea.classList.remove('bg-blue-50', 'border-blue-100');
-    resultsArea.classList.add('bg-red-50', 'border-red-100');
-    commuteTimeEl.textContent = msg;
-    commuteTimeEl.className = 'text-sm font-medium text-red-600';
-    commuteDistEl.textContent = 'Failed';
+    resultsArea.classList.remove('bg-[#0070f3]', 'shadow-blue-100');
+    resultsArea.classList.add('bg-red-500', 'shadow-red-100');
+    commuteTimeEl.textContent = 'Error';
+    commuteDistEl.textContent = msg;
+    commuteModeText.textContent = 'Failed';
 }
 
 // Request Initial Address Check (in case side panel opened after page load)
@@ -227,3 +241,4 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         chrome.tabs.sendMessage(tabs[0].id, { type: 'GET_ADDRESS' });
     }
 });
+
