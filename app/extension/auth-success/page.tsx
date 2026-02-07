@@ -6,15 +6,27 @@ export default function AuthSuccessPage() {
     const [countdown, setCountdown] = useState(1);
 
     useEffect(() => {
-        // Attempt to close immediately
-        const closeWindow = () => {
-            window.close();
-            // Fallback: if window.close() is blocked, show message
+        // Function to attempt closing the window
+        const attemptClose = () => {
+            try {
+                window.close();
+            } catch (e) { console.log('window.close failed', e); }
+
+            try {
+                self.close();
+            } catch (e) { console.log('self.close failed', e); }
+
+            try {
+                window.top?.close();
+            } catch (e) { console.log('top.close failed', e); }
         };
 
-        closeWindow();
+        // Try immediately
+        attemptClose();
+
+        // Try repeatedly
         const timer = setInterval(() => {
-            closeWindow();
+            attemptClose();
             setCountdown((prev) => Math.max(0, prev - 1));
         }, 1000);
 
