@@ -48,6 +48,11 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
     setShowAuthStep(true)
   }
 
+  const handleSkip = () => {
+    localStorage.setItem('hasSeenNeighborhoodFinderIntro', 'true')
+    onClose()
+  }
+
   const handleContinue = () => {
     localStorage.setItem('hasSeenNeighborhoodFinderIntro', 'true')
     // Check wizardActive from localStorage as well, in case context hasn't updated
@@ -89,7 +94,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
       zIndex: 10000,
       padding: isMobile ? '0' : '0.5rem',
       overflow: 'auto'
-    }} onClick={onClose}>
+    }} onClick={handleSkip}>
       <div style={{
         backgroundColor: '#fff',
         borderRadius: isMobile ? '0' : '12px',
@@ -115,7 +120,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
           position: 'relative'
         }}>
           <button
-            onClick={onClose}
+            onClick={handleSkip}
             style={{
               position: 'absolute',
               top: '1rem',
@@ -256,7 +261,7 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
           {!showAuthStep ? (
             <>
               <button
-                onClick={onClose}
+                onClick={handleSkip}
                 style={{ padding: '0.75rem 1.5rem', backgroundColor: 'transparent', color: '#666', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Skip intro
@@ -280,9 +285,15 @@ export default function NeighborhoodFinderIntro({ isOpen, onClose }: Neighborhoo
             <>
               <button
                 onClick={() => setShowAuthStep(false)}
-                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                style={{ padding: '0.75rem 1.5rem', backgroundColor: 'transparent', color: '#666', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Back
+              </button>
+              <button
+                onClick={handleSkip}
+                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+              >
+                Continue without signing in
               </button>
               <button
                 onClick={handleContinue}
