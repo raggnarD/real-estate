@@ -646,7 +646,9 @@ async function calculateCommute() {
         }
 
         const params = new URLSearchParams(queryParams);
-        const response = await fetch(`${API_BASE}/api/commute?${params.toString()}`);
+        const response = await fetch(`${API_BASE}/api/commute?${params.toString()}`, {
+            credentials: 'include' // Send session cookie for tracking
+        });
 
         if (response.status === 401) {
             showLogin();

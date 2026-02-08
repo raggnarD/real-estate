@@ -244,6 +244,20 @@ function AccountMenu({ mobile, onClick }: { mobile?: boolean, onClick?: () => vo
         >
           👤 Account Settings
         </Link>
+        {session.user?.email === 'james.kocher@gmail.com' && (
+          <Link
+            href="/admin/users"
+            onClick={onClick}
+            style={{
+              textDecoration: 'none',
+              color: pathname === '/admin/users' ? '#0070f3' : '#333',
+              padding: '0.75rem 0',
+              fontSize: '1rem'
+            }}
+          >
+            🔧 Admin
+          </Link>
+        )}
         <button
           onClick={() => signOut()}
           style={{
@@ -339,6 +353,22 @@ function AccountMenu({ mobile, onClick }: { mobile?: boolean, onClick?: () => vo
             >
               Account Settings
             </Link>
+            {session.user?.email === 'james.kocher@gmail.com' && (
+              <Link
+                href="/admin/users"
+                onClick={() => setIsOpen(false)}
+                style={{
+                  display: 'block',
+                  padding: '10px 12px',
+                  textDecoration: 'none',
+                  color: '#333',
+                  fontSize: '0.9rem',
+                  backgroundColor: pathname === '/admin/users' ? '#f0f7ff' : 'transparent'
+                }}
+              >
+                Admin
+              </Link>
+            )}
             <button
               onClick={() => signOut()}
               style={{
