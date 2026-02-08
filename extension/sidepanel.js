@@ -448,6 +448,26 @@ loginBtn.addEventListener('click', () => {
         height: height,
         left: left,
         top: top
+    }, (window) => {
+        // Monitor the popup for success URL to auto-close it
+        if (window) {
+            const tabId = window.tabs && window.tabs.length > 0 ? window.tabs[0].id : null;
+            const listener = (tid, changeInfo, tab) => {
+                if (tab.windowId === window.id && tab.url && tab.url.includes('auth-success')) {
+                    // Success detected! Close the window.
+                    chrome.windows.remove(window.id);
+                    chrome.tabs.onUpdated.removeListener(listener);
+                }
+            };
+            chrome.tabs.onUpdated.addListener(listener);
+
+            // Cleanup listener if window is closed manually
+            chrome.windows.onRemoved.addListener((windowId) => {
+                if (windowId === window.id) {
+                    chrome.tabs.onUpdated.removeListener(listener);
+                }
+            });
+        }
     });
 });
 
