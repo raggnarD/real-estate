@@ -15,8 +15,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           const { sql } = await import('@vercel/postgres');
           await sql`
-            INSERT INTO users (email, name, last_login, login_count)
-            VALUES (${user.email}, ${user.name}, NOW(), 1)
+            INSERT INTO users (email, name, last_login, login_count, neighborhood_finder_calls, true_commute_calls, api_calls)
+            VALUES (${user.email}, ${user.name}, NOW(), 1, 0, 0, 0)
             ON CONFLICT (email)
             DO UPDATE SET
               last_login = NOW(),
