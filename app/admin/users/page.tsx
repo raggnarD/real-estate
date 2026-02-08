@@ -144,13 +144,13 @@ export default function AdminUsersPage() {
                                     </th>
                                     <th
                                         onClick={() => handleSort('login_count')}
-                                        className="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
                                     >
                                         Logins <SortIcon field="login_count" />
                                     </th>
                                     <th
                                         onClick={() => handleSort('api_calls')}
-                                        className="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
                                     >
                                         API Calls <SortIcon field="api_calls" />
                                     </th>
@@ -183,12 +183,12 @@ export default function AdminUsersPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {new Date(user.last_login).toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                                                     {user.login_count}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                                                     {user.api_calls}
                                                 </span>
