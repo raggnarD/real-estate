@@ -120,42 +120,42 @@ export default function AdminUsersPage() {
                                 <tr className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                                     <th
                                         onClick={() => handleSort('email')}
-                                        className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        className="px-8 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
                                         style={{ textAlign: 'left' }}
                                     >
                                         Email <SortIcon field="email" />
                                     </th>
                                     <th
                                         onClick={() => handleSort('name')}
-                                        className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        className="px-8 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
                                         style={{ textAlign: 'left' }}
                                     >
                                         Name <SortIcon field="name" />
                                     </th>
                                     <th
                                         onClick={() => handleSort('first_login')}
-                                        className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        className="px-8 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
                                         style={{ textAlign: 'left' }}
                                     >
                                         First Login <SortIcon field="first_login" />
                                     </th>
                                     <th
                                         onClick={() => handleSort('last_login')}
-                                        className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        className="px-8 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
                                         style={{ textAlign: 'left' }}
                                     >
                                         Last Login <SortIcon field="last_login" />
                                     </th>
                                     <th
                                         onClick={() => handleSort('login_count')}
-                                        className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        className="px-8 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
                                         style={{ textAlign: 'left' }}
                                     >
                                         Logins <SortIcon field="login_count" />
                                     </th>
                                     <th
                                         onClick={() => handleSort('api_calls')}
-                                        className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        className="px-8 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
                                         style={{ textAlign: 'left' }}
                                     >
                                         API Calls <SortIcon field="api_calls" />
@@ -177,22 +177,22 @@ export default function AdminUsersPage() {
                                             className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                                                 } hover:bg-blue-50 transition-colors`}
                                         >
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            <td className="px-8 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 {user.email}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            <td className="px-8 py-4 whitespace-nowrap text-sm text-gray-700">
                                                 {user.name}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td className="px-8 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {new Date(user.first_login).toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            <td className="px-8 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {new Date(user.last_login).toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            <td className="px-8 py-4 whitespace-nowrap text-sm text-gray-700">
                                                 {user.login_count}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            <td className="px-8 py-4 whitespace-nowrap text-sm text-gray-700">
                                                 {user.api_calls}
                                             </td>
                                         </tr>
