@@ -34,21 +34,22 @@ export default function AuthSuccessPage() {
     }, []);
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-white text-center p-6">
-            <div className="max-w-md w-full">
-                <div className="mb-8 text-8xl animate-bounce">
-                    ✅
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white text-center p-6">
+            <div className="max-w-2xl w-full flex flex-col items-center">
+
+                <div className="flex items-center justify-center gap-6 mb-12">
+                    <h1 className="text-6xl font-extrabold text-gray-900">Signed In!</h1>
+                    <span className="text-8xl animate-bounce">✅</span>
                 </div>
 
-                <h1 className="text-3xl font-extrabold text-gray-900 mb-4">Signed In!</h1>
-                <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+                <p className="text-2xl text-gray-600 mb-16 leading-relaxed max-w-xl">
                     You have successfully signed in to RushRoost.<br />
                     You can now close this window and return to the extension.
                 </p>
 
                 <button
                     onClick={() => window.close()}
-                    className="w-full bg-black hover:bg-gray-800 text-white text-xl font-bold py-4 px-8 rounded-xl shadow-lg transform transition hover:scale-105"
+                    className="bg-black hover:bg-gray-800 text-white text-4xl font-bold py-8 px-16 rounded-3xl shadow-2xl transform transition hover:scale-105 active:scale-95"
                 >
                     Close Window
                 </button>
