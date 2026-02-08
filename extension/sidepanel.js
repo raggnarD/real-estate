@@ -462,8 +462,11 @@ loginBtn.addEventListener('click', () => {
                     // Trigger address refresh on the active tab
                     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                         if (tabs && tabs.length > 0) {
-                            chrome.tabs.sendMessage(tabs[0].id, { type: 'GET_ADDRESS' }).catch(() => {
-                                // Ignore errors if content script not ready
+                            const tabId = tabs[0].id;
+                            chrome.tabs.sendMessage(tabId, { type: 'GET_ADDRESS' }).catch(() => {
+                                // If content script is orphaned (e.g. extension reloaded), reload the page to fix it
+                                console.log('Content script not ready, reloading page...');
+                                chrome.tabs.reload(tabId);
                             });
                         }
                     });
