@@ -453,7 +453,8 @@ loginBtn.addEventListener('click', () => {
         if (window) {
             const tabId = window.tabs && window.tabs.length > 0 ? window.tabs[0].id : null;
             const listener = (tid, changeInfo, tab) => {
-                if (tab.windowId === window.id && tab.url && tab.url.includes('auth-success')) {
+                // Check strictly if we are on the success page (not just if URL contains the string)
+                if (tab.windowId === window.id && tab.url && tab.url.startsWith(`${API_BASE}/extension/auth-success`)) {
                     // Success detected! Close the window.
                     chrome.windows.remove(window.id);
                     chrome.tabs.onUpdated.removeListener(listener);
