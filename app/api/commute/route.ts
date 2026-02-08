@@ -27,9 +27,13 @@ export async function GET(request: NextRequest) {
     try {
       const { sql } = await import('@vercel/postgres');
       // Fire and forget - don't await to keep API fast
-      sql`UPDATE users SET api_calls = api_calls + 1 WHERE email = ${session.user.email}`.catch(e =>
-        console.error('Failed to track API call', e)
-      );
+      sql`
+        UPDATE users 
+        SET 
+          true_commute_calls = true_commute_calls + 1,
+          api_calls = api_calls + 1
+        WHERE email = ${session.user.email}
+      `.catch(e => console.error('Failed to track API call', e));
     } catch (e) {
       console.error('Failed to import postgres', e);
     }

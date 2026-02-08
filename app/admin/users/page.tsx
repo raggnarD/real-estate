@@ -11,9 +11,11 @@ interface User {
     last_login: string
     login_count: number
     api_calls: number
+    neighborhood_finder_calls: number
+    true_commute_calls: number
 }
 
-type SortField = 'email' | 'name' | 'first_login' | 'last_login' | 'login_count' | 'api_calls'
+type SortField = 'email' | 'name' | 'first_login' | 'last_login' | 'login_count' | 'api_calls' | 'neighborhood_finder_calls' | 'true_commute_calls'
 type SortDirection = 'asc' | 'desc'
 
 export default function AdminUsersPage() {
@@ -154,18 +156,32 @@ export default function AdminUsersPage() {
                                         Logins <SortIcon field="login_count" />
                                     </th>
                                     <th
+                                        onClick={() => handleSort('neighborhood_finder_calls')}
+                                        className="px-8 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        style={{ textAlign: 'left' }}
+                                    >
+                                        Neighborhood <SortIcon field="neighborhood_finder_calls" />
+                                    </th>
+                                    <th
+                                        onClick={() => handleSort('true_commute_calls')}
+                                        className="px-8 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        style={{ textAlign: 'left' }}
+                                    >
+                                        True Commute <SortIcon field="true_commute_calls" />
+                                    </th>
+                                    <th
                                         onClick={() => handleSort('api_calls')}
                                         className="px-8 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
                                         style={{ textAlign: 'left' }}
                                     >
-                                        API Calls <SortIcon field="api_calls" />
+                                        Total API Calls <SortIcon field="api_calls" />
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {sortedUsers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                        <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
                                             <div className="text-lg">No users tracked yet</div>
                                             <div className="text-sm mt-2">Users will appear here after they sign in</div>
                                         </td>
@@ -191,6 +207,12 @@ export default function AdminUsersPage() {
                                             </td>
                                             <td className="px-8 py-4 whitespace-nowrap text-sm text-gray-700">
                                                 {user.login_count}
+                                            </td>
+                                            <td className="px-8 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                {user.neighborhood_finder_calls || 0}
+                                            </td>
+                                            <td className="px-8 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                {user.true_commute_calls || 0}
                                             </td>
                                             <td className="px-8 py-4 whitespace-nowrap text-sm text-gray-700">
                                                 {user.api_calls}

@@ -12,7 +12,7 @@ export async function GET(request: Request) {
 
     try {
         const result = await sql`
-      SELECT email, name, first_login, last_login, login_count, api_calls
+      SELECT email, name, first_login, last_login, login_count, api_calls, neighborhood_finder_calls, true_commute_calls
       FROM users
       ORDER BY last_login DESC;
     `;

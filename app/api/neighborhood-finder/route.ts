@@ -1,8 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiKey } from '@/utils/apiKeyResolver'
 import { getCitiesNearLocation, formatCityForGeocoding } from '@/utils/cityDataLoader'
+import { auth } from '@/auth'
 
 export async function GET(request: NextRequest) {
+  // Track neighborhood finder usage if user is authenticated
+  const session = await auth()
+  if (session?.user?.email) {
+    try {
+      const { sql } = await import('@vercel/postgres');
+      // Fire and forget - don't await to keep API fast
+      sql`
+        UPDATE users 
+        SET 
+          neighborhood_finder_calls = neighborhood_finder_calls + 1,
+          api_calls = api_calls + 1
+        WHERE email = ${session.user.email}
+      `.catch(e => console.error('Failed to track neighborhood finder call', e));
+    } catch (e) {
+      console.error('Failed to import postgres', e);
+    }
+  }
+
   const searchParams = request.nextUrl.searchParams
   const workLat = searchParams.get('lat')
   const workLng = searchParams.get('lng')
