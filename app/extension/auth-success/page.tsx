@@ -30,7 +30,15 @@ export default function AuthSuccessPage() {
             setCountdown((prev) => Math.max(0, prev - 1));
         }, 1000);
 
-        return () => clearInterval(timer);
+        // FALLBACK: If window is still open after 2.5s (e.g. Web App user), redirect to home
+        const redirectTimer = setTimeout(() => {
+            window.location.href = '/';
+        }, 2500);
+
+        return () => {
+            clearInterval(timer);
+            clearTimeout(redirectTimer);
+        };
     }, []);
 
     return (
