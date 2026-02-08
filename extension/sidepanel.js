@@ -458,6 +458,15 @@ loginBtn.addEventListener('click', () => {
                     // Success detected! Close the window.
                     chrome.windows.remove(window.id);
                     chrome.tabs.onUpdated.removeListener(listener);
+
+                    // Trigger address refresh on the active tab
+                    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                        if (tabs && tabs.length > 0) {
+                            chrome.tabs.sendMessage(tabs[0].id, { type: 'GET_ADDRESS' }).catch(() => {
+                                // Ignore errors if content script not ready
+                            });
+                        }
+                    });
                 }
             };
             chrome.tabs.onUpdated.addListener(listener);
