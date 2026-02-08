@@ -34,7 +34,7 @@ export default function AuthSuccessPage() {
     }, []);
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white text-center p-6">
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white !bg-white text-center p-6">
             <div className="max-w-2xl w-full flex flex-col items-center">
 
                 <div className="flex items-center justify-center gap-6 mb-12">

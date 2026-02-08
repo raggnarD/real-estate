@@ -431,7 +431,8 @@ function showMain(user) {
 // Login Handler
 loginBtn.addEventListener('click', () => {
     // Open sign-in page in a popup window for a cleaner experience
-    const callbackUrl = encodeURIComponent(`${API_BASE}/extension/auth-success`);
+    // Added version param to bust cache
+    const callbackUrl = encodeURIComponent(`${API_BASE}/extension/auth-success?v=3`);
     const authUrl = `${API_BASE}/api/auth/signin?callbackUrl=${callbackUrl}`;
 
     // Calculate center positioning
