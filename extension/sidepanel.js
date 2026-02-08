@@ -58,40 +58,6 @@ let nearestStop = null;
 let transitStops = [];
 let transitStopsOffset = 0;
 let hasMoreStops = false;
-
-// One Tap Widget Elements
-const oneTapWidget = document.getElementById('one-tap-widget');
-const oneTapCard = document.getElementById('one-tap-card');
-const closeOneTap = document.getElementById('close-one-tap');
-
-// One Tap Logic
-function showOneTap() {
-    oneTapWidget.classList.remove('hidden');
-    // Small delay to allow display:block to apply before transition
-    setTimeout(() => {
-        oneTapWidget.style.transform = 'translateY(0)';
-    }, 100);
-}
-
-function hideOneTap() {
-    oneTapWidget.style.transform = 'translateY(-120%)';
-    setTimeout(() => {
-        oneTapWidget.classList.add('hidden');
-    }, 500);
-}
-
-// Event Listeners for One Tap
-if (oneTapCard) {
-    oneTapCard.addEventListener('click', () => {
-        loginBtn.click(); // Reuse existing login logic
-    });
-}
-if (closeOneTap) {
-    closeOneTap.addEventListener('click', (e) => {
-        e.stopPropagation(); // Don't trigger login
-        hideOneTap();
-    });
-}
 let currentPropertyLocation = null;
 let googleMapsApiKey = null;
 
@@ -439,9 +405,6 @@ function showLogin() {
     resultsArea.classList.add('hidden'); // Ensure results are cleared
     calculateBtn.classList.add('hidden');
     if (signOutBtn) signOutBtn.classList.add('hidden');
-
-    // Show the "Simulated" One Tap widget
-    if (showOneTap) showOneTap();
 }
 
 let isMainVisible = false;
@@ -463,9 +426,6 @@ function showMain(user) {
     mainSection.classList.remove('hidden');
     calculateBtn.classList.remove('hidden');
     if (signOutBtn) signOutBtn.classList.remove('hidden');
-
-    // Hide One Tap widget if visible
-    if (hideOneTap) hideOneTap();
 }
 
 // Login Handler
