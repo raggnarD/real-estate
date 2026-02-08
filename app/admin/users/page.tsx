@@ -183,15 +183,11 @@ export default function AdminUsersPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {new Date(user.last_login).toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                                    {user.login_count}
-                                                </span>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                {user.login_count}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                                    {user.api_calls}
-                                                </span>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                {user.api_calls}
                                             </td>
                                         </tr>
                                     ))
