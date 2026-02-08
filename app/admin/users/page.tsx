@@ -121,36 +121,42 @@ export default function AdminUsersPage() {
                                     <th
                                         onClick={() => handleSort('email')}
                                         className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        style={{ textAlign: 'left' }}
                                     >
                                         Email <SortIcon field="email" />
                                     </th>
                                     <th
                                         onClick={() => handleSort('name')}
                                         className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        style={{ textAlign: 'left' }}
                                     >
                                         Name <SortIcon field="name" />
                                     </th>
                                     <th
                                         onClick={() => handleSort('first_login')}
                                         className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        style={{ textAlign: 'left' }}
                                     >
                                         First Login <SortIcon field="first_login" />
                                     </th>
                                     <th
                                         onClick={() => handleSort('last_login')}
                                         className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        style={{ textAlign: 'left' }}
                                     >
                                         Last Login <SortIcon field="last_login" />
                                     </th>
                                     <th
                                         onClick={() => handleSort('login_count')}
                                         className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        style={{ textAlign: 'left' }}
                                     >
                                         Logins <SortIcon field="login_count" />
                                     </th>
                                     <th
                                         onClick={() => handleSort('api_calls')}
                                         className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition-colors"
+                                        style={{ textAlign: 'left' }}
                                     >
                                         API Calls <SortIcon field="api_calls" />
                                     </th>
